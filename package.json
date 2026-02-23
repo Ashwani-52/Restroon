@@ -1,0 +1,17 @@
+{
+  "name": "smartorder",
+  "private": true,
+  "workspaces": [
+    "app",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,app -c blue,green \"PORT=5050 npm --workspace server run dev\" \"npm --workspace app run dev\"",
+    "build": "npm --workspace app run build",
+    "start": "PORT=5050 npm --workspace server run start",
+    "install:all": "npm install --workspaces --include-workspace-root"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

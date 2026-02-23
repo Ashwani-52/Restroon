@@ -1,0 +1,151 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* AirLens Color System - Deep Forest Charcoal Theme */
+    --background: 150 12% 7%; /* #0d1310 */
+    --foreground: 0 0% 96%; /* #f4f4f4 */
+    --card: 150 12% 10%;
+    --card-foreground: 0 0% 96%;
+    --popover: 150 12% 7%;
+    --popover-foreground: 0 0% 96%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 150 12% 7%;
+    --secondary: 150 8% 15%;
+    --secondary-foreground: 0 0% 96%;
+    --muted: 150 8% 18%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 0 0% 100%;
+    --accent-foreground: 150 12% 7%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 100% / 0.1;
+    --input: 150 8% 15%;
+    --ring: 0 0% 100%;
+    --radius: 0.5rem;
+    
+    /* Custom properties */
+    --forest-dark: #0d1310;
+    --forest-mid: #1a2420;
+    --off-white: #f4f4f4;
+    --pure-white: #ffffff;
+    --soft-black: #1a1a1a;
+  }
+
+  .light-section {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 10%;
+    --card: 0 0% 98%;
+    --card-foreground: 0 0% 10%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+    --border: 0 0% 0% / 0.08;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  html {
+    scroll-behavior: auto;
+  }
+  
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'DM Sans', sans-serif;
+    overflow-x: hidden;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Manrope', sans-serif;
+  }
+  
+  .font-serif {
+    font-family: 'Playfair Display', serif;
+  }
+  
+  .font-sans {
+    font-family: 'Manrope', sans-serif;
+  }
+  
+  .font-body {
+    font-family: 'DM Sans', sans-serif;
+  }
+}
+
+@layer components {
+  /* Viewfinder overlay effect */
+  .viewfinder {
+    position: relative;
+  }
+  
+  .viewfinder::before,
+  .viewfinder::after {
+    content: "";
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    pointer-events: none;
+    z-index: 10;
+    transition: all 0.3s ease;
+  }
+  
+  .viewfinder::before {
+    top: 16px;
+    left: 16px;
+    border-top: 2px solid white;
+    border-left: 2px solid white;
+  }
+  
+  .viewfinder::after {
+    bottom: 16px;
+    right: 16px;
+    border-bottom: 2px solid white;
+    border-right: 2px solid white;
+  }
+  
+  .viewfinder-corners {
+    position: relative;
+  }
+  
+  .viewfinder-corners .corner-tr,
+  .viewfinder-corners .corner-bl {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    pointer-events: none;
+    z-index: 10;
+  }
+  
+  .viewfinder-corners .corner-tr {
+    top: 16px;
+    right: 16px;
+    border-top: 2px solid white;
+    border-right: 2px solid white;
+  }
+  
+  .viewfinder-corners .corner-bl {
+    bottom: 16px;
+    left: 16px;
+    border-bottom: 2px solid white;
+    border-left: 2px solid white;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .tracking-tight {
+    letter-spacing: -0.025em;
+  }
+  
+  .tracking-tighter {
+    letter-spacing: -0.05em;
+  }
+}
