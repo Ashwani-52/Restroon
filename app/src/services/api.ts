@@ -306,7 +306,13 @@ export const analyticsApi = {
     apiClient.get<ApiResponse<TopProduct[]>>(`/analytics/top-products`, { params: { cafeId, limit } }),
 
   getRevenueByCategory: (cafeId: string) =>
-    apiClient.get<ApiResponse<{ category: string; revenue: number }[]>>(`/analytics/revenue-by-category`, { params: { cafeId } }),
+    apiClient.get<ApiResponse<{ name: string; value: number }[]>>(`/analytics/revenue-by-category`, { params: { cafeId } }),
+
+  getHourlyPatterns: (cafeId: string) =>
+    apiClient.get<ApiResponse<{ hour: string; orders: number; revenue: number }[]>>(`/analytics/hourly-patterns`, { params: { cafeId } }),
+
+  getCustomerInsights: (cafeId: string) =>
+    apiClient.get<ApiResponse<{ name: string; contact: string; totalOrders: number; totalSpent: number; lastOrder: string }[]>>(`/analytics/customer-insights`, { params: { cafeId } }),
 
   getOrderStats: (cafeId: string, period: 'day' | 'week' | 'month' | 'year') =>
     apiClient.get<ApiResponse<{ date: string; pending: number; preparing: number; ready: number; completed: number }[]>>(`/analytics/order-stats`, { params: { cafeId, period } }),

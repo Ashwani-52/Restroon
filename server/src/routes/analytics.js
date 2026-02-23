@@ -73,12 +73,79 @@ router.get('/top-products', authenticate, async (req, res) => {
 
 // GET /api/analytics/revenue-by-category?cafeId=xxx
 router.get('/revenue-by-category', authenticate, async (req, res) => {
-    res.json({ success: true, data: [] }); // stub
+    const { cafeId } = req.query;
+    try {
+        const orders = await Order.find({ cafe: cafeId, status: { $ne: 'cancelled' } });
+        const map = {};
+        orders.forEach(o => {
+            o.items.forEach(item => {
+                const catName = item.product?.category?.name || 'Uncategorized';
+                if (!map[catName]) map[catName] = { name: catName, value: 0 };
+                map[catName].value += (item.price * item.quantity);
+            });
+        });
+        res.json({ success: true, data: Object.values(map) });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
 });
 
-// GET /api/analytics/order-stats?cafeId=xxx&period=week
-router.get('/order-stats', authenticate, async (req, res) => {
-    res.json({ success: true, data: [] }); // stub
+// GET /api/analytics/hourly-patterns?cafeId=xxx
+router.get('/hourly-patterns', authenticate, async (req, res) => {
+    const { cafeId } = req.query;
+    try {
+        const orders = await Order.find({ cafe: cafeId, status: { $ne: 'cancelled' } });
+        const map = {};
+        // Initialize 24 hours
+        for (let i = 0; i < 24; i++) {
+            const label = i < 12 ? `${i === 0 ? 12 : i} AM` : `${i === 12 ? 12 : i - 12} PM`;
+            map[i] = { hour: label, orders: 0, revenue: 0, sortKey: i };
+        }
+
+        orders.forEach(o => {
+            const hour = new Date(o.createdAt).getHours();
+            if (map[hour]) {
+                map[hour].orders += 1;
+                map[hour].revenue += o.total;
+            }
+        });
+
+        res.json({ success: true, data: Object.values(map).sort((a, b) => a.sortKey - b.sortKey) });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// GET /api/analytics/customer-insights?cafeId=xxx
+router.get('/customer-insights', authenticate, async (req, res) => {
+    const { cafeId } = req.query;
+    try {
+        const orders = await Order.find({ cafe: cafeId, status: { $ne: 'cancelled' } });
+        const map = {};
+
+        orders.forEach(o => {
+            const key = o.customer?.phone || o.customer?.email || 'Guest';
+            if (!map[key]) {
+                map[key] = {
+                    name: o.customer?.name || 'Guest',
+                    contact: key,
+                    totalOrders: 0,
+                    totalSpent: 0,
+                    lastOrder: o.createdAt
+                };
+            }
+            map[key].totalOrders += 1;
+            map[key].totalSpent += o.total;
+            if (new Date(o.createdAt) > new Date(map[key].lastOrder)) {
+                map[key].lastOrder = o.createdAt;
+            }
+        });
+
+        const sorted = Object.values(map).sort((a, b) => b.totalSpent - a.totalSpent).slice(0, 10);
+        res.json({ success: true, data: sorted });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
 });
 
 // GET /api/analytics/platform (super admin)

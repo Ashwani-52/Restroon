@@ -52,35 +52,18 @@ const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'
 const Analytics: React.FC = () => {
   const { cafe } = useCafe();
   const [period, setPeriod] = useState<'day' | 'week' | 'month' | 'year'>('week');
-  const { stats, salesData, topProducts, isLoading } = useAnalytics({
+  const {
+    stats,
+    salesData,
+    topProducts,
+    revenueByCategory,
+    hourlyPatterns,
+    customerInsights,
+    isLoading
+  } = useAnalytics({
     cafeId: cafe?._id,
     period,
   });
-
-  // Mock data for revenue by category
-  const revenueByCategory = [
-    { name: 'Beverages', value: 45000 },
-    { name: 'Food', value: 35000 },
-    { name: 'Desserts', value: 15000 },
-    { name: 'Snacks', value: 10000 },
-  ];
-
-  // Mock data for hourly sales
-  const hourlySales = [
-    { hour: '8 AM', orders: 12, revenue: 2400 },
-    { hour: '9 AM', orders: 18, revenue: 3600 },
-    { hour: '10 AM', orders: 25, revenue: 5000 },
-    { hour: '11 AM', orders: 32, revenue: 6400 },
-    { hour: '12 PM', orders: 45, revenue: 9000 },
-    { hour: '1 PM', orders: 52, revenue: 10400 },
-    { hour: '2 PM', orders: 38, revenue: 7600 },
-    { hour: '3 PM', orders: 28, revenue: 5600 },
-    { hour: '4 PM', orders: 22, revenue: 4400 },
-    { hour: '5 PM', orders: 30, revenue: 6000 },
-    { hour: '6 PM', orders: 42, revenue: 8400 },
-    { hour: '7 PM', orders: 48, revenue: 9600 },
-    { hour: '8 PM', orders: 35, revenue: 7000 },
-  ];
 
   const statCards = [
     {
@@ -287,7 +270,7 @@ const Analytics: React.FC = () => {
             <CardContent>
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={hourlySales}>
+                  <BarChart data={hourlyPatterns}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                     <XAxis dataKey="hour" stroke="#6b7280" fontSize={12} />
                     <YAxis stroke="#6b7280" fontSize={12} />
@@ -351,7 +334,7 @@ const Analytics: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {revenueByCategory.map((category, index) => (
+                  {revenueByCategory.length > 0 ? revenueByCategory.map((category, index) => (
                     <div key={category.name} className="flex items-center gap-4">
                       <div
                         className="w-3 h-3 rounded-full"
@@ -366,14 +349,16 @@ const Analytics: React.FC = () => {
                           <div
                             className="h-full rounded-full"
                             style={{
-                              width: `${(category.value / revenueByCategory[0].value) * 100}%`,
+                              width: `${(category.value / (revenueByCategory[0]?.value || 1)) * 100}%`,
                               backgroundColor: COLORS[index % COLORS.length],
                             }}
                           />
                         </div>
                       </div>
                     </div>
-                  ))}
+                  )) : (
+                    <p className="text-center text-muted-foreground py-8">No category data available</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -421,15 +406,42 @@ const Analytics: React.FC = () => {
         <TabsContent value="customers" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Customer Insights</CardTitle>
-              <CardDescription>Coming soon - detailed customer analytics</CardDescription>
+              <CardTitle>Top Customers</CardTitle>
+              <CardDescription>Your most loyal patrons across all time</CardDescription>
             </CardHeader>
-            <CardContent className="py-12 text-center">
-              <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">Customer analytics feature is under development</p>
-              <p className="text-sm text-muted-foreground mt-2">
-                Track customer behavior, preferences, and loyalty metrics
-              </p>
+            <CardContent>
+              <div className="relative w-full overflow-auto">
+                <table className="w-full caption-bottom text-sm">
+                  <thead className="[&_tr]:border-b">
+                    <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                      <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Customer</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Contact</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Orders</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground text-right">Spent</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground text-right">Last Visit</th>
+                    </tr>
+                  </thead>
+                  <tbody className="[&_tr:last-child]:border-0">
+                    {customerInsights.map((customer, i) => (
+                      <tr key={i} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                        <td className="p-4 align-middle font-medium">{customer.name}</td>
+                        <td className="p-4 align-middle font-mono text-xs">{customer.contact}</td>
+                        <td className="p-4 align-middle">{customer.totalOrders}</td>
+                        <td className="p-4 align-middle text-right font-bold">₹{customer.totalSpent.toLocaleString()}</td>
+                        <td className="p-4 align-middle text-right text-muted-foreground">
+                          {new Date(customer.lastOrder).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {customerInsights.length === 0 && (
+                <div className="py-12 text-center">
+                  <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-20" />
+                  <p className="text-muted-foreground">No customer records yet</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

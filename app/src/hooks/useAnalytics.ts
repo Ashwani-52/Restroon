@@ -16,6 +16,9 @@ export const useAnalytics = (options: UseAnalyticsOptions = {}) => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [salesData, setSalesData] = useState<SalesData[]>([]);
   const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
+  const [revenueByCategory, setRevenueByCategory] = useState<{ name: string; value: number }[]>([]);
+  const [hourlyPatterns, setHourlyPatterns] = useState<{ hour: string; orders: number; revenue: number }[]>([]);
+  const [customerInsights, setCustomerInsights] = useState<{ name: string; contact: string; totalOrders: number; totalSpent: number; lastOrder: string }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -66,12 +69,51 @@ export const useAnalytics = (options: UseAnalyticsOptions = {}) => {
     }
   }, [cafeId]);
 
+  const fetchRevenueByCategory = useCallback(async () => {
+    if (!cafeId) return;
+    try {
+      const response = await analyticsApi.getRevenueByCategory(cafeId);
+      if (response.data.success) {
+        setRevenueByCategory(response.data.data);
+      }
+    } catch (err) {
+      console.error('Fetch revenue by category error:', err);
+    }
+  }, [cafeId]);
+
+  const fetchHourlyPatterns = useCallback(async () => {
+    if (!cafeId) return;
+    try {
+      const response = await analyticsApi.getHourlyPatterns(cafeId);
+      if (response.data.success) {
+        setHourlyPatterns(response.data.data);
+      }
+    } catch (err) {
+      console.error('Fetch hourly patterns error:', err);
+    }
+  }, [cafeId]);
+
+  const fetchCustomerInsights = useCallback(async () => {
+    if (!cafeId) return;
+    try {
+      const response = await analyticsApi.getCustomerInsights(cafeId);
+      if (response.data.success) {
+        setCustomerInsights(response.data.data);
+      }
+    } catch (err) {
+      console.error('Fetch customer insights error:', err);
+    }
+  }, [cafeId]);
+
   // Initial fetch
   useEffect(() => {
     fetchStats();
     fetchSalesData();
     fetchTopProducts();
-  }, [fetchStats, fetchSalesData, fetchTopProducts]);
+    fetchRevenueByCategory();
+    fetchHourlyPatterns();
+    fetchCustomerInsights();
+  }, [fetchStats, fetchSalesData, fetchTopProducts, fetchRevenueByCategory, fetchHourlyPatterns, fetchCustomerInsights]);
 
   // Real-time synchronization via WebSockets
   useSocketEvent('new-order', (order) => {
@@ -79,8 +121,11 @@ export const useAnalytics = (options: UseAnalyticsOptions = {}) => {
       fetchStats();
       fetchSalesData();
       fetchTopProducts();
+      fetchRevenueByCategory();
+      fetchHourlyPatterns();
+      fetchCustomerInsights();
     }
-  }, [cafeId, fetchStats, fetchSalesData, fetchTopProducts]);
+  }, [cafeId, fetchStats, fetchSalesData, fetchTopProducts, fetchRevenueByCategory, fetchHourlyPatterns, fetchCustomerInsights]);
 
   useSocketEvent('order-update', (order) => {
     if (order && order.cafe === cafeId) {
@@ -111,6 +156,9 @@ export const useAnalytics = (options: UseAnalyticsOptions = {}) => {
     stats,
     salesData,
     topProducts,
+    revenueByCategory,
+    hourlyPatterns,
+    customerInsights,
     isLoading,
     error,
     fetchStats,
