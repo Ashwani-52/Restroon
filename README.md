@@ -1,4 +1,4 @@
-# SmartOrder (App + Server)
+# Restroon (App + Server)
 
 This repo contains:
 
