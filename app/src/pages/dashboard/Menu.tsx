@@ -1,4 +1,4 @@
-// OrderSmartly - Menu Management Page
+// Restroon - Menu Management Page
 import React, { useState, useRef } from 'react';
 import { useCafe } from '@/context/CafeContext';
 import { useMenu } from '@/hooks/useMenu';

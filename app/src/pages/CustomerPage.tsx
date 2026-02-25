@@ -1,4 +1,4 @@
-// OrderSmartly - Customer Page
+// Restroon - Customer Page
 import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import type { Cafe } from '@/types';
@@ -7,7 +7,8 @@ import Storefront from '@/components/customer/Storefront';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Zap, LogOut, LayoutDashboard, User } from 'lucide-react';
+import { Logo } from '@/components/common/Logo';
+import { LogOut, LayoutDashboard, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const CustomerPage: React.FC = () => {
@@ -21,13 +22,10 @@ const CustomerPage: React.FC = () => {
             <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                 <div className="container flex h-14 items-center justify-between px-4 md:px-6 max-w-5xl mx-auto">
                     <div
-                        className="flex items-center gap-2 cursor-pointer"
+                        className="flex items-center cursor-pointer"
                         onClick={() => setSelectedCafe(null)}
                     >
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                            <Zap className="h-5 w-5 text-primary-foreground" />
-                        </div>
-                        <span className="font-bold">OrderSmartly</span>
+                        <Logo height="h-40" />
                     </div>
 
                     <div className="flex items-center gap-4">

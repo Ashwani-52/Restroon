@@ -19,7 +19,7 @@ router.get('/dashboard', authenticate, async (req, res) => {
         Inventory.countDocuments({ cafe: cafeId, $expr: { $lte: ['$currentStock', '$minStock'] } }),
         Order.distinct('customer.phone', { cafe: cafeId, status: { $ne: 'cancelled' } })
     ]);
-
+    //Linear Scan
     const totalRevenue = allOrders.filter(o => o.status !== 'cancelled').reduce((s, o) => s + o.total, 0);
     const todayRevenue = todayOrders.filter(o => o.status !== 'cancelled').reduce((s, o) => s + o.total, 0);
 
@@ -37,7 +37,7 @@ router.get('/dashboard', authenticate, async (req, res) => {
         }
     });
 });
-
+//REVENUE TRENDS - Filter orders by time range
 // GET /api/analytics/sales?cafeId=xxx&period=week
 router.get('/sales', authenticate, async (req, res) => {
     const { cafeId, period = 'week' } = req.query;
@@ -46,13 +46,23 @@ router.get('/sales', authenticate, async (req, res) => {
 
     const orders = await Order.find({ cafe: cafeId, createdAt: { $gte: from }, status: { $ne: 'cancelled' } });
     // Group by date
+
+    //HASHMAP
+
+    //Hash Table / Dictionary
+    // Key–Value mapping
+    // Frequency counting
+    // Grouping algorithm
     const map = {};
     orders.forEach(o => {
         const d = o.createdAt.toISOString().split('T')[0];
+        //REVENUE TRENDS - HashMap Aggregation
         if (!map[d]) map[d] = { date: d, revenue: 0, orders: 0 };
         map[d].revenue += o.total;
         map[d].orders += 1;
     });
+    //Sorting
+    //QuickSort / TimSort (engine-dependent)
     res.json({ success: true, data: Object.values(map).sort((a, b) => a.date.localeCompare(b.date)) });
 });
 

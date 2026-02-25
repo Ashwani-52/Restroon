@@ -1,4 +1,4 @@
-// OrderSmartly - Analytics Dashboard Page
+// Restroon - Analytics Dashboard Page
 import React, { useState } from 'react';
 import { useCafe } from '@/context/CafeContext';
 import { useAnalytics } from '@/hooks/useAnalytics';

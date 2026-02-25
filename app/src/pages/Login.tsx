@@ -1,4 +1,4 @@
-// OrderSmartly - Login Page (Google OAuth Enabled)
+// Restroon - Login Page (Google OAuth Enabled)
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -10,7 +10,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Zap, Coffee, ArrowRight, Chrome, Shield, Store, User } from 'lucide-react';
+import { Logo } from '@/components/common/Logo';
+import { Eye, EyeOff, Coffee, ArrowRight, Chrome, Shield, Store, User, Zap } from 'lucide-react';
 import type { UserRole } from '@/types';
 
 // Google OAuth Script Loader
@@ -139,19 +140,13 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted p-4">
+    <div className="min-h-screen flex flex-col items-center justify-start bg-gradient-to-br from-background via-background to-muted p-4 pt-2 md:pt-4">
       <div className="w-full max-w-md">
         {/* Logo */}
-        <div className="flex justify-center mb-8">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/25">
-              <Zap className="h-7 w-7 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">OrderSmartly</h1>
-              <p className="text-sm text-muted-foreground">Café Management Simplified</p>
-            </div>
-          </div>
+        <div className="flex justify-center -mb-6 leading-none relative z-10">
+          <Logo
+            height="h-64"
+          />
         </div>
 
         <Card className="border shadow-xl">

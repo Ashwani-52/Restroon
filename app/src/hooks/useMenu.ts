@@ -1,4 +1,4 @@
-// OrderSmartly - Menu Hook
+// Restroon - Menu Hook
 import { useState, useEffect, useCallback } from 'react';
 import { categoryApi, productApi } from '@/services/api';
 import { useSocketEvent } from '@/context/SocketContext';

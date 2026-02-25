@@ -1,4 +1,4 @@
-// OrderSmartly - Inventory Management Page
+// Restroon - Inventory Management Page
 import React, { useState } from 'react';
 import { useCafe } from '@/context/CafeContext';
 import { useInventory } from '@/hooks/useInventory';

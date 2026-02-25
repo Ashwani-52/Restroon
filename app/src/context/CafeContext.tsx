@@ -1,4 +1,4 @@
-// OrderSmartly - Cafe Context for Managing Current Cafe State
+// Restroon - Cafe Context for Managing Current Cafe State
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { cafeApi } from '@/services/api';
 import { useAuth } from './AuthContext';

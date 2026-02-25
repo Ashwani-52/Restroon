@@ -1,4 +1,4 @@
-// OrderSmartly - Dashboard Layout
+// Restroon - Dashboard Layout
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import EditCafeModal from '@/components/dashboard/EditCafeModal';
+import { Logo } from '@/components/common/Logo';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -127,11 +128,8 @@ const DashboardLayout: React.FC = () => {
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex w-64 flex-col border-r bg-card">
         {/* Logo */}
-        <div className="flex h-16 items-center gap-2 border-b px-6">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <Zap className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <span className="text-lg font-bold">OrderSmartly</span>
+        <div className="flex h-16 items-center border-b px-6">
+          <Logo height="h-40" />
         </div>
 
         {/* Cafe Info */}
@@ -188,11 +186,8 @@ const DashboardLayout: React.FC = () => {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-64 p-0">
-              <div className="flex h-16 items-center gap-2 border-b px-6">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                  <Zap className="h-5 w-5 text-primary-foreground" />
-                </div>
-                <span className="text-lg font-bold">OrderSmartly</span>
+              <div className="flex h-16 items-center border-b px-6">
+                <Logo height="h-40" />
               </div>
               <div className="p-4">
                 <NavContent />

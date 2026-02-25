@@ -1,4 +1,4 @@
-// OrderSmartly - API Service Layer (Backend-Aligned)
+// Restroon - API Service Layer (Backend-Aligned)
 import axios, { type AxiosInstance, type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import type {
   ApiResponse,

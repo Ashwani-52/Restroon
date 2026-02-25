@@ -1,4 +1,4 @@
-// OrderSmartly - Type Definitions
+// Restroon - Type Definitions
 
 // ==================== USER TYPES ====================
 export type UserRole = 'super_admin' | 'cafe_owner' | 'customer';

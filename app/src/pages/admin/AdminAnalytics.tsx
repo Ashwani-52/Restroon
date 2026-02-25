@@ -1,4 +1,4 @@
-// OrderSmartly - Admin Analytics Page
+// Restroon - Admin Analytics Page
 import React, { useState, useEffect } from 'react';
 import { analyticsApi } from '@/services/api';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';

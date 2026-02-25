@@ -1,4 +1,4 @@
-// OrderSmartly - Main App Component
+// Restroon - Main App Component
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
@@ -39,7 +39,7 @@ import Payments from '@/pages/dashboard/Payments';
 // Placeholder components for pages not yet implemented
 const Onboarding = () => (
   <div className="flex flex-col items-center justify-center h-[60vh]">
-    <h2 className="text-2xl font-bold mb-2">Welcome to OrderSmartly!</h2>
+    <h2 className="text-2xl font-bold mb-2">Welcome to Restroon!</h2>
     <p className="text-muted-foreground">Onboarding flow coming soon</p>
   </div>
 );

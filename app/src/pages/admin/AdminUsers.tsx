@@ -1,4 +1,4 @@
-// OrderSmartly - Admin Users Management
+// Restroon - Admin Users Management
 import React, { useState, useEffect } from 'react';
 import { userApi } from '@/services/api';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';

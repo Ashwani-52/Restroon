@@ -1,4 +1,4 @@
-// OrderSmartly - Super Admin Dashboard
+// Restroon - Super Admin Dashboard
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { usePlatformAnalytics } from '@/hooks/useAnalytics';

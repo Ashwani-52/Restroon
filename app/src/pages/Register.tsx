@@ -1,4 +1,4 @@
-// OrderSmartly - Register Page
+// Restroon - Register Page
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -10,7 +10,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Spinner } from '@/components/ui/spinner';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Zap, Coffee, Store, User, ArrowRight, Check, Shield } from 'lucide-react';
+import { Logo } from '@/components/common/Logo';
+import { Eye, EyeOff, Coffee, Store, User, ArrowRight, Check, Shield } from 'lucide-react';
 import type { UserRole } from '@/types';
 
 const Register: React.FC = () => {
@@ -128,16 +129,11 @@ const Register: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted p-4">
       <div className="w-full max-w-lg">
         {/* Logo */}
-        <div className="flex justify-center mb-8">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/25">
-              <Zap className="h-7 w-7 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">OrderSmartly</h1>
-              <p className="text-sm text-muted-foreground">Café Management Simplified</p>
-            </div>
-          </div>
+        <div className="flex justify-center mb-2">
+          <Logo
+            className="gap-3"
+            height="h-40"
+          />
         </div>
 
         <Card className="border shadow-xl">

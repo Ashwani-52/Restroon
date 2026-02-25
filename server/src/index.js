@@ -95,7 +95,7 @@ app.use('/api/admin/subscriptions', subscriptionsRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
-    res.json({ success: true, message: 'OrderSmartly API is running', timestamp: new Date() });
+    res.json({ success: true, message: 'Restroon API is running', timestamp: new Date() });
 });
 
 // 404 handler
@@ -112,7 +112,7 @@ const PORT = process.env.PORT || 5050;
 const start = async () => {
     await connectDB();
     server.listen(PORT, '0.0.0.0', () => {
-        console.log(`🚀 OrderSmartly API running on http://localhost:${PORT}`);
+        console.log(`🚀 Restroon API running on http://localhost:${PORT}`);
         console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
     });
 };

@@ -1,4 +1,4 @@
-// OrderSmartly - Admin Cafes Management
+// Restroon - Admin Cafes Management
 import React, { useState, useEffect } from 'react';
 import { cafeApi } from '@/services/api';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';

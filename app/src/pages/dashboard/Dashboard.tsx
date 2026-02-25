@@ -1,4 +1,4 @@
-// OrderSmartly - Café Owner Dashboard
+// Restroon - Café Owner Dashboard
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useCafe } from '@/context/CafeContext';
@@ -138,7 +138,7 @@ const Dashboard: React.FC = () => {
               <Store className="h-8 w-8 text-primary" />
             </div>
             <div className="space-y-2 max-w-lg mx-auto">
-              <h2 className="text-2xl font-bold tracking-tight">Welcome to OrderSmartly!</h2>
+              <h2 className="text-2xl font-bold tracking-tight">Welcome to Restroon!</h2>
               <p className="text-muted-foreground">
                 You're just one step away from managing your orders digitally.
                 Get started by creating your Café Profile. This will allow customers to find you and place orders.

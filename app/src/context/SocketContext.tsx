@@ -1,4 +1,4 @@
-// OrderSmartly - Socket.IO Context (Backend-Aligned with Cafe Rooms)
+// Restroon - Socket.IO Context (Backend-Aligned with Cafe Rooms)
 import React, { createContext, useContext, useEffect, useRef, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';

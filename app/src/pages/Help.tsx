@@ -90,7 +90,7 @@ const Help: React.FC = () => {
             <Card>
                 <CardHeader>
                     <CardTitle>Frequently Asked Questions</CardTitle>
-                    <CardDescription>Quick answers to common questions about OrderSmartly.</CardDescription>
+                    <CardDescription>Quick answers to common questions about Restroon.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Accordion type="single" collapsible className="w-full">

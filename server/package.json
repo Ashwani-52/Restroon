@@ -1,7 +1,7 @@
 {
     "name": "server",
     "version": "1.0.0",
-    "description": "OrderSmartly Backend - Express.js + MongoDB",
+    "description": "Restroon Backend - Express.js + MongoDB",
     "main": "src/index.js",
     "type": "commonjs",
     "scripts": {

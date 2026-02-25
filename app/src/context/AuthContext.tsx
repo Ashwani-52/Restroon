@@ -1,4 +1,4 @@
-// OrderSmartly - Authentication Context (Google OAuth Aligned)
+// Restroon - Authentication Context (Google OAuth Aligned)
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '@/services/api';

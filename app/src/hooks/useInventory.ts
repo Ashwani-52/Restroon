@@ -1,4 +1,4 @@
-// OrderSmartly - Inventory Hook
+// Restroon - Inventory Hook
 import { useState, useEffect, useCallback } from 'react';
 import { inventoryApi } from '@/services/api';
 import { useSocketEvent } from '@/context/SocketContext';
