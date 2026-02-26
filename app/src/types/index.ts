@@ -238,6 +238,9 @@ export interface PlatformStats {
   totalUsers: number;
   totalOrders: number;
   totalRevenue: number;
+  activeCafes?: number;
+  activeSubscriptions?: number;
+  pendingSubscriptions?: number;
 }
 
 // ==================== NOTIFICATION TYPES ====================
