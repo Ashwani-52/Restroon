@@ -1,0 +1,31 @@
+{
+    "rewrites": [
+        {
+            "source": "/api/:path*",
+            "destination": "https://restroon.onrender.com/api/:path*"
+        },
+        {
+            "source": "/uploads/:path*",
+            "destination": "https://restroon.onrender.com/uploads/:path*"
+        },
+        {
+            "source": "/socket.io/:path*",
+            "destination": "https://restroon.onrender.com/socket.io/:path*"
+        },
+        {
+            "source": "/(.*)",
+            "destination": "/index.html"
+        }
+    ],
+    "headers": [
+        {
+            "source": "/(.*)",
+            "headers": [
+                {
+                    "key": "Cross-Origin-Opener-Policy",
+                    "value": "unsafe-none"
+                }
+            ]
+        }
+    ]
+}
