@@ -102,7 +102,7 @@ apiClient.interceptors.response.use(
 export const authApi = {
   // Google OAuth Login
   googleLogin: (idToken: string, role?: string) =>
-    apiClient.post<ApiResponse<AuthResponse>>('/auth/google-login', { idToken, role }),
+    apiClient.post<ApiResponse<AuthResponse>>('/auth/google/callback', { idToken, role }),
 
   // Traditional login (fallback)
   login: (email: string, password: string, role?: string) =>

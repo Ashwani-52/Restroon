@@ -7,8 +7,8 @@ const { authenticate, generateTokens } = require('../middleware/auth');
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-// ============ POST /api/auth/google-login ============
-router.post('/google-login', async (req, res) => {
+// ============ POST /api/auth/google/callback ============
+router.post('/google/callback', async (req, res) => {
     try {
         const { idToken, role } = req.body;
         if (!idToken) return res.status(400).json({ success: false, message: 'idToken is required' });

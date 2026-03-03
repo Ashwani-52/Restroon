@@ -98,7 +98,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         completed: 'Order completed',
         cancelled: 'Order was cancelled',
       };
-      
+
       toast.info(statusMessages[orderData.status] || `Order status: ${orderData.status}`, {
         description: `Order #${orderData.orderNumber}`,
       });
@@ -115,9 +115,12 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         description: data.error,
       });
     });
-
+    //LOW STOCK ALERT
+    //Queue concept
     socket.on('inventory-update', (item: unknown) => {
       const itemData = item as { name: string; currentStock: number; unit: string; minStock: number };
+      //Decision Making – Greedy Logic
+      //Object / Record Access (Hash Map concept)
       if (itemData.currentStock <= itemData.minStock) {
         toast.warning(`Low stock alert: ${itemData.name}`, {
           description: `Current stock: ${itemData.currentStock} ${itemData.unit}`,
@@ -211,12 +214,12 @@ export const useSocketEvent = (event: string, callback: (...args: any[]) => void
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     socket.on(event as any, callback as any);
-    
+
     return () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       socket.off(event as any, callback as any);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socket, event, ...deps]);
 };
 
