@@ -29,8 +29,7 @@ const server = http.createServer(app);
 const ALLOWED_ORIGINS = [
     'http://localhost:5173',
     'http://localhost:5174',
-    'https://restroon-app.vercel.app',
-    process.env.FRONTEND_URL,
+    ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map(url => url.trim()) : []),
 ].filter(Boolean);
 
 const io = new Server(server, {
