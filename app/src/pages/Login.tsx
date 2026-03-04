@@ -64,6 +64,7 @@ const Login: React.FC = () => {
             callback: handleGoogleResponse,
             auto_select: false,
             cancel_on_tap_outside: true,
+            use_fedcm_for_prompt: true,
           });
 
           window.google.accounts.id.renderButton(
@@ -71,7 +72,7 @@ const Login: React.FC = () => {
             {
               theme: 'outline',
               size: 'large',
-              width: '100%',
+              width: 400,
               text: 'signin_with'
             }
           );

@@ -1,4 +1,10 @@
 {
+    "build": {
+        "env": {
+            "VITE_API_URL": "/api",
+            "VITE_GOOGLE_CLIENT_ID": "1004456199614-8vegnqihe75guo32r96fnf6h88cnmcgm.apps.googleusercontent.com"
+        }
+    },
     "rewrites": [
         {
             "source": "/api/:path*",
@@ -23,7 +29,7 @@
             "headers": [
                 {
                     "key": "Cross-Origin-Opener-Policy",
-                    "value": "unsafe-none"
+                    "value": "same-origin-allow-popups"
                 }
             ]
         }
