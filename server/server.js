@@ -49,6 +49,10 @@ app.use('/api/subscription', subscriptionRoutes);
 
 app.get('/ping', (req, res) => res.status(200).json({ success: true, message: 'pong' }));
 
+app.get('/health', (req, res) => {
+    res.status(200).send("Restroon backend is alive");
+});
+
 app.use((req, res) => res.status(404).json({ success: false, message: 'Route not found' }));
 app.use(errorHandler);
 
