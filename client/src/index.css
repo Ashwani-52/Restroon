@@ -1,0 +1,154 @@
+@import url('https://fonts.googleapis.com/css2?family=Bangers&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    --yellow: #FFD23F;
+    --red: #FF3B30;
+    --orange: #FF6B35;
+    --black: #1A1A1A;
+    --white: #FAFAF8;
+    --cream: #FFF8E7;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Space Grotesk', sans-serif;
+    background: var(--cream);
+    color: var(--black);
+    overflow-x: hidden;
+}
+
+/* ── Retro Grid Background ── */
+.retro-grid {
+    background-color: var(--cream);
+    background-image:
+        linear-gradient(rgba(26, 26, 26, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(26, 26, 26, 0.08) 1px, transparent 1px);
+    background-size: 40px 40px;
+}
+
+/* ── Stripe Animation ── */
+.stripe-bg {
+    background: repeating-linear-gradient(-45deg,
+            var(--yellow),
+            var(--yellow) 20px,
+            var(--orange) 20px,
+            var(--orange) 40px);
+    background-size: 200% 200%;
+    animation: stripeMove 4s linear infinite;
+}
+
+@keyframes stripeMove {
+    0% {
+        background-position: 0 0;
+    }
+
+    100% {
+        background-position: 100px 100px;
+    }
+}
+
+/* ── Float Animation ── */
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+.float {
+    animation: float 3s ease-in-out infinite;
+}
+
+/* ── Bounce Border ── */
+.cartoon-border {
+    border: 3px solid var(--black);
+    box-shadow: 6px 6px 0 var(--black);
+    transition: all 0.15s ease;
+}
+
+.cartoon-border:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 9px 9px 0 var(--black);
+}
+
+/* ── Marquee ── */
+@keyframes marquee {
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(calc(-100% - 1rem));
+    }
+}
+
+@keyframes marquee-vertical {
+    from {
+        transform: translateY(0);
+    }
+
+    to {
+        transform: translateY(calc(-100% - 1rem));
+    }
+}
+
+.animate-marquee {
+    animation: marquee 40s linear infinite;
+}
+
+.animate-marquee-vertical {
+    animation: marquee-vertical 40s linear infinite;
+}
+
+/* ── Typewriter cursor ── */
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
+}
+
+.cursor {
+    animation: blink 1s step-end infinite;
+}
+
+/* ── Star pop ── */
+@keyframes starPop {
+    0% {
+        transform: scale(0) rotate(0deg);
+        opacity: 0;
+    }
+
+    60% {
+        transform: scale(1.3) rotate(20deg);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+.star-pop {
+    animation: starPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
