@@ -3,7 +3,18 @@ import { useState, useEffect } from 'react';
 import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import api from '../../../services/api';
 import { CartoonButton } from '../../../components/ui/CartoonButton';
-import { GlobeStickers } from '../../../components/ui/GlobeStickers';
+
+// Default trends if API fails
+const defaultTrends = [
+    { name: 'Biryani', emoji: '🍛', score: 95, change: '+12%', growing: true, insight: 'Highest ordered dish across all cities' },
+    { name: 'Momos', emoji: '🥟', score: 88, change: '+18%', growing: true, insight: 'Trending heavily in North India' },
+    { name: 'South Indian', emoji: '🍜', score: 82, change: '+8%', growing: true, insight: 'Dosa & idli seeing peak demand' },
+    { name: 'Chai & Snacks', emoji: '☕', score: 78, change: '+5%', growing: true, insight: 'Evening orders spiking 40%' },
+    { name: 'Healthy Bowls', emoji: '🥗', score: 71, change: '+22%', growing: true, insight: 'Fastest growing category in 2025' },
+    { name: 'Pizza', emoji: '🍕', score: 65, change: '-3%', growing: false, insight: 'Slight dip but still top 6' },
+    { name: 'Rolls & Wraps', emoji: '🌯', score: 60, change: '+9%', growing: true, insight: 'Quick lunch favourite' },
+    { name: 'Chinese', emoji: '🍜', score: 55, change: '-5%', growing: false, insight: 'Losing to South Indian options' },
+];
 
 // Replace AdminStats function in AdminDashboard.jsx
 import {
