@@ -1,12 +1,11 @@
 // src/components/landing/HeroSection.jsx
-import { useState, useEffect, Suspense, lazy } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ComicText } from '../ui/ComicText';
 import { CartoonButton } from '../ui/CartoonButton';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-
-const Spline = lazy(() => import('@splinetool/react-spline'));
+import AnimatedHeroScene from './AnimatedHeroScene';
 
 function useIsMobile() {
     const [isMobile, setIsMobile] = useState(false);
@@ -17,25 +16,6 @@ function useIsMobile() {
         return () => window.removeEventListener('resize', check);
     }, []);
     return isMobile;
-}
-
-function SplineLoader() {
-    return (
-        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-sky-200 to-green-200">
-            <div className="text-center">
-                <div className="text-6xl mb-3 animate-bounce">🛵</div>
-                <div className="w-48 h-3 bg-ink/20 rounded-full mx-auto overflow-hidden">
-                    <motion.div
-                        className="h-full bg-orange rounded-full"
-                        initial={{ width: '0%' }}
-                        animate={{ width: '100%' }}
-                        transition={{ duration: 3, ease: 'easeInOut' }}
-                    />
-                </div>
-                <p className="font-bangers text-ink mt-2">Loading Animation...</p>
-            </div>
-        </div>
-    );
 }
 
 function MobileHeroAnimation() {
@@ -351,13 +331,8 @@ export default function HeroSection() {
                                 // ── Mobile: Lightweight CSS Animation ──
                                 <MobileHeroAnimation />
                             ) : (
-                                // ── Desktop: Full Spline Scene ──
-                                <Suspense fallback={<SplineLoader />}>
-                                    <Spline
-                                        scene="https://prod.spline.design/f185ed77-4846-48bf-a06a-99cae9854985/scene.splinecode"
-                                        style={{ width: '100%', height: '100%' }}
-                                    />
-                                </Suspense>
+                                // ── Desktop: Canvas Frame Animation ──
+                                <AnimatedHeroScene />
                             )}
                         </div>
                     </div>
