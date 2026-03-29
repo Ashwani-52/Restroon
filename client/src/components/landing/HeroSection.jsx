@@ -1,11 +1,123 @@
 // src/components/landing/HeroSection.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense, lazy } from 'react';
 import { motion } from 'framer-motion';
 import { ComicText } from '../ui/ComicText';
 import { CartoonButton } from '../ui/CartoonButton';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import AnimatedHeroScene from './AnimatedHeroScene';
+
+const Spline = lazy(() => import('@splinetool/react-spline'));
+
+function useIsMobile() {
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+        const check = () => setIsMobile(window.innerWidth < 1024);
+        check();
+        window.addEventListener('resize', check);
+        return () => window.removeEventListener('resize', check);
+    }, []);
+    return isMobile;
+}
+
+function SplineLoader() {
+    return (
+        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-sky-200 to-green-200">
+            <div className="text-center">
+                <div className="text-6xl mb-3 animate-bounce">🛵</div>
+                <div className="w-48 h-3 bg-ink/20 rounded-full mx-auto overflow-hidden">
+                    <motion.div
+                        className="h-full bg-orange rounded-full"
+                        initial={{ width: '0%' }}
+                        animate={{ width: '100%' }}
+                        transition={{ duration: 3, ease: 'easeInOut' }}
+                    />
+                </div>
+                <p className="font-bangers text-ink mt-2">Loading Animation...</p>
+            </div>
+        </div>
+    );
+}
+
+function MobileHeroAnimation() {
+    const menuItems = [
+        { emoji: '🍕', name: 'Margherita Pizza', price: '₹199', color: 'bg-yellow' },
+        { emoji: '🍔', name: 'Smash Burger', price: '₹149', color: 'bg-orange' },
+        { emoji: '☕', name: 'Masala Chai', price: '₹30', color: 'bg-yellow' },
+        { emoji: '🍛', name: 'Chicken Biryani', price: '₹249', color: 'bg-red' },
+        { emoji: '🥘', name: 'Dal Makhani', price: '₹180', color: 'bg-orange' },
+    ];
+
+    return (
+        <div className="w-full h-full bg-cream overflow-hidden relative">
+
+            {/* Cafe Header */}
+            <div className="bg-gradient-to-r from-yellow to-orange p-4 flex items-center gap-3">
+                <div className="w-12 h-12 bg-cream border-3 border-ink rounded-xl flex items-center justify-center text-2xl shadow-[2px_2px_0_#1A1A1A]">
+                    🏪
+                </div>
+                <div>
+                    <p className="font-bangers text-xl text-ink">CHAI WALA</p>
+                    <div className="flex items-center gap-2">
+                        <span className="bg-green-400 text-ink text-xs font-bangers px-2 py-0.5 rounded-full border border-ink">
+                            ✅ OPEN
+                        </span>
+                        <span className="font-mono text-xs text-ink/60">⭐ 4.8 • 2km</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* Menu Items — animated scroll */}
+            <div className="p-3 space-y-2 overflow-hidden">
+                <p className="font-bangers text-sm text-ink/60">🍽️ MENU</p>
+                {menuItems.map((item, i) => (
+                    <motion.div
+                        key={item.name}
+                        className={`${item.color} border-2 border-ink rounded-xl p-3 flex items-center justify-between shadow-[2px_2px_0_#1A1A1A]`}
+                        initial={{ opacity: 0, x: 60 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{
+                            delay: i * 0.15,
+                            duration: 0.4,
+                            ease: 'easeOut'
+                        }}
+                    >
+                        <div className="flex items-center gap-2">
+                            <span className="text-2xl">{item.emoji}</span>
+                            <span className="font-bangers text-sm text-ink">{item.name}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="font-bangers text-sm text-ink">{item.price}</span>
+                            <motion.button
+                                className="bg-ink text-cream text-xs font-bangers px-2 py-1 rounded-lg"
+                                whileTap={{ scale: 0.9 }}
+                                animate={{ scale: [1, 1.1, 1] }}
+                                transition={{ delay: i * 0.15 + 0.5, duration: 0.3 }}
+                            >
+                                +ADD
+                            </motion.button>
+                        </div>
+                    </motion.div>
+                ))}
+            </div>
+
+            {/* Order Button at bottom */}
+            <motion.div
+                className="absolute bottom-0 left-0 right-0 p-3 bg-cream border-t-2 border-ink"
+                initial={{ y: 100 }}
+                animate={{ y: 0 }}
+                transition={{ delay: 1.2, duration: 0.4 }}
+            >
+                <motion.button
+                    className="w-full bg-yellow border-3 border-ink rounded-xl py-3 font-bangers text-xl text-ink shadow-[3px_3px_0_#1A1A1A]"
+                    animate={{ scale: [1, 1.02, 1] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                    🛵 Place Order • ₹378
+                </motion.button>
+            </motion.div>
+        </div>
+    );
+}
 
 // ── Typewriter Hook ────────────────────────────
 function useTypewriter(words, speed = 80) {
@@ -40,6 +152,7 @@ function useTypewriter(words, speed = 80) {
 
 export default function HeroSection() {
     const { user } = useAuth();
+    const isMobile = useIsMobile();
     const typeText = useTypewriter([
         'Restaurant Online',
         'Cafe Digital',
@@ -232,8 +345,21 @@ export default function HeroSection() {
                             </span>
                         </div>
 
-                        {/* Animated Hero Scene */}
-                        <AnimatedHeroScene />
+                        {/* Content */}
+                        <div className="w-full h-[calc(100%-36px)]">
+                            {isMobile ? (
+                                // ── Mobile: Lightweight CSS Animation ──
+                                <MobileHeroAnimation />
+                            ) : (
+                                // ── Desktop: Full Spline Scene ──
+                                <Suspense fallback={<SplineLoader />}>
+                                    <Spline
+                                        scene="https://prod.spline.design/f185ed77-4846-48bf-a06a-99cae9854985/scene.splinecode"
+                                        style={{ width: '100%', height: '100%' }}
+                                    />
+                                </Suspense>
+                            )}
+                        </div>
                     </div>
 
                     {/* Floating Badge — Top Right */}

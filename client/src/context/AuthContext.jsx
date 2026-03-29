@@ -11,24 +11,36 @@ export function AuthProvider({ children }) {
     useEffect(() => {
         api.get('/api/auth/me')
             .then(r => setUser(r.data.user))
-            .catch(() => setUser(null))
+            .catch(() => {
+                setUser(null);
+                localStorage.removeItem('accessToken');
+            })
             .finally(() => setLoading(false));
     }, []);
 
     const login = async (email, password) => {
         const r = await api.post('/api/auth/login', { email, password });
+        if (r.data.accessToken) {
+            localStorage.setItem('accessToken', r.data.accessToken);
+        }
         setUser(r.data.user);
         return r.data.user;
     };
 
     const register = async (data) => {
         const r = await api.post('/api/auth/register', data);
+        if (r.data.accessToken) {
+            localStorage.setItem('accessToken', r.data.accessToken);
+        }
         setUser(r.data.user);
         return r.data.user;
     };
 
     const logout = async () => {
-        await api.post('/api/auth/logout');
+        try {
+            await api.post('/api/auth/logout');
+        } catch {}
+        localStorage.removeItem('accessToken');
         setUser(null);
     };
 

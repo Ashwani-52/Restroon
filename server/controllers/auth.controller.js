@@ -62,6 +62,7 @@ export const register = async (req, res) => {
         res.status(201).json({
             success: true,
             message: 'Registered successfully',
+            accessToken,
             user
         });
 
@@ -130,6 +131,7 @@ export const login = async (req, res) => {
         res.status(200).json({
             success: true,
             message: 'Logged in successfully',
+            accessToken,
             user
         });
 
@@ -177,7 +179,7 @@ export const logout = async (req, res) => {
 // ──────────────────────────────────────────
 export const refreshAccessToken = async (req, res) => {
     try {
-        const token = req.cookies?.refreshToken;
+        const token = req.cookies?.refreshToken || req.headers?.authorization?.replace('Bearer ', '');
 
         if (!token) {
             return res.status(401).json({
@@ -205,6 +207,7 @@ export const refreshAccessToken = async (req, res) => {
 
         res.status(200).json({
             success: true,
+            accessToken: newAccessToken,
             message: 'Token refreshed'
         });
 
