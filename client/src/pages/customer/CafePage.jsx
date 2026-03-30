@@ -21,7 +21,7 @@ export default function CafePage() {
     const [placedOrderId, setPlacedOrderId] = useState(null);
     const [paymentMethod, setPaymentMethod] = useState('online');
 
-    const { cart, cafeId, total, count, addToCart, clearCart } = useCart();
+    const { cart, cafeId, total, count, addToCart, updateQty, clearCart } = useCart();
     const { user } = useAuth();
     const navigate = useNavigate();
 
@@ -127,43 +127,54 @@ export default function CafePage() {
 
                     {/* Items */}
                     <div className="space-y-4">
-                        {filteredMenu.map(item => (
-                            <motion.div
-                                key={item._id}
-                                className="bg-cream border-3 border-ink rounded-2xl p-4 flex items-center gap-4 shadow-[4px_4px_0_#1A1A1A]"
-                                whileHover={{ x: 4 }}
-                            >
-                                <div className="w-20 h-20 bg-yellow rounded-xl border-2 border-ink flex-shrink-0 overflow-hidden">
-                                    {item.image
-                                        ? <img src={item.image} className="w-full h-full object-cover" alt="" />
-                                        : <div className="w-full h-full flex items-center justify-center text-3xl">🍽️</div>
-                                    }
-                                </div>
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <h3 className="font-bangers text-xl text-ink">{item.name}</h3>
-                                        <span className={`text-xs px-2 py-0.5 rounded-full border font-grotesk ${item.isVeg ? 'bg-green-100 border-green-500 text-green-700' : 'bg-red/10 border-red text-red'}`}>
-                                            {item.isVeg ? '🟢 Veg' : '🔴 Non-veg'}
-                                        </span>
-                                        {item.isBestSeller && <span className="bg-yellow border border-ink rounded-full px-2 py-0.5 font-bangers text-xs">⭐ BEST</span>}
+                        {filteredMenu.map(item => {
+                            const cartItem = cartItems.find(i => i.menuItem === item._id);
+                            return (
+                                <motion.div
+                                    key={item._id}
+                                    className="bg-cream border-3 border-ink rounded-2xl p-4 flex items-center gap-4 shadow-[4px_4px_0_#1A1A1A]"
+                                    whileHover={{ x: 4 }}
+                                >
+                                    <div className="w-20 h-20 bg-yellow rounded-xl border-2 border-ink flex-shrink-0 overflow-hidden">
+                                        {item.image
+                                            ? <img src={item.image} className="w-full h-full object-cover" alt="" />
+                                            : <div className="w-full h-full flex items-center justify-center text-3xl">🍽️</div>
+                                        }
                                     </div>
-                                    <p className="font-grotesk text-sm text-ink/70">{item.description}</p>
-                                    <div className="flex items-center justify-between mt-2">
-                                        <span className="font-bangers text-2xl text-orange">₹{item.price}</span>
-                                        {item.isAvailable ? (
-                                            <CartoonButton
-                                                label="+ Add"
-                                                color="bg-yellow"
-                                                size="sm"
-                                                onClick={() => addToCart(item, cafe._id)}
-                                            />
-                                        ) : (
-                                            <span className="font-grotesk text-sm text-ink/50 italic">Not available</span>
-                                        )}
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <h3 className="font-bangers text-xl text-ink">{item.name}</h3>
+                                            <span className={`text-xs px-2 py-0.5 rounded-full border font-grotesk ${item.isVeg ? 'bg-green-100 border-green-500 text-green-700' : 'bg-red/10 border-red text-red'}`}>
+                                                {item.isVeg ? '🟢 Veg' : '🔴 Non-veg'}
+                                            </span>
+                                            {item.isBestSeller && <span className="bg-yellow border border-ink rounded-full px-2 py-0.5 font-bangers text-xs">⭐ BEST</span>}
+                                        </div>
+                                        <p className="font-grotesk text-sm text-ink/70">{item.description}</p>
+                                        <div className="flex items-center justify-between mt-2">
+                                            <span className="font-bangers text-2xl text-orange">₹{item.price}</span>
+                                            {item.isAvailable ? (
+                                                cartItem ? (
+                                                    <div className="flex items-center gap-3 bg-yellow border-2 border-ink rounded-xl px-2">
+                                                        <button onClick={() => updateQty(item._id, cartItem.quantity - 1)} className="font-bangers text-xl px-2 py-1 hover:text-orange transition-colors">-</button>
+                                                        <span className="font-bangers text-xl w-4 text-center">{cartItem.quantity}</span>
+                                                        <button onClick={() => updateQty(item._id, cartItem.quantity + 1)} className="font-bangers text-xl px-2 py-1 hover:text-orange transition-colors">+</button>
+                                                    </div>
+                                                ) : (
+                                                    <CartoonButton
+                                                        label="+ Add"
+                                                        color="bg-yellow"
+                                                        size="sm"
+                                                        onClick={() => addToCart(item, cafe._id)}
+                                                    />
+                                                )
+                                            ) : (
+                                                <span className="font-grotesk text-sm text-ink/50 italic">Not available</span>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            </motion.div>
-                        ))}
+                                </motion.div>
+                            );
+                        })}
                     </div>
                 </div>
 

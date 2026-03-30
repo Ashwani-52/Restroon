@@ -43,7 +43,7 @@ router.get('/google/callback',
             const user = req.user;
 
             // ─── Generate tokens + set cookies ─────
-            const { refreshToken } = setTokenCookies(res, user);
+            const { accessToken, refreshToken } = setTokenCookies(res, user);
 
             // ─── Save refresh token in DB ───────────
             user.refreshToken = refreshToken;
@@ -56,7 +56,8 @@ router.get('/google/callback',
                 customer: `${process.env.CLIENT_URL}/cafes`
             };
 
-            res.redirect(redirectMap[user.role] || `${process.env.CLIENT_URL}/cafes`);
+            const redirectUrl = redirectMap[user.role] || `${process.env.CLIENT_URL}/cafes`;
+            res.redirect(`${redirectUrl}?token=${accessToken}`);
 
         } catch (err) {
             console.error('Google callback error:', err);

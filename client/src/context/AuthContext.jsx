@@ -13,6 +13,16 @@ export function AuthProvider({ children }) {
     if (hasFetched.current) return;
     hasFetched.current = true;
 
+    // Check URL for token first (from Google OAuth callback)
+    const params = new URLSearchParams(window.location.search);
+    const urlToken = params.get('token');
+    
+    if (urlToken) {
+        localStorage.setItem('accessToken', urlToken);
+        // Clean up URL without reloading
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     const token = localStorage.getItem('accessToken');
 
     // ─── If no token at all — don't even call API ─
