@@ -17,11 +17,13 @@ export default function CafePage() {
     const [loading, setLoading] = useState(true);
     const [ordering, setOrdering] = useState(false);
     const [address, setAddress] = useState({ street: '', city: '', pincode: '' });
-    const [orderType, setOrderType] = useState('delivery'); // delivery | dine_in
+    const [orderType, setOrderType] = useState('delivery');
     const [placedOrderId, setPlacedOrderId] = useState(null);
     const [paymentMethod, setPaymentMethod] = useState('online');
     const [customerName, setCustomerName] = useState('');
     const [customerPhone, setCustomerPhone] = useState('');
+    const [showSavePrompt, setShowSavePrompt] = useState(false); // save-address prompt
+    const [savedOrderId, setSavedOrderId] = useState(null);     // orderId after COD success
 
     const cartRef = useRef(null);
 
@@ -40,9 +42,18 @@ export default function CafePage() {
         }).finally(() => setLoading(false));
     }, [slug]);
 
-    // Pre-fill customer name from auth
+    // Pre-fill from user profile (phone + saved address)
     useEffect(() => {
-        if (user?.name) setCustomerName(user.name);
+        if (!user) return;
+        if (user.name) setCustomerName(user.name);
+        if (user.phone) setCustomerPhone(user.phone);
+        if (user.defaultAddress?.street || user.defaultAddress?.city) {
+            setAddress({
+                street: user.defaultAddress.street || '',
+                city:   user.defaultAddress.city   || '',
+                pincode: user.defaultAddress.pincode || ''
+            });
+        }
     }, [user]);
 
     const categories = ['All', ...new Set(menu.map(m => m.category))];
@@ -77,12 +88,36 @@ export default function CafePage() {
         try {
             const res = await api.post('/api/order', buildOrderPayload('cod'));
             clearCart();
-            navigate(`/order-confirmation/${res.data.order._id}`);
+            // Show save-address prompt if address was entered and not yet saved
+            const hasSavedAddr = user?.defaultAddress?.city;
+            if (orderType === 'delivery' && address.city && !hasSavedAddr) {
+                setSavedOrderId(res.data.order._id);
+                setShowSavePrompt(true);
+            } else {
+                navigate(`/order-confirmation/${res.data.order._id}`);
+            }
         } catch (err) {
             alert(err.response?.data?.message || 'Order failed');
         } finally {
             setOrdering(false);
         }
+    };
+
+    // ── Save address then navigate ─────────────────────────
+    const saveAddressAndNavigate = async () => {
+        try {
+            await api.put('/api/auth/profile', {
+                phone: customerPhone.trim(),
+                defaultAddress: address
+            });
+        } catch (_) { /* non-critical */ }
+        setShowSavePrompt(false);
+        navigate(`/order-confirmation/${savedOrderId}`);
+    };
+
+    const skipSaveAndNavigate = () => {
+        setShowSavePrompt(false);
+        navigate(`/order-confirmation/${savedOrderId}`);
     };
 
     // ── Create pending order for online payment ───────────
@@ -117,6 +152,43 @@ export default function CafePage() {
     return (
         <div className="min-h-screen retro-grid">
             <Navbar />
+
+            {/* ── Save-Address Modal ───────────────── */}
+            <AnimatePresence>
+                {showSavePrompt && (
+                    <motion.div
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 px-4"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                    >
+                        <motion.div
+                            className="bg-cream border-4 border-ink rounded-3xl p-6 max-w-sm w-full shadow-[8px_8px_0_#FF6B35]"
+                            initial={{ scale: 0.8, y: 40 }}
+                            animate={{ scale: 1, y: 0 }}
+                        >
+                            <h2 className="font-bangers text-2xl text-ink mb-2">📍 Save Address?</h2>
+                            <p className="font-grotesk text-sm text-ink/70 mb-4">
+                                Save <strong>{address.street}, {address.city}</strong> so you don't retype it next time.
+                            </p>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={saveAddressAndNavigate}
+                                    className="flex-1 py-2 bg-yellow border-2 border-ink rounded-xl font-bangers shadow-[2px_2px_0_#1A1A1A] hover:shadow-none transition-all"
+                                >
+                                    ✅ Save
+                                </button>
+                                <button
+                                    onClick={skipSaveAndNavigate}
+                                    className="flex-1 py-2 bg-cream border-2 border-ink rounded-xl font-bangers"
+                                >
+                                    Skip
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* ── Sticky Cart Icon (mobile only) ──────────── */}
             {count > 0 && (

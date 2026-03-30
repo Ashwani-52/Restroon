@@ -3,6 +3,7 @@ import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import Order from '../models/Order.model.js';
 import Cafe from '../models/Cafe.model.js';
+import { sendOrderSMSPair } from '../utils/sms.js';
 import { PLATFORM_FEE_PERCENT } from '../utils/constants.js';
 
 const razorpay = new Razorpay({
@@ -141,6 +142,11 @@ export const verifyPayment = async (req, res) => {
             message: 'Payment verified successfully',
             orderId: order._id
         });
+
+        // ─── Fire dual SMS for online payment (non-blocking) ───
+        sendOrderSMSPair(order, cafe).catch(err =>
+            console.error('[SMS] Online payment SMS error:', err.message)
+        );
 
     } catch (err) {
         console.error('Payment verification error:', err);

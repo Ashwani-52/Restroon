@@ -1,6 +1,7 @@
 import Order from '../models/Order.model.js';
 import Cafe from '../models/Cafe.model.js';
 import MenuItem from '../models/MenuItem.model.js';
+import { sendOrderSMSPair } from '../utils/sms.js';
 import {
     ORDER_STATUS,
     CAFE_STATUS
@@ -123,6 +124,13 @@ export const placeOrder = async (req, res) => {
             message: 'Order placed successfully',
             order
         });
+
+        // ─── Fire SMS pair for COD (non-blocking, after response sent) ───
+        if (isCOD) {
+            sendOrderSMSPair(order, cafe).catch(err =>
+                console.error('[SMS] COD SMS error:', err.message)
+            );
+        }
 
     } catch (err) {
         res.status(500).json({

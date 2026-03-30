@@ -69,7 +69,13 @@ const userSchema = new mongoose.Schema(
                     lng: { type: Number }
                 }
             }
-        ]
+        ],
+        // ─── Quick-access default address for checkout auto-fill ───
+        defaultAddress: {
+            street: { type: String, trim: true, default: '' },
+            city: { type: String, trim: true, default: '' },
+            pincode: { type: String, trim: true, default: '' }
+        }
     },
     { timestamps: true }
 );

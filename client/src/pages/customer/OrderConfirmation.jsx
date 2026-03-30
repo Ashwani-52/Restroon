@@ -16,24 +16,42 @@ const STATUS_LABELS = {
     delivered: '🎉 Delivered!'
 };
 
+// Cancellable only if in placed state
+const isCancellable = (status) => status === 'placed';
+const isPastPlaced = (status) => ['accepted', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'].includes(status);
+
 export default function OrderConfirmation() {
     const { orderId } = useParams();
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [cancelling, setCancelling] = useState(false);
 
     useEffect(() => {
         api.get(`/api/order/${orderId}`)
             .then(r => setOrder(r.data.order))
             .finally(() => setLoading(false));
 
-        // Poll every 15 seconds for status updates
+        // Poll every 10 seconds for live status updates
         const interval = setInterval(() => {
             api.get(`/api/order/${orderId}`)
                 .then(r => setOrder(r.data.order));
-        }, 15000);
+        }, 10000);
 
         return () => clearInterval(interval);
     }, [orderId]);
+
+    const handleCancel = async () => {
+        if (!window.confirm('Cancel this order?')) return;
+        setCancelling(true);
+        try {
+            const res = await api.post(`/api/order/${orderId}/cancel`);
+            setOrder(res.data.order); // update status to cancelled
+        } catch (err) {
+            alert(err.response?.data?.message || 'Cannot cancel order');
+        } finally {
+            setCancelling(false);
+        }
+    };
 
     if (loading) return (
         <div className="min-h-screen retro-grid flex items-center justify-center">
@@ -148,6 +166,45 @@ export default function OrderConfirmation() {
                                 <span className="font-bangers text-xl text-orange">₹{order?.totalAmount}</span>
                             </div>
                         </div>
+
+                        {/* ─── Conditional Cancel Button ─────────── */}
+                        {order?.status !== 'delivered' && order?.status !== 'cancelled' && (
+                            <div className="bg-cream border-3 border-ink rounded-2xl p-5 shadow-[4px_4px_0_#1A1A1A]">
+                                <h3 className="font-bangers text-xl text-ink mb-3">CANCEL ORDER</h3>
+
+                                {isCancellable(order?.status) ? (
+                                    // ━━ ACTIVE cancel button ━━
+                                    <>
+                                        <p className="font-grotesk text-sm text-ink/60 mb-3">
+                                            Still pending? You can cancel before the cafe accepts.
+                                        </p>
+                                        <button
+                                            onClick={handleCancel}
+                                            disabled={cancelling}
+                                            className="w-full py-3 bg-red text-cream font-bangers text-lg border-2 border-ink rounded-xl shadow-[3px_3px_0_#1A1A1A] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[3px] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            {cancelling ? '⏳ Cancelling...' : '❌ Cancel Order'}
+                                        </button>
+                                    </>
+                                ) : (
+                                    // ━━ DISABLED state after accepted/preparing+ ━━
+                                    <div className="flex items-center gap-3 bg-orange/10 border-2 border-orange rounded-xl p-3">
+                                        <span className="text-2xl">🍳</span>
+                                        <p className="font-grotesk text-sm text-ink">
+                                            <strong>Food is being prepared</strong> — cancellation is no longer available.
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Cancelled state badge */}
+                        {order?.status === 'cancelled' && (
+                            <div className="bg-red/10 border-2 border-red rounded-2xl p-4 text-center">
+                                <p className="font-bangers text-2xl text-red">❌ ORDER CANCELLED</p>
+                                <p className="font-grotesk text-sm text-ink/60 mt-1">Your order has been cancelled.</p>
+                            </div>
+                        )}
 
                         <Link to="/cafes">
                             <CartoonButton label="🍕 Order More Food" color="bg-yellow" size="lg" />

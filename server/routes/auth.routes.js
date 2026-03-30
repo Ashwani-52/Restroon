@@ -7,6 +7,7 @@ import {
     refreshAccessToken,
     getMe
 } from '../controllers/auth.controller.js';
+import { updateProfile, getProfile } from '../controllers/user.controller.js';
 import { protect } from '../middleware/auth.middleware.js';
 import { setTokenCookies } from '../utils/generateToken.js';
 import User from '../models/User.model.js';
@@ -19,6 +20,10 @@ router.post('/login', login);
 router.post('/logout', protect, logout);
 router.post('/refresh', refreshAccessToken);
 router.get('/me', protect, getMe);
+
+// ─── Profile (address + phone save/load) ───
+router.get('/profile', protect, getProfile);
+router.put('/profile', protect, updateProfile);
 
 // ─── Google OAuth ───────────────────────────
 router.get('/google', (req, res, next) => {
