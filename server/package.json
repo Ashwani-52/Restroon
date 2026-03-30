@@ -25,7 +25,8 @@
     "nodemailer": "^6.9.7",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
-    "razorpay": "^2.9.2"
+    "razorpay": "^2.9.2",
+    "twilio": "^5.13.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
