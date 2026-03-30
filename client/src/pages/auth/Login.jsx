@@ -1,6 +1,6 @@
 // src/pages/auth/Login.jsx
 import { useState, useEffect } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { CartoonButton } from '../../components/ui/CartoonButton';
@@ -13,6 +13,7 @@ export default function Login() {
 
     const { login } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
 
     // ─── Show error from Google OAuth redirect ──
     useEffect(() => {
@@ -27,9 +28,23 @@ export default function Login() {
         setLoading(true);
         try {
             const user = await login(form.email, form.password);
-            if (user.role === 'admin') navigate('/dashboard/admin');
-            else if (user.role === 'owner') navigate('/dashboard/owner');
-            else navigate('/cafes');
+            
+            // ─── Redirect to where they came from ────
+            const from = location.state?.from;
+
+            if (from && from !== '/login' && from !== '/register') {
+                navigate(from, { replace: true });
+                return;
+            }
+
+            // ─── Default redirect by role ─────────────
+            const redirectMap = {
+                admin   : '/dashboard/admin',
+                owner   : '/dashboard/owner',
+                customer: '/cafes'
+            };
+            navigate(redirectMap[user.role] || '/cafes', { replace: true });
+            
         } catch (err) {
             setError(err.response?.data?.message || 'Invalid email or password');
         } finally {

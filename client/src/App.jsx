@@ -1,64 +1,100 @@
 // src/App.jsx
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import { CartProvider } from './context/CartContext';
-import { ProtectedRoute } from './routes/ProtectedRoute';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { CartProvider }          from './context/CartContext';
+import { ProtectedRoute }        from './routes/ProtectedRoute';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 
-import LandingPage from './pages/LandingPage';
-import Login from './pages/auth/Login';
-import Register from './pages/auth/Register';
-import CafesPage from './pages/customer/CafesPage';
-import CafePage from './pages/customer/CafePage';
+import LandingPage       from './pages/LandingPage';
+import Login             from './pages/auth/Login';
+import Register          from './pages/auth/Register';
+import CafesPage         from './pages/customer/CafesPage';
+import CafePage          from './pages/customer/CafePage';
 import OrderConfirmation from './pages/customer/OrderConfirmation';
-import CustomerProfile from './pages/customer/CustomerProfile';
-import OwnerDashboard from './pages/dashboard/owner/OwnerDashboard';
-import AdminDashboard from './pages/dashboard/admin/AdminDashboard';
+import CustomerProfile   from './pages/customer/CustomerProfile';
+import OwnerDashboard    from './pages/dashboard/owner/OwnerDashboard';
+import AdminDashboard    from './pages/dashboard/admin/AdminDashboard';
+
+// ── Redirect logged-in users away from login/register ──
+function AuthGuard({ children }) {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen retro-grid flex items-center justify-center">
+        <div className="text-6xl animate-bounce mb-4">🛵</div>
+      </div>
+    );
+  }
+
+  if (user) {
+    const redirect = {
+      admin   : '/dashboard/admin',
+      owner   : '/dashboard/owner',
+      customer: '/cafes'
+    };
+    return <Navigate to={redirect[user.role] || '/'} replace />;
+  }
+
+  return children;
+}
+
+function NotFound() {
+  return (
+    <div className="min-h-screen retro-grid flex items-center justify-center">
+      <div className="text-center">
+        <div className="text-7xl mb-4">😔</div>
+        <p className="font-bangers text-5xl text-ink">404</p>
+        <p className="font-bangers text-2xl text-ink/60 mt-2">Page not found</p>
+        <a href="/" className="font-grotesk text-orange underline mt-4 block text-lg">← Go Home</a>
+      </div>
+    </div>
+  );
+}
 
 export default function App() {
-    return (
-        <AuthProvider>
-            <CartProvider>
-                <BrowserRouter>
-                    <Routes>
-                        {/* Public */}
-                        <Route path="/" element={<LandingPage />} />
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/register" element={<Register />} />
-                        <Route path="/cafes" element={<CafesPage />} />
-                        <Route path="/cafe/:slug" element={<CafePage />} />
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <CartProvider>
+          <Routes>
 
-                        {/* Customer Protected */}
-                        <Route path="/profile" element={
-                            <ProtectedRoute>
-                                <CustomerProfile />
-                            </ProtectedRoute>
-                        } />
-                        <Route path="/order-confirmation/:orderId" element={
-                            <ProtectedRoute>
-                                <OrderConfirmation />
-                            </ProtectedRoute>
-                        } />
+            {/* ─── PUBLIC — anyone can access ────── */}
+            <Route path="/"           element={<LandingPage />} />
+            <Route path="/cafes"      element={<CafesPage />} />
+            <Route path="/cafe/:slug" element={<CafePage />} />
 
-                        {/* Owner Dashboard */}
-                        <Route path="/dashboard/owner/*" element={
-                            <ProtectedRoute role="owner">
-                                <OwnerDashboard />
-                            </ProtectedRoute>
-                        } />
+            {/* ─── AUTH — redirect if logged in ─── */}
+            <Route path="/login"    element={<AuthGuard><Login /></AuthGuard>} />
+            <Route path="/register" element={<AuthGuard><Register /></AuthGuard>} />
 
-                        {/* Admin Dashboard */}
-                        <Route path="/dashboard/admin/*" element={
-                            <ProtectedRoute role="admin">
-                                <AdminDashboard />
-                            </ProtectedRoute>
-                        } />
-                    </Routes>
-                </BrowserRouter>
-                <Analytics />
-                <SpeedInsights />
-            </CartProvider>
-        </AuthProvider>
-    );
+            {/* ─── PROTECTED — need login ────────── */}
+            <Route path="/profile" element={
+              <ProtectedRoute><CustomerProfile /></ProtectedRoute>
+            } />
+            <Route path="/order-confirmation/:orderId" element={
+              <ProtectedRoute><OrderConfirmation /></ProtectedRoute>
+            } />
+
+            {/* ─── OWNER DASHBOARD ───────────────── */}
+            <Route path="/dashboard/owner/*" element={
+              <ProtectedRoute role="owner"><OwnerDashboard /></ProtectedRoute>
+            } />
+
+            {/* ─── ADMIN DASHBOARD ───────────────── */}
+            <Route path="/dashboard/admin/*" element={
+              <ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>
+            } />
+
+            {/* ─── 404 ───────────────────────────── */}
+            <Route path="*" element={<NotFound />} />
+
+          </Routes>
+          <Analytics />
+          <SpeedInsights />
+        </CartProvider>
+      </AuthProvider>
+    </BrowserRouter>
+  );
 }
