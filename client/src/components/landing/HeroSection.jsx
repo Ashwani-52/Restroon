@@ -7,64 +7,6 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import AnimatedHeroScene from './AnimatedHeroScene';
 
-function useIsMobile() {
-    const [isMobile, setIsMobile] = useState(false);
-    useEffect(() => {
-        const check = () => setIsMobile(window.innerWidth < 1024);
-        check();
-        window.addEventListener('resize', check);
-        return () => window.removeEventListener('resize', check);
-    }, []);
-    return isMobile;
-}
-
-function MobileHeroAnimation() {
-    return (
-        <div className="w-full h-full bg-cream overflow-hidden relative flex flex-col items-center justify-center p-4">
-            <h3 className="font-bangers text-3xl text-ink text-center mb-6 z-10">
-                Super Fast <br/><span className="text-orange">Zero Lag</span>
-            </h3>
-
-            {/* Pure CSS Track */}
-            <div className="relative w-full h-32 border-b-4 border-ink overflow-hidden border-dashed">
-                {/* The Scooter via CSS */}
-                <div className="absolute bottom-0 text-7xl animate-scooty z-20">
-                    🛵
-                </div>
-                <div className="absolute bottom-0 text-5xl animate-scooty-delay-1 z-10 opacity-50">
-                    🍕
-                </div>
-                <div className="absolute bottom-0 text-5xl animate-scooty-delay-2 z-10 opacity-50">
-                    🍔
-                </div>
-            </div>
-
-            <p className="font-grotesk text-sm text-ink/60 text-center mt-6 z-10">
-                (Pure CSS. 60 FPS across all mobile devices.)
-            </p>
-
-            <style>{`
-                @keyframes scooty {
-                    0% { transform: translateX(-100px) rotate(-5deg); }
-                    20% { transform: translateX(20vw) rotate(0deg); }
-                    40% { transform: translateX(50vw) rotate(-2deg); }
-                    60% { transform: translateX(80vw) rotate(2deg) translateY(-10px); }
-                    80% { transform: translateX(100vw) rotate(0deg); }
-                    100% { transform: translateX(120vw) rotate(5deg); }
-                }
-                .animate-scooty {
-                    animation: scooty 3s linear infinite;
-                }
-                .animate-scooty-delay-1 {
-                    animation: scooty 3s linear infinite 0.2s;
-                }
-                .animate-scooty-delay-2 {
-                    animation: scooty 3s linear infinite 0.4s;
-                }
-            `}</style>
-        </div>
-    );
-}
 
 // ── Typewriter Hook ────────────────────────────
 function useTypewriter(words, speed = 80) {
@@ -99,7 +41,6 @@ function useTypewriter(words, speed = 80) {
 
 export default function HeroSection() {
     const { user } = useAuth();
-    const isMobile = useIsMobile();
     const typeText = useTypewriter([
         'Restaurant Online',
         'Cafe Digital',
@@ -149,7 +90,7 @@ export default function HeroSection() {
                     >
                         <span className="text-lg">🛵</span>
                         <span className="font-bangers tracking-wider text-sm md:text-lg">
-                            No Swiggy. No Zomato. No 30% Cut.
+                            Less Commission. More Benefits.
                         </span>
                     </motion.div>
 
@@ -292,15 +233,9 @@ export default function HeroSection() {
                             </span>
                         </div>
 
-                        {/* Content */}
+                        {/* Content — AnimatedHeroScene on all devices */}
                         <div className="w-full h-[calc(100%-36px)]">
-                            {isMobile ? (
-                                // ── Mobile: Lightweight CSS Animation ──
-                                <MobileHeroAnimation />
-                            ) : (
-                                // ── Desktop: Canvas Frame Animation ──
-                                <AnimatedHeroScene />
-                            )}
+                            <AnimatedHeroScene />
                         </div>
                     </div>
 
