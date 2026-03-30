@@ -21,7 +21,7 @@ export default function CafePage() {
     const [placedOrderId, setPlacedOrderId] = useState(null);
     const [paymentMethod, setPaymentMethod] = useState('online');
 
-    const { cart, cafeId, total, count, addToCart, updateQty, clearCart } = useCart();
+    const { cart, cafeId, total, count, addToCart, updateQty, decreaseQty, clearCart } = useCart();
     const { user } = useAuth();
     const navigate = useNavigate();
 
@@ -154,18 +154,15 @@ export default function CafePage() {
                                             <span className="font-bangers text-2xl text-orange">₹{item.price}</span>
                                             {item.isAvailable ? (
                                                 cartItem ? (
-                                                    <div className="flex items-center gap-3 bg-yellow border-2 border-ink rounded-xl px-2">
-                                                        <button onClick={() => updateQty(item._id, cartItem.quantity - 1)} className="font-bangers text-xl px-2 py-1 hover:text-orange transition-colors">-</button>
-                                                        <span className="font-bangers text-xl w-4 text-center">{cartItem.quantity}</span>
-                                                        <button onClick={() => updateQty(item._id, cartItem.quantity + 1)} className="font-bangers text-xl px-2 py-1 hover:text-orange transition-colors">+</button>
+                                                    <div className="flex items-center gap-3 bg-red border-2 border-ink rounded-lg px-2 py-1">
+                                                        <button onClick={() => decreaseQty(item._id)} className="text-cream text-lg px-2 font-bold hover:scale-110 active:scale-95 transition-transform">-</button>
+                                                        <span className="text-cream font-bangers text-lg w-4 text-center">{cartItem.quantity}</span>
+                                                        <button onClick={() => addToCart(item, cafe._id)} className="text-cream text-lg px-2 font-bold hover:scale-110 active:scale-95 transition-transform">+</button>
                                                     </div>
                                                 ) : (
-                                                    <CartoonButton
-                                                        label="+ Add"
-                                                        color="bg-yellow"
-                                                        size="sm"
-                                                        onClick={() => addToCart(item, cafe._id)}
-                                                    />
+                                                    <button onClick={() => addToCart(item, cafe._id)} className="bg-ink text-yellow font-bangers px-4 py-2 rounded-lg border-2 border-ink shadow-[2px_2px_0_#FF6B35] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all">
+                                                        + ADD
+                                                    </button>
                                                 )
                                             ) : (
                                                 <span className="font-grotesk text-sm text-ink/50 italic">Not available</span>
@@ -311,6 +308,28 @@ export default function CafePage() {
                     </div>
                 </div>
             </div>
+
+            {/* Floating Mobile Cart Bar */}
+            {count > 0 && (
+                <div className="md:hidden fixed bottom-6 left-6 right-6 z-50">
+                    <button onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth'})} className="w-full text-left">
+                        <div className="bg-ink rounded-2xl border-4 border-ink p-4 flex items-center justify-between shadow-[6px_6px_0_#FF6B35] active:translate-y-1 active:shadow-[2px_2px_0_#FF6B35] transition-all">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-yellow rounded-xl border-2 border-ink flex items-center justify-center font-bangers text-xl text-ink">
+                                    {count}
+                                </div>
+                                <div>
+                                    <div className="font-bangers text-xl text-cream tracking-wide">VIEW CART</div>
+                                    <div className="font-mono text-xs text-cream/70">₹{total} plus taxes</div>
+                                </div>
+                            </div>
+                            <div className="text-yellow text-2xl animate-bounce">
+                                ↓
+                            </div>
+                        </div>
+                    </button>
+                </div>
+            )}
         </div>
     );
 }

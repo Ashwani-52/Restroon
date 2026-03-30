@@ -8,10 +8,10 @@ export function CartProvider({ children }) {
     const [cafeId, setCafeId] = useState(null);
 
     const addToCart = (item, cafe_id) => {
-        // If adding from different cafe, clear cart
         if (cafeId && cafeId !== cafe_id) {
-            if (!window.confirm('Your cart has items from another cafe. Clear and add new item?')) return;
+            if (!window.confirm('Your cart has items from another cafe. Clear cart?')) return;
             setCart([]);
+            setCafeId(null);
         }
         setCafeId(cafe_id);
         setCart(prev => {
@@ -45,6 +45,15 @@ export function CartProvider({ children }) {
         ));
     };
 
+    const decreaseQty = (menuItemId) => {
+        setCart(prev => {
+            const item = prev.find(i => i.menuItem === menuItemId);
+            if (!item) return prev;
+            if (item.quantity === 1) return prev.filter(i => i.menuItem !== menuItemId);
+            return prev.map(i => i.menuItem === menuItemId ? { ...i, quantity: i.quantity - 1 } : i);
+        });
+    };
+
     const clearCart = () => { setCart([]); setCafeId(null); };
 
     const total = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
@@ -53,7 +62,7 @@ export function CartProvider({ children }) {
     return (
         <CartContext.Provider value={{
             cart, cafeId, total, count,
-            addToCart, removeFromCart, updateQty, clearCart
+            addToCart, removeFromCart, updateQty, decreaseQty, clearCart
         }}>
             {children}
         </CartContext.Provider>

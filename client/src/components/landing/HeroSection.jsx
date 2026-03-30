@@ -19,82 +19,49 @@ function useIsMobile() {
 }
 
 function MobileHeroAnimation() {
-    const menuItems = [
-        { emoji: '🍕', name: 'Margherita Pizza', price: '₹199', color: 'bg-yellow' },
-        { emoji: '🍔', name: 'Smash Burger', price: '₹149', color: 'bg-orange' },
-        { emoji: '☕', name: 'Masala Chai', price: '₹30', color: 'bg-yellow' },
-        { emoji: '🍛', name: 'Chicken Biryani', price: '₹249', color: 'bg-red' },
-        { emoji: '🥘', name: 'Dal Makhani', price: '₹180', color: 'bg-orange' },
-    ];
-
     return (
-        <div className="w-full h-full bg-cream overflow-hidden relative">
+        <div className="w-full h-full bg-cream overflow-hidden relative flex flex-col items-center justify-center p-4">
+            <h3 className="font-bangers text-3xl text-ink text-center mb-6 z-10">
+                Super Fast <br/><span className="text-orange">Zero Lag</span>
+            </h3>
 
-            {/* Cafe Header */}
-            <div className="bg-gradient-to-r from-yellow to-orange p-4 flex items-center gap-3">
-                <div className="w-12 h-12 bg-cream border-3 border-ink rounded-xl flex items-center justify-center text-2xl shadow-[2px_2px_0_#1A1A1A]">
-                    🏪
+            {/* Pure CSS Track */}
+            <div className="relative w-full h-32 border-b-4 border-ink overflow-hidden border-dashed">
+                {/* The Scooter via CSS */}
+                <div className="absolute bottom-0 text-7xl animate-scooty z-20">
+                    🛵
                 </div>
-                <div>
-                    <p className="font-bangers text-xl text-ink">CHAI WALA</p>
-                    <div className="flex items-center gap-2">
-                        <span className="bg-green-400 text-ink text-xs font-bangers px-2 py-0.5 rounded-full border border-ink">
-                            ✅ OPEN
-                        </span>
-                        <span className="font-mono text-xs text-ink/60">⭐ 4.8 • 2km</span>
-                    </div>
+                <div className="absolute bottom-0 text-5xl animate-scooty-delay-1 z-10 opacity-50">
+                    🍕
+                </div>
+                <div className="absolute bottom-0 text-5xl animate-scooty-delay-2 z-10 opacity-50">
+                    🍔
                 </div>
             </div>
 
-            {/* Menu Items — animated scroll */}
-            <div className="p-3 space-y-2 overflow-hidden">
-                <p className="font-bangers text-sm text-ink/60">🍽️ MENU</p>
-                {menuItems.map((item, i) => (
-                    <motion.div
-                        key={item.name}
-                        className={`${item.color} border-2 border-ink rounded-xl p-3 flex items-center justify-between shadow-[2px_2px_0_#1A1A1A]`}
-                        initial={{ opacity: 0, x: 60 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{
-                            delay: i * 0.15,
-                            duration: 0.4,
-                            ease: 'easeOut'
-                        }}
-                    >
-                        <div className="flex items-center gap-2">
-                            <span className="text-2xl">{item.emoji}</span>
-                            <span className="font-bangers text-sm text-ink">{item.name}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <span className="font-bangers text-sm text-ink">{item.price}</span>
-                            <motion.button
-                                className="bg-ink text-cream text-xs font-bangers px-2 py-1 rounded-lg"
-                                whileTap={{ scale: 0.9 }}
-                                animate={{ scale: [1, 1.1, 1] }}
-                                transition={{ delay: i * 0.15 + 0.5, duration: 0.3 }}
-                            >
-                                +ADD
-                            </motion.button>
-                        </div>
-                    </motion.div>
-                ))}
-            </div>
+            <p className="font-grotesk text-sm text-ink/60 text-center mt-6 z-10">
+                (Pure CSS. 60 FPS across all mobile devices.)
+            </p>
 
-            {/* Order Button at bottom */}
-            <motion.div
-                className="absolute bottom-0 left-0 right-0 p-3 bg-cream border-t-2 border-ink"
-                initial={{ y: 100 }}
-                animate={{ y: 0 }}
-                transition={{ delay: 1.2, duration: 0.4 }}
-            >
-                <motion.button
-                    className="w-full bg-yellow border-3 border-ink rounded-xl py-3 font-bangers text-xl text-ink shadow-[3px_3px_0_#1A1A1A]"
-                    animate={{ scale: [1, 1.02, 1] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                >
-                    🛵 Place Order • ₹378
-                </motion.button>
-            </motion.div>
+            <style>{`
+                @keyframes scooty {
+                    0% { transform: translateX(-100px) rotate(-5deg); }
+                    20% { transform: translateX(20vw) rotate(0deg); }
+                    40% { transform: translateX(50vw) rotate(-2deg); }
+                    60% { transform: translateX(80vw) rotate(2deg) translateY(-10px); }
+                    80% { transform: translateX(100vw) rotate(0deg); }
+                    100% { transform: translateX(120vw) rotate(5deg); }
+                }
+                .animate-scooty {
+                    animation: scooty 3s linear infinite;
+                }
+                .animate-scooty-delay-1 {
+                    animation: scooty 3s linear infinite 0.2s;
+                }
+                .animate-scooty-delay-2 {
+                    animation: scooty 3s linear infinite 0.4s;
+                }
+            `}</style>
         </div>
     );
 }
@@ -181,8 +148,8 @@ export default function HeroSection() {
                         transition={{ delay: 0.2 }}
                     >
                         <span className="text-lg">🛵</span>
-                        <span className="font-bangers tracking-wider text-lg">
-                            Why pay 30–40% commissions when you don’t have to?
+                        <span className="font-bangers tracking-wider text-sm md:text-lg">
+                            No Swiggy. No Zomato. No 30% Cut.
                         </span>
                     </motion.div>
 
