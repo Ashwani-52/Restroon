@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 import LandingPage from './pages/LandingPage';
 import Login from './pages/auth/Login';
@@ -56,6 +57,7 @@ export default function App() {
                     </Routes>
                 </BrowserRouter>
                 <Analytics />
+                <SpeedInsights />
             </CartProvider>
         </AuthProvider>
     );
