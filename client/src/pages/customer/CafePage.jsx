@@ -1,5 +1,5 @@
 // src/pages/customer/CafePage.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../services/api';
@@ -20,6 +20,10 @@ export default function CafePage() {
     const [orderType, setOrderType] = useState('delivery'); // delivery | dine_in
     const [placedOrderId, setPlacedOrderId] = useState(null);
     const [paymentMethod, setPaymentMethod] = useState('online');
+    const [customerName, setCustomerName] = useState('');
+    const [customerPhone, setCustomerPhone] = useState('');
+
+    const cartRef = useRef(null);
 
     const { cart, cafeId, total, count, addToCart, updateQty, decreaseQty, clearCart } = useCart();
     const { user } = useAuth();
@@ -36,6 +40,11 @@ export default function CafePage() {
         }).finally(() => setLoading(false));
     }, [slug]);
 
+    // Pre-fill customer name from auth
+    useEffect(() => {
+        if (user?.name) setCustomerName(user.name);
+    }, [user]);
+
     const categories = ['All', ...new Set(menu.map(m => m.category))];
 
     const filteredMenu = category === 'All'
@@ -44,19 +53,29 @@ export default function CafePage() {
 
     const cartItems = cafeId === cafe?._id ? cart : [];
 
+    const scrollToCart = () => {
+        cartRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+
+    // ── Shared order payload builder ──────────────────────
+    const buildOrderPayload = (method) => ({
+        cafeId: cafe._id,
+        items: cart.map(i => ({ menuItemId: i.menuItem, quantity: i.quantity })),
+        paymentMethod: method,
+        orderType,
+        deliveryAddress: orderType === 'delivery' ? address : null,
+        note: orderType === 'dine_in' ? 'Dine-in order' : '',
+        customerName: customerName.trim(),
+        customerPhone: customerPhone.trim(),
+    });
+
+    // ── COD order ─────────────────────────────────────────
     const placeOrder = async () => {
         if (!user) { navigate('/login'); return; }
         if (cart.length === 0) return;
         setOrdering(true);
         try {
-            const res = await api.post('/api/order', {
-                cafeId: cafe._id,
-                items: cart.map(i => ({ menuItemId: i.menuItem, quantity: i.quantity })),
-                paymentMethod: 'cod',
-                orderType,
-                deliveryAddress: orderType === 'delivery' ? address : null,
-                note: orderType === 'dine_in' ? 'Dine-in order' : ''
-            });
+            const res = await api.post('/api/order', buildOrderPayload('cod'));
             clearCart();
             navigate(`/order-confirmation/${res.data.order._id}`);
         } catch (err) {
@@ -65,6 +84,23 @@ export default function CafePage() {
             setOrdering(false);
         }
     };
+
+    // ── Create pending order for online payment ───────────
+    const createPendingOrder = async () => {
+        if (!user) { navigate('/login'); return; }
+        setOrdering(true);
+        try {
+            const res = await api.post('/api/order', buildOrderPayload('online'));
+            setPlacedOrderId(res.data.order._id);
+        } catch (err) {
+            alert(err.response?.data?.message || 'Failed');
+        } finally {
+            setOrdering(false);
+        }
+    };
+
+    const isAddressValid = orderType !== 'delivery' || (address.street && address.city);
+    const isFormValid = customerName.trim() && customerPhone.trim() && isAddressValid;
 
     if (loading) return (
         <div className="min-h-screen retro-grid flex items-center justify-center">
@@ -81,6 +117,20 @@ export default function CafePage() {
     return (
         <div className="min-h-screen retro-grid">
             <Navbar />
+
+            {/* ── Sticky Cart Icon (mobile only) ──────────── */}
+            {count > 0 && (
+                <button
+                    onClick={scrollToCart}
+                    className="md:hidden fixed top-20 right-4 z-50 bg-ink border-3 border-ink rounded-2xl w-14 h-14 flex flex-col items-center justify-center shadow-[4px_4px_0_#FF6B35] active:translate-y-1 active:shadow-[2px_2px_0_#FF6B35] transition-all"
+                    aria-label="View Cart"
+                >
+                    <span className="text-2xl">🛒</span>
+                    <span className="bg-yellow text-ink font-bangers text-xs rounded-full px-1.5 leading-tight -mt-1">
+                        {count}
+                    </span>
+                </button>
+            )}
 
             {/* Hero */}
             <div className="relative h-72 bg-gradient-to-br from-yellow to-orange">
@@ -104,7 +154,7 @@ export default function CafePage() {
 
             <div className="max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-                {/* Menu */}
+                {/* ── Menu ─────────────────────────────────── */}
                 <div className="lg:col-span-2">
                     {/* Category Filter */}
                     <div className="flex gap-3 overflow-x-auto pb-3 mb-6">
@@ -175,8 +225,8 @@ export default function CafePage() {
                     </div>
                 </div>
 
-                {/* Cart */}
-                <div className="lg:col-span-1">
+                {/* ── Cart ─────────────────────────────────── */}
+                <div className="lg:col-span-1" ref={cartRef}>
                     <div className="sticky top-24">
                         <div className="bg-cream border-4 border-ink rounded-3xl p-6 shadow-[8px_8px_0_#1A1A1A]">
                             <h2 className="font-bangers text-3xl text-ink mb-4">🛒 YOUR ORDER</h2>
@@ -202,7 +252,7 @@ export default function CafePage() {
                                     </div>
 
                                     {/* Cart items */}
-                                    <div className="space-y-3 mb-4 max-h-64 overflow-y-auto">
+                                    <div className="space-y-3 mb-4 max-h-48 overflow-y-auto">
                                         {cartItems.map(item => (
                                             <div key={item.menuItem} className="flex items-center justify-between">
                                                 <div>
@@ -214,6 +264,25 @@ export default function CafePage() {
                                                 </div>
                                             </div>
                                         ))}
+                                    </div>
+
+                                    {/* ── Customer Details ──────────────────── */}
+                                    <div className="space-y-2 mb-4">
+                                        <p className="font-bangers text-sm text-ink/70">YOUR DETAILS</p>
+                                        <input
+                                            type="text"
+                                            placeholder="Your Name *"
+                                            value={customerName}
+                                            onChange={e => setCustomerName(e.target.value)}
+                                            className="w-full px-3 py-2 bg-white border-2 border-ink rounded-xl font-grotesk text-sm focus:outline-none focus:border-orange"
+                                        />
+                                        <input
+                                            type="tel"
+                                            placeholder="Phone Number *"
+                                            value={customerPhone}
+                                            onChange={e => setCustomerPhone(e.target.value)}
+                                            className="w-full px-3 py-2 bg-white border-2 border-ink rounded-xl font-grotesk text-sm focus:outline-none focus:border-orange"
+                                        />
                                     </div>
 
                                     {/* Delivery address (if delivery) */}
@@ -246,7 +315,7 @@ export default function CafePage() {
                                         {['online', 'cod'].map(method => (
                                             <button
                                                 key={method}
-                                                onClick={() => setPaymentMethod(method)}
+                                                onClick={() => { setPaymentMethod(method); setPlacedOrderId(null); }}
                                                 className={`flex-1 py-2 rounded-xl border-2 border-ink font-bangers text-sm transition-all ${paymentMethod === method ? 'bg-yellow shadow-[2px_2px_0_#1A1A1A]' : 'bg-cream'}`}
                                             >
                                                 {method === 'online' ? '💳 Online' : '💵 Cash'}
@@ -260,47 +329,36 @@ export default function CafePage() {
                                             label={ordering ? '⏳ Placing...' : `🛵 Place Order • ₹${total}`}
                                             color="bg-yellow"
                                             size="lg"
-                                            disabled={ordering || (orderType === 'delivery' && (!address.street || !address.city))}
+                                            disabled={ordering || !isFormValid}
                                             onClick={placeOrder}
                                         />
                                     )}
 
-                                    {/* Online Payment */}
+                                    {/* Online — Razorpay checkout (after order created) */}
                                     {paymentMethod === 'online' && placedOrderId && (
                                         <RazorpayCheckout
                                             orderId={placedOrderId}
                                             amount={total}
-                                            onSuccess={() => clearCart()}
+                                            onSuccess={() => { clearCart(); navigate(`/order-confirmation/${placedOrderId}`); }}
                                         />
                                     )}
 
-                                    {/* Create order first for online payment */}
+                                    {/* Online — Create pending order first */}
                                     {paymentMethod === 'online' && !placedOrderId && (
                                         <CartoonButton
                                             label={ordering ? '⏳ Processing...' : `💳 Proceed to Pay • ₹${total}`}
                                             color="bg-yellow"
                                             size="lg"
-                                            disabled={ordering || (orderType === 'delivery' && (!address.street || !address.city))}
-                                            onClick={async () => {
-                                                if (!user) { navigate('/login'); return; }
-                                                setOrdering(true);
-                                                try {
-                                                    const res = await api.post('/api/order', {
-                                                        cafeId: cafe._id,
-                                                        items: cart.map(i => ({ menuItemId: i.menuItem, quantity: i.quantity })),
-                                                        paymentMethod: 'online',
-                                                        orderType,
-                                                        deliveryAddress: orderType === 'delivery' ? address : null,
-                                                        note: orderType === 'dine_in' ? 'Dine-in order' : ''
-                                                    });
-                                                    setPlacedOrderId(res.data.order._id);
-                                                } catch (err) {
-                                                    alert(err.response?.data?.message || 'Failed');
-                                                } finally {
-                                                    setOrdering(false);
-                                                }
-                                            }}
+                                            disabled={ordering || !isFormValid}
+                                            onClick={createPendingOrder}
                                         />
+                                    )}
+
+                                    {/* Validation hint */}
+                                    {!isFormValid && (
+                                        <p className="text-center font-grotesk text-xs text-ink/50 mt-2">
+                                            * Fill your name, phone{orderType === 'delivery' ? ' & address' : ''} to continue
+                                        </p>
                                     )}
                                 </>
                             )}
@@ -308,28 +366,6 @@ export default function CafePage() {
                     </div>
                 </div>
             </div>
-
-            {/* Floating Mobile Cart Bar */}
-            {count > 0 && (
-                <div className="md:hidden fixed bottom-6 left-6 right-6 z-50">
-                    <button onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth'})} className="w-full text-left">
-                        <div className="bg-ink rounded-2xl border-4 border-ink p-4 flex items-center justify-between shadow-[6px_6px_0_#FF6B35] active:translate-y-1 active:shadow-[2px_2px_0_#FF6B35] transition-all">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-yellow rounded-xl border-2 border-ink flex items-center justify-center font-bangers text-xl text-ink">
-                                    {count}
-                                </div>
-                                <div>
-                                    <div className="font-bangers text-xl text-cream tracking-wide">VIEW CART</div>
-                                    <div className="font-mono text-xs text-cream/70">₹{total} plus taxes</div>
-                                </div>
-                            </div>
-                            <div className="text-yellow text-2xl animate-bounce">
-                                ↓
-                            </div>
-                        </div>
-                    </button>
-                </div>
-            )}
         </div>
     );
 }

@@ -17,7 +17,9 @@ export const placeOrder = async (req, res) => {
             paymentMethod,
             deliveryAddress,
             orderType,
-            note
+            note,
+            customerName,
+            customerPhone
         } = req.body;
 
         // ─── Validate required fields ──────────
@@ -99,14 +101,21 @@ export const placeOrder = async (req, res) => {
         }
 
         // ─── Create order ──────────────────────
+        const isCOD = !paymentMethod || paymentMethod === 'cod';
+
         const order = await Order.create({
             customer: req.user._id,
             cafe: cafeId,
             items: orderItems,
             totalAmount,
             paymentMethod: paymentMethod || 'cod',
-            deliveryAddress,
-            note: note || ''
+            orderType: orderType || 'delivery',
+            deliveryAddress: orderType === 'dine_in' ? undefined : deliveryAddress,
+            note: note || '',
+            customerName: customerName || req.user.name || '',
+            customerPhone: customerPhone || '',
+            // COD orders are confirmed immediately; online orders wait for payment
+            paymentConfirmed: isCOD
         });
 
         res.status(201).json({
@@ -204,7 +213,12 @@ export const getCafeOrders = async (req, res) => {
         }
 
         const { status } = req.query;
-        const query = { cafe: cafe._id };
+        const query = {
+            cafe: cafe._id,
+            // Only show orders where payment is confirmed
+            // (COD = confirmed immediately, Online = confirmed after Razorpay)
+            paymentConfirmed: true
+        };
 
         if (status) query.status = status;
 

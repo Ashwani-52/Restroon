@@ -103,6 +103,7 @@ export const verifyPayment = async (req, res) => {
 
         order.razorpayPaymentId = razorpay_payment_id;
         order.paymentStatus = 'paid';
+        order.paymentConfirmed = true;  // ← owner popup fires only now
         await order.save();
 
         // ─── Auto transfer to cafe (if linked account exists) ─

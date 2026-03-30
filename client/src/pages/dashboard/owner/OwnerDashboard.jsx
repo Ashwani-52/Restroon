@@ -8,8 +8,30 @@ import { CartoonButton } from '../../../components/ui/CartoonButton';
 import { ImageUpload } from '../../../components/ui/ImageUpload';
 import SubscriptionPage from './SubscriptionPage';
 
+// ── Ting sound via Web Audio API (no file needed) ────
+function playTing() {
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(660, ctx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.6, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.6);
+    } catch { }
+}
+
 // ── Order Popup Component ──────────────────────
 function NewOrderPopup({ order, onAccept, onReject }) {
+    useEffect(() => {
+        if (order) playTing();
+    }, [order]);
+
     return (
         <AnimatePresence>
             {order && (
@@ -35,6 +57,17 @@ function NewOrderPopup({ order, onAccept, onReject }) {
                                 #{order._id?.slice(-6).toUpperCase()}
                             </p>
                         </div>
+
+                        {/* Customer info */}
+                        {(order.customerName || order.customerPhone) && (
+                            <div className="bg-orange/20 border-2 border-orange rounded-xl p-3 mb-4 flex items-center gap-3">
+                                <span className="text-2xl">👤</span>
+                                <div>
+                                    {order.customerName && <p className="font-bangers text-lg text-ink">{order.customerName}</p>}
+                                    {order.customerPhone && <p className="font-mono text-sm text-ink/70">{order.customerPhone}</p>}
+                                </div>
+                            </div>
+                        )}
 
                         <div className="bg-yellow border-2 border-ink rounded-2xl p-4 mb-6">
                             <div className="space-y-2">
@@ -146,13 +179,29 @@ function OwnerOrders({ cafe }) {
                                     <div>
                                         <p className="font-bangers text-xl text-ink">#{order._id.slice(-6).toUpperCase()}</p>
                                         <p className="font-grotesk text-sm text-ink/60">
-                                            {order.customer?.name} • {new Date(order.createdAt).toLocaleTimeString()}
+                                            {new Date(order.createdAt).toLocaleTimeString()}
                                         </p>
                                     </div>
                                     <span className="bg-yellow border-2 border-ink rounded-full px-3 py-1 font-bangers text-sm">
                                         ₹{order.totalAmount}
                                     </span>
                                 </div>
+
+                                {/* Customer contact */}
+                                {(order.customerName || order.customerPhone) && (
+                                    <div className="flex items-center gap-2 mb-3 bg-orange/10 border border-orange/30 rounded-xl px-3 py-2">
+                                        <span>👤</span>
+                                        <span className="font-grotesk text-sm font-semibold">{order.customerName}</span>
+                                        {order.customerPhone && (
+                                            <a
+                                                href={`tel:${order.customerPhone}`}
+                                                className="ml-auto font-mono text-xs bg-green-400 border border-ink rounded-lg px-2 py-1 hover:bg-green-300 transition-colors"
+                                            >
+                                                📞 {order.customerPhone}
+                                            </a>
+                                        )}
+                                    </div>
+                                )}
 
                                 <div className="space-y-1 mb-4">
                                     {order.items?.map(item => (

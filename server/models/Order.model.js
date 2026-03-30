@@ -69,6 +69,14 @@ const orderSchema = new mongoose.Schema(
             maxlength: [ORDER_NOTE_MAX, `Note cannot exceed ${ORDER_NOTE_MAX} characters`],
             default: ''
         },
+        orderType: {
+            type: String,
+            enum: ['delivery', 'dine_in'],
+            default: 'delivery'
+        },
+        customerName: { type: String, default: '' },
+        customerPhone: { type: String, default: '' },
+        paymentConfirmed: { type: Boolean, default: false },
         platformFee: { type: Number, default: 0 },
         totalCharged: { type: Number, default: 0 },
     },
