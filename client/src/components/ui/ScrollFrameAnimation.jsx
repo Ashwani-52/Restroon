@@ -11,7 +11,6 @@ export function ScrollFrameAnimation() {
     const canvasRef = useRef(null);
     const containerRef = useRef(null);
     const [images, setImages] = useState([]);
-    const [isLoaded, setIsLoaded] = useState(false);
 
     // Map scroll progress of the element itself
     const { scrollYProgress } = useScroll({
@@ -31,17 +30,7 @@ export function ScrollFrameAnimation() {
             img.src = src;
             return img;
         });
-        
-        // Wait for first 5 frames to load properly before showing canvas
-        Promise.all(
-            preloads.slice(0, 5).map(img => new Promise(res => {
-                if (img.complete) res();
-                else { img.onload = res; img.onerror = res; }
-            }))
-        ).then(() => {
-            setImages(preloads);
-            setIsLoaded(true);
-        });
+        setImages(preloads);
     }, []);
 
     // Draw frame to canvas
@@ -73,16 +62,9 @@ export function ScrollFrameAnimation() {
 
     return (
         <div ref={containerRef} className="w-full h-full relative flex items-center justify-center overflow-hidden">
-            {!isLoaded && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-cream z-20">
-                    <div className="text-4xl mb-4 animate-bounce">🛵</div>
-                    <p className="font-bangers text-2xl text-ink animate-pulse">Loading Animation...</p>
-                </div>
-            )}
             <canvas 
                 ref={canvasRef} 
                 className="w-full h-full object-cover"
-                style={{ opacity: isLoaded ? 1 : 0, transition: 'opacity 0.5s ease-in-out' }}
             />
         </div>
     );

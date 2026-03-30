@@ -17,7 +17,6 @@ export default function AnimatedHeroScene() {
     const frameRef = useRef(0);
     const timerRef = useRef(null);
     const [loadedCount, setLoadedCount] = useState(0);
-    const [ready, setReady] = useState(false);
 
     // ── Preload all frames ──────────────────────────────────────────────────
     useEffect(() => {
@@ -30,12 +29,10 @@ export default function AnimatedHeroScene() {
             img.onload = () => {
                 loaded++;
                 setLoadedCount(loaded);
-                if (loaded === TOTAL_FRAMES) setReady(true);
             };
             img.onerror = () => {
                 loaded++;
                 setLoadedCount(loaded);
-                if (loaded === TOTAL_FRAMES) setReady(true);
             };
             img.src = src;
             images[i] = img;
@@ -46,9 +43,8 @@ export default function AnimatedHeroScene() {
         };
     }, []);
 
-    // ── Start animation once all frames loaded ──────────────────────────────
+    // ── Start animation directly ──────────────────────────────
     useEffect(() => {
-        if (!ready) return;
         const canvas = canvasRef.current;
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
@@ -74,7 +70,7 @@ export default function AnimatedHeroScene() {
 
         timerRef.current = setInterval(draw, 1000 / FPS);
         return () => clearInterval(timerRef.current);
-    }, [ready]);
+    }, []);
 
     // ── Resize canvas to fill container ────────────────────────────────────
     useEffect(() => {
@@ -93,22 +89,6 @@ export default function AnimatedHeroScene() {
 
     return (
         <div className="relative w-full h-full bg-[#7dd87d] overflow-hidden">
-            {/* Loading overlay */}
-            {!ready && (
-                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#7dd87d]">
-                    <div className="text-5xl mb-4 animate-bounce">🛵</div>
-                    <p className="font-bangers text-2xl text-ink mb-3">Loading Animation...</p>
-                    <div className="w-48 h-3 bg-ink/20 rounded-full overflow-hidden border-2 border-ink">
-                        <div
-                            className="h-full bg-ink rounded-full transition-all duration-200"
-                            style={{ width: `${progress}%` }}
-                        />
-                    </div>
-                    <p className="font-mono text-xs text-ink/50 mt-2">{progress}%</p>
-                </div>
-            )}
-
-            {/* Canvas fills entire container */}
             <canvas
                 ref={canvasRef}
                 className="w-full h-full"
