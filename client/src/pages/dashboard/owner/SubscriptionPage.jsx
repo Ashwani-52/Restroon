@@ -135,31 +135,30 @@ export default function SubscriptionPage() {
                     )}
                 </motion.div>
 
-                {/* Plan Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-10">
                     {PLANS.map((plan, i) => (
                         <motion.div
                             key={plan.key}
                             className={`
-                ${plan.color} border-4 border-ink rounded-3xl p-8 relative
-                shadow-[8px_8px_0_#1A1A1A]
-                ${plan.isPopular ? 'scale-105 shadow-[10px_10px_0_#1A1A1A]' : ''}
-                ${current?.plan === plan.key ? 'ring-4 ring-green-400' : ''}
-              `}
+                                ${plan.color} border-4 border-ink rounded-3xl p-8 relative flex flex-col
+                                shadow-[8px_8px_0_#1A1A1A]
+                                ${plan.isPopular ? 'md:scale-105 z-10 shadow-[10px_10px_0_#1A1A1A]' : 'z-0'}
+                                ${current?.plan === plan.key ? 'ring-4 ring-green-400' : ''}
+                            `}
                             initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: i * 0.1 }}
                         >
                             {/* Popular Badge */}
                             {plan.isPopular && (
-                                <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-ink text-yellow border-3 border-ink rounded-full px-4 py-1">
+                                <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-ink text-yellow border-3 border-ink rounded-full px-4 py-1 z-20">
                                     <span className="font-bangers text-lg">⭐ POPULAR</span>
                                 </div>
                             )}
 
                             {/* Current badge */}
                             {current?.plan === plan.key && (
-                                <div className="absolute -top-5 right-4 bg-green-400 text-ink border-2 border-ink rounded-full px-3 py-1">
+                                <div className="absolute -top-5 right-4 bg-green-400 text-ink border-2 border-ink rounded-full px-3 py-1 z-20">
                                     <span className="font-bangers text-sm">✅ ACTIVE</span>
                                 </div>
                             )}
@@ -176,28 +175,30 @@ export default function SubscriptionPage() {
 
                             <div className="border-t-2 border-ink/20 my-4" />
 
-                            <ul className="space-y-2 mb-6">
+                            <ul className="space-y-3 mb-8 flex-1">
                                 {plan.features.map(f => (
-                                    <li key={f} className="flex items-center gap-2 font-grotesk text-sm text-ink">
-                                        <span className="w-5 h-5 bg-ink text-cream rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">✓</span>
+                                    <li key={f} className="flex items-start gap-3 font-grotesk text-sm text-ink font-medium">
+                                        <span className="w-5 h-5 bg-ink text-cream rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">✓</span>
                                         {f}
                                     </li>
                                 ))}
                             </ul>
 
-                            {current?.plan === plan.key && current?.status === 'active' ? (
-                                <div className="w-full py-3 bg-green-400 border-3 border-ink rounded-2xl text-center font-bangers text-ink text-lg">
-                                    ✅ Current Plan
-                                </div>
-                            ) : (
-                                <CartoonButton
-                                    label={paying === plan.key ? '⏳ Processing...' : plan.price === 0 ? '🌱 Start Free' : `💳 Get ${plan.name}`}
-                                    color="bg-cream"
-                                    size="md"
-                                    disabled={paying !== null}
-                                    onClick={() => handleSelect(plan)}
-                                />
-                            )}
+                            <div className="mt-auto flex justify-center w-full">
+                                {current?.plan === plan.key && current?.status === 'active' ? (
+                                    <div className="w-full py-3 bg-green-400 border-3 border-ink rounded-2xl text-center font-bangers text-ink text-lg">
+                                        ✅ Current Plan
+                                    </div>
+                                ) : (
+                                    <CartoonButton
+                                        label={paying === plan.key ? '⏳ Processing...' : plan.price === 0 ? '🌱 Start Free' : `💳 Get ${plan.name}`}
+                                        color="bg-cream"
+                                        size="md"
+                                        disabled={paying !== null}
+                                        onClick={() => handleSelect(plan)}
+                                    />
+                                )}
+                            </div>
                         </motion.div>
                     ))}
                 </div>

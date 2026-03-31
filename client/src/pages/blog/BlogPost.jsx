@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { getBlogBySlug } from '../../services/api';
-import { Calendar, User, Eye, ArrowLeft } from 'lucide-react';
 
 const BlogPost = () => {
   const { slug } = useParams();
@@ -27,71 +26,77 @@ const BlogPost = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen pt-32 pb-20 flex justify-center bg-[#FFFBEF]">
-        <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin"></div>
+      <div className="min-h-screen pt-32 pb-20 flex justify-center bg-cream retro-grid">
+        <div className="w-16 h-16 border-4 border-ink border-t-red rounded-full animate-spin"></div>
       </div>
     );
   }
 
   if (error || !blog) {
     return (
-      <div className="min-h-screen pt-32 pb-20 flex flex-col items-center justify-center bg-[#FFFBEF]">
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">Post Not Found</h2>
-        <p className="text-gray-600 mb-8">The article you are looking for does not exist.</p>
-        <Link to="/blog" className="text-orange-600 font-semibold hover:underline flex items-center">
-          <ArrowLeft size={16} className="mr-2"/> Back to Blog
+      <div className="min-h-screen pt-32 pb-20 flex flex-col items-center justify-center bg-cream retro-grid relative">
+        <div className="absolute top-0 left-0 right-0 h-3 stripe-bg z-10" />
+        <h2 className="text-5xl font-bangers text-ink mb-4 drop-shadow-[2px_2px_0_#fff]">Post Not Found 😲</h2>
+        <p className="font-grotesk font-bold text-ink/80 mb-8 text-xl">The article you are looking for does not exist.</p>
+        <Link to="/blog" className="px-6 py-3 bg-red text-cream font-bangers text-xl tracking-widest rounded-xl border-3 border-ink shadow-[4px_4px_0_#1A1A1A] hover:translate-y-1 hover:shadow-none transition-all">
+          ⬅️ BACK TO BLOG
         </Link>
+        <div className="absolute bottom-6 left-0 right-0 h-3 stripe-bg z-10" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#FFFBEF] pt-28 pb-20 px-4 sm:px-6">
-      
+    <div className="relative min-h-screen bg-cream retro-grid pt-28 pb-20 px-4 sm:px-6">
+      <div className="absolute top-0 left-0 right-0 h-3 stripe-bg z-10" />
+
       {/* Back Button */}
-      <div className="max-w-4xl mx-auto mb-8">
-        <Link to="/blog" className="inline-flex items-center text-gray-500 hover:text-orange-600 font-medium transition-colors">
-          <ArrowLeft size={20} className="mr-2"/> All Articles
+      <div className="max-w-4xl mx-auto mb-8 relative z-10">
+        <Link to="/blog" className="inline-block px-4 py-2 bg-yellow text-ink font-bangers text-lg tracking-widest rounded-xl border-3 border-ink shadow-[4px_4px_0_#1A1A1A] hover:translate-y-1 hover:shadow-[2px_2px_0_#1A1A1A] transition-all transform -rotate-1">
+          ⬅️ ALL ARTICLES
         </Link>
       </div>
 
       <motion.article 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-4xl mx-auto bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-orange-100"
+        className="relative z-10 max-w-4xl mx-auto bg-white rounded-3xl overflow-hidden border-4 border-ink shadow-[12px_12px_0_#1A1A1A]"
       >
         {/* Header Image */}
-        <div className="h-[400px] md:h-[500px] relative">
+        <div className="h-[400px] md:h-[500px] relative border-b-4 border-ink">
           <img src={blog.featuredImage} alt={blog.title} className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent"></div>
           
-          <div className="absolute bottom-0 left-0 right-0 p-8 md:p-14">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-tight mb-6">
+          <div className="absolute bottom-0 left-0 right-0 p-8 md:p-14 bg-gradient-to-t from-ink/90 via-ink/40 to-transparent">
+            <h1 className="text-4xl md:text-5xl lg:text-7xl font-bangers text-cream leading-none tracking-wide drop-shadow-[4px_4px_0_#1A1A1A] mb-8 relative z-10">
               {blog.title}
             </h1>
             
-            <div className="flex flex-wrap items-center space-x-6 text-sm md:text-base font-medium text-orange-50 uppercase tracking-widest">
-              <span className="flex items-center"><User size={18} className="mr-2"/> {blog.author}</span>
-              <span className="flex items-center"><Calendar size={18} className="mr-2"/> {new Date(blog.createdAt).toLocaleDateString()}</span>
-              <span className="flex items-center"><Eye size={18} className="mr-2"/> {blog.views} Views</span>
+            <div className="inline-flex flex-wrap items-center gap-4 text-sm md:text-base font-bold font-mono text-ink bg-yellow px-4 py-2 rounded border-2 border-ink transform rotate-1 shadow-[4px_4px_0_#1A1A1A] relative z-10">
+              <span className="flex items-center">✍️ {blog.author}</span>
+              <span className="flex items-center">🗓️ {new Date(blog.createdAt).toLocaleDateString()}</span>
+              <span className="flex items-center">👁️ {blog.views} Views</span>
             </div>
           </div>
         </div>
 
         {/* Content Body */}
-        <div className="p-8 md:p-14 lg:p-16">
+        <div className="p-8 md:p-14 lg:p-16 relative bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjZmZmIj48L3JlY3Q+CjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNlNWU1ZTUiPjwvcmVjdD4KPC9zdmc+')]">
           <div 
-            className="prose prose-lg md:prose-xl prose-orange max-w-none text-gray-700
-              prose-headings:font-bold prose-headings:text-gray-900 
-              prose-h2:mt-12 prose-h2:mb-6 prose-h2:text-3xl
-              prose-p:leading-relaxed prose-p:mb-6
-              prose-a:text-orange-600 prose-a:no-underline hover:prose-a:underline
-              prose-img:rounded-3xl prose-img:shadow-xl"
+            className="prose prose-lg md:prose-xl max-w-none text-ink font-grotesk font-medium
+              prose-headings:font-bangers prose-headings:text-ink prose-headings:tracking-wide prose-headings:drop-shadow-[1px_1px_0_#fff]
+              prose-h2:mt-12 prose-h2:mb-6 prose-h2:text-4xl
+              prose-h3:text-3xl
+              prose-p:leading-relaxed prose-p:mb-6 prose-p:bg-white/80 prose-p:p-2 prose-p:rounded
+              prose-a:text-red prose-a:font-bold prose-a:underline prose-a:decoration-4 hover:prose-a:bg-yellow
+              prose-img:rounded-2xl prose-img:border-4 prose-img:border-ink prose-img:shadow-[8px_8px_0_#1A1A1A]"
             dangerouslySetInnerHTML={{ __html: blog.content }}
           />
         </div>
 
       </motion.article>
+
+      {/* ── Stripe Banner Bottom ── */}
+      <div className="absolute bottom-6 left-0 right-0 h-3 stripe-bg" />
     </div>
   );
 };

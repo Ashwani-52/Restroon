@@ -59,7 +59,7 @@ export default function LandingPage() {
                         <div>
                             <h4 className="font-bangers text-xl text-cream mb-4 tracking-wide">Get in Touch</h4>
                             <ul className="space-y-2 font-grotesk text-sm text-cream/60">
-                                <li>Email: support@restroon.com</li>
+                                <li>Email: ashwanikumar6064@gmail.com</li>
                                 <li>Location: Punjab, India</li>
                                 <li className="mt-4 italic">Response within 24 hours</li>
                             </ul>
