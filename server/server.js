@@ -18,6 +18,7 @@ import adminRoutes from './routes/admin.routes.js';
 import uploadRoutes from './routes/upload.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
 import subscriptionRoutes from './routes/subscription.routes.js';
+import profileRoutes      from './routes/profile.routes.js';
 
 configurePassport();              // ← ADD — initialize passport strategies
 
@@ -46,6 +47,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/subscription', subscriptionRoutes);
+app.use('/api/profile',      profileRoutes);
 
 app.get('/ping', (req, res) => res.status(200).json({ success: true, message: 'pong' }));
 

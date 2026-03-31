@@ -75,7 +75,14 @@ const userSchema = new mongoose.Schema(
             street: { type: String, trim: true, default: '' },
             city: { type: String, trim: true, default: '' },
             pincode: { type: String, trim: true, default: '' }
-        }
+        },
+        // ─── Favourite cafes ───────────────────
+        favourites: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Cafe'
+            }
+        ]
     },
     { timestamps: true }
 );

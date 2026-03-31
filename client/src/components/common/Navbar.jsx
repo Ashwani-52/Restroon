@@ -65,6 +65,11 @@ export default function Navbar() {
                                     size="sm"
                                 />
                             </Link>
+                            {user.role === 'customer' && (
+                                <Link to="/profile">
+                                    <CartoonButton label="👤 Profile" color="bg-white" size="sm" />
+                                </Link>
+                            )}
                             <CartoonButton
                                 label="Logout"
                                 color="bg-red"
