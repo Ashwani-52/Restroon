@@ -94,4 +94,9 @@ api.interceptors.response.use(
   }
 );
 
+// --- New API Endpoints for AdSense Pages ---
+export const submitContact = (data) => api.post('/api/contact', data);
+export const getBlogs = () => api.get('/api/blogs');
+export const getBlogBySlug = (slug) => api.get(`/api/blogs/${slug}`);
+
 export default api;

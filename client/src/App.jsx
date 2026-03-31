@@ -16,7 +16,11 @@ import CustomerProfile   from './pages/customer/CustomerProfile';
 import OwnerDashboard    from './pages/dashboard/owner/OwnerDashboard';
 import AdminDashboard    from './pages/dashboard/admin/AdminDashboard';
 import PrivacyPolicy     from './pages/PrivacyPolicy';
-
+import About             from './pages/About';
+import Contact           from './pages/Contact';
+import { Terms, RefundPolicy, CookiePolicy, FAQ } from './pages/LegalPages';
+import BlogList          from './pages/blog/BlogList';
+import BlogPost          from './pages/blog/BlogPost';
 // ── Redirect logged-in users away from login/register ──
 function AuthGuard({ children }) {
   const { user, loading } = useAuth();
@@ -65,8 +69,17 @@ export default function App() {
             <Route path="/"           element={<LandingPage />} />
             <Route path="/cafes"      element={<CafesPage />} />
             <Route path="/cafe/:slug" element={<CafePage />} />
-            <Route path="/privacy"    element={<PrivacyPolicy />} />
-
+            
+            <Route path="/about"      element={<About />} />
+            <Route path="/contact"    element={<Contact />} />
+            <Route path="/blog"       element={<BlogList />} />
+            <Route path="/blog/:slug" element={<BlogPost />} />
+            
+            <Route path="/privacy"       element={<PrivacyPolicy />} />
+            <Route path="/terms"         element={<Terms />} />
+            <Route path="/refund-policy" element={<RefundPolicy />} />
+            <Route path="/cookie-policy" element={<CookiePolicy />} />
+            <Route path="/faq"           element={<FAQ />} />
             {/* ─── AUTH — redirect if logged in ─── */}
             <Route path="/login"    element={<AuthGuard><Login /></AuthGuard>} />
             <Route path="/register" element={<AuthGuard><Register /></AuthGuard>} />

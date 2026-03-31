@@ -19,7 +19,8 @@ import uploadRoutes from './routes/upload.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
 import subscriptionRoutes from './routes/subscription.routes.js';
 import profileRoutes      from './routes/profile.routes.js';
-
+import contactRoutes      from './routes/contact.routes.js';
+import blogRoutes         from './routes/blog.routes.js';
 configurePassport();              // ← ADD — initialize passport strategies
 
 const app = express();
@@ -48,6 +49,8 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/profile',      profileRoutes);
+app.use('/api/contact',      contactRoutes);
+app.use('/api/blogs',        blogRoutes);
 
 app.get('/ping', (req, res) => res.status(200).json({ success: true, message: 'pong' }));
 

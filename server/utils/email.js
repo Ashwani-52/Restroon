@@ -302,3 +302,40 @@ export async function sendOrderEmailPair(order, cafe, customerEmail) {
         });
     }
 }
+
+// ── NEW CONTACT FORM EMAIL ───────────────────────────────────────────────────
+export async function sendContactEmail(contactData) {
+    const { name, email, subject, message } = contactData;
+    
+    const supportEmail = process.env.EMAIL_USER;
+    if (!supportEmail) {
+        console.warn('[EMAIL] Support mapped email not found, skipping contact email');
+        return;
+    }
+
+    const htmlBody = /* html */ `
+        <p style="font-size:16px;color:#1A1A1A;margin-bottom:20px;">
+          You have received a new message from the Restroon Contact Form:
+        </p>
+
+        <div style="background:#FFFBEF;border:2px solid #FF6B35;border-radius:8px;padding:20px;margin-bottom:24px;">
+          <p style="margin:0 0 10px 0;"><strong>Name:</strong> ${name}</p>
+          <p style="margin:0 0 10px 0;"><strong>Email:</strong> ${email}</p>
+          <p style="margin:0 0 10px 0;"><strong>Subject:</strong> ${subject}</p>
+          <hr style="border:none;border-top:1px solid #FF6B35;margin:15px 0;" />
+          <p style="margin:0;white-space:pre-wrap;">${message}</p>
+        </div>
+        
+        <p style="font-size:14px;color:#6B7280;">Reply directly to ${email} to answer.</p>
+    `;
+
+    await sendMail({
+        to: supportEmail,
+        subject: `[Contact] ${subject}`,
+        html: buildTemplate({
+            title: 'New Contact Inquiry 📬',
+            preheader: `From: ${name}`,
+            bodyHtml: htmlBody
+        })
+    });
+}
