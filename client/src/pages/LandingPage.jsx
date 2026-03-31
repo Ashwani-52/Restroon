@@ -1,4 +1,5 @@
 import Navbar from '../components/common/Navbar';
+import { Link } from 'react-router-dom';
 import HeroSection from '../components/landing/HeroSection';
 import FeaturesSection from '../components/landing/FeaturesSection';
 import HowItWorks from '../components/landing/HowItWorks';
@@ -28,7 +29,7 @@ export default function LandingPage() {
                         © 2026 Restroon. Built with ❤️ for local cafes.
                     </p>
                     <div className="flex gap-6">
-                        <a href="#" className="font-grotesk text-sm text-cream/60 hover:text-yellow transition-colors">Privacy</a>
+                        <Link to="/privacy" className="font-grotesk text-sm text-cream/60 hover:text-yellow transition-colors">Privacy</Link>
                         <a href="#" className="font-grotesk text-sm text-cream/60 hover:text-yellow transition-colors">Terms</a>
                         <a href="#" className="font-grotesk text-sm text-cream/60 hover:text-yellow transition-colors">Contact</a>
                     </div>
