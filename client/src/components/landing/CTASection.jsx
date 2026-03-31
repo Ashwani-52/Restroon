@@ -20,7 +20,7 @@ export default function CTASection() {
                         READY TO GO <span className="text-yellow">ONLINE?</span>
                     </h2>
                     <p className="font-grotesk text-xl text-cream/70 mb-8 max-w-2xl mx-auto">
-                        Join 500+ cafes. Zero commission. Your restaurant online in minutes.
+                        Join 500+ cafes. 4% commission. Your restaurant online in minutes.
                     </p>
 
                     <div className="flex flex-wrap gap-4 justify-center">

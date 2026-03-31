@@ -1,12 +1,15 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ComicText } from '../components/ui/ComicText';
+import { BackButton } from '../components/ui/BackButton';
 
 const About = () => {
   return (
     <div className="relative min-h-screen bg-cream retro-grid overflow-hidden pt-28 pb-20">
       {/* ── Stripe Banner Top ── */}
       <div className="absolute top-0 left-0 right-0 h-3 stripe-bg z-10" />
+
+      <BackButton className="top-8 left-8" />
 
       {/* ── Floating Stars ── */}
       {['⭐', '✨', '💥', '🌟', '⚡'].map((star, i) => (
@@ -69,7 +72,7 @@ const About = () => {
 
           <div className="grid grid-cols-2 gap-6">
             {[
-              { icon: '💸', title: "Zero Commission", desc: "Restaurants keep 100% of their earnings." },
+              { icon: '💸', title: "4% Commission", desc: "Restaurants keep 96% of their earnings." },
               { icon: '🏪', title: "Local First", desc: "Built specifically to uplift local cafes and stalls." },
               { icon: '🍕', title: "Transparent Menus", desc: "No artificially inflated online prices." },
               { icon: '🤝', title: "Direct Contact", desc: "Customers connect directly with cafes." },

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { submitContact } from '../services/api';
 import { ComicText } from '../components/ui/ComicText';
 import { CartoonButton } from '../components/ui/CartoonButton';
+import { BackButton } from '../components/ui/BackButton';
 
 const Contact = () => {
   const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
@@ -17,7 +18,13 @@ const Contact = () => {
     setLoading(true);
     setErrorMsg('');
     try {
-      await submitContact(formData);
+      const payload = {
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        subject: formData.subject.trim(),
+        message: formData.message.trim(),
+      };
+      await submitContact(payload);
       setSuccessStatus('Message sent successfully! Our team will get back to you within 24 hours.');
       setFormData({ name: '', email: '', subject: '', message: '' });
     } catch (err) {
@@ -31,6 +38,8 @@ const Contact = () => {
     <div className="relative min-h-screen bg-cream retro-grid overflow-hidden pt-28 pb-20 px-4 sm:px-6">
       {/* ── Stripe Banner Top ── */}
       <div className="absolute top-0 left-0 right-0 h-3 stripe-bg z-10" />
+
+      <BackButton className="top-8 left-8" />
 
       {/* ── Floating Elements ── */}
       {['✉️', '🚀', '💬', '📞', '⚡'].map((emoji, i) => (

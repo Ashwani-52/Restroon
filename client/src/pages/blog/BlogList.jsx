@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { getBlogs } from '../../services/api';
 import { Link } from 'react-router-dom';
 import { ComicText } from '../../components/ui/ComicText';
+import { BackButton } from '../../components/ui/BackButton';
 
 const BlogList = () => {
   const [blogs, setBlogs] = useState([]);
@@ -34,6 +35,8 @@ const BlogList = () => {
     <div className="relative min-h-screen bg-cream retro-grid pt-28 pb-20 px-4 sm:px-6">
       {/* ── Stripe Banner Top ── */}
       <div className="absolute top-0 left-0 right-0 h-3 stripe-bg z-10" />
+
+      <BackButton className="top-8 left-8" />
 
       {/* ── Floating Stars ── */}
       {['⭐', '✨', '💥'].map((star, i) => (

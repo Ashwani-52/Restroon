@@ -1,9 +1,11 @@
 import React from 'react';
 import { ShieldAlert, RefreshCcw, Cookie, HelpCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { BackButton } from '../components/ui/BackButton';
 
 const PageLayout = ({ icon: Icon, title, lastUpdated, children }) => (
-  <div className="min-h-screen bg-[#FFFBEF] pt-28 pb-20 px-4 sm:px-6">
+  <div className="min-h-screen bg-[#FFFBEF] pt-28 pb-20 px-4 sm:px-6 relative">
+    <BackButton className="top-8 left-8" />
     <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden border border-orange-100">
       <div className="bg-gradient-to-r from-orange-500 to-orange-400 p-8 text-center relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
@@ -40,8 +42,8 @@ export const Terms = () => (
     <h2>3. Restaurant Responsibilities</h2>
     <p>Partner cafes are responsible for maintaining accurate pricing, availability, and fulfilling accepted orders in a timely manner. Restroon acts merely as a technology facilitator and does not prepare or handle food.</p>
 
-    <h2>4. Payment Terms & Zero Commission</h2>
-    <p>We pride ourselves on charging minimal or zero commission to our partner restaurants. Payments are securely processed via Razorpay. Users are responsible for all applicable taxes and delivery charges stated at checkout.</p>
+    <h2>4. Payment Terms & 4% Commission</h2>
+    <p>We charge a nominal 4% commission to our partner restaurants. Payments are securely processed via Razorpay. Users are responsible for all applicable taxes and delivery charges stated at checkout.</p>
 
     <h2>5. Cancellation & Refunds</h2>
     <p>Orders can only be cancelled before they are accepted by the restaurant. For full details on dispute resolution, please refer to our dedicated <a href="/refund-policy" className="text-orange-600 underline">Refund Policy</a>.</p>
@@ -91,7 +93,7 @@ export const CookiePolicy = () => (
 export const FAQ = () => (
   <PageLayout icon={HelpCircle} title="Frequently Asked Questions" lastUpdated="March 31, 2026">
     <h3>1. What is Restroon?</h3>
-    <p>Restroon is a modern dining and ordering platform built to support local cafes by offering them a high-tech ordering system without the crippling 30% commission fees charged by traditional delivery apps.</p>
+    <p>Restroon is a modern dining and ordering platform built to support local cafes by offering them a high-tech ordering system with a modest 4% commission fee, far lower than the 30% charged by traditional delivery apps.</p>
 
     <h3>2. Are prices on Restroon the same as dining in?</h3>
     <p>Yes! Because we do not charge exorbitant commissions, our partner restaurants do not need to artificially inflate their online menu prices. What you see is the real menu price.</p>
