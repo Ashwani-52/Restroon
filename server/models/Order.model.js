@@ -76,6 +76,7 @@ const orderSchema = new mongoose.Schema(
         },
         customerName: { type: String, default: '' },
         customerPhone: { type: String, default: '' },
+        customerEmail: { type: String, default: '' },
         paymentConfirmed: { type: Boolean, default: false },
         platformFee: { type: Number, default: 0 },
         totalCharged: { type: Number, default: 0 },

@@ -1,7 +1,8 @@
 import Order from '../models/Order.model.js';
 import Cafe from '../models/Cafe.model.js';
 import MenuItem from '../models/MenuItem.model.js';
-import { sendOrderSMSPair } from '../utils/sms.js';
+import { sendOrderEmailPair } from '../utils/email.js';
+import User from '../models/User.model.js';
 import {
     ORDER_STATUS,
     CAFE_STATUS
@@ -20,7 +21,8 @@ export const placeOrder = async (req, res) => {
             orderType,
             note,
             customerName,
-            customerPhone
+            customerPhone,
+            customerEmail
         } = req.body;
 
         // ─── Validate required fields ──────────
@@ -104,6 +106,10 @@ export const placeOrder = async (req, res) => {
         // ─── Create order ──────────────────────
         const isCOD = !paymentMethod || paymentMethod === 'cod';
 
+        // Resolve customer email: from body > User doc
+        const user = await User.findById(req.user._id).select('email');
+        const resolvedEmail = customerEmail || user?.email || '';
+
         const order = await Order.create({
             customer: req.user._id,
             cafe: cafeId,
@@ -115,6 +121,7 @@ export const placeOrder = async (req, res) => {
             note: note || '',
             customerName: customerName || req.user.name || '',
             customerPhone: customerPhone || '',
+            customerEmail: resolvedEmail,
             // COD orders are confirmed immediately; online orders wait for payment
             paymentConfirmed: isCOD
         });
@@ -125,10 +132,10 @@ export const placeOrder = async (req, res) => {
             order
         });
 
-        // ─── Fire SMS pair for COD (non-blocking, after response sent) ───
+        // ─── Fire email pair for COD (non-blocking, after response sent) ───
         if (isCOD) {
-            sendOrderSMSPair(order, cafe).catch(err =>
-                console.error('[SMS] COD SMS error:', err.message)
+            sendOrderEmailPair(order, cafe, resolvedEmail).catch(err =>
+                console.error('[EMAIL] COD email error:', err.message)
             );
         }
 
