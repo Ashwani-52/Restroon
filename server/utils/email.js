@@ -1,40 +1,50 @@
 // server/utils/email.js
 // ── Nodemailer email helper (ES Module) ────────────────────────────────────
 // Uses Gmail via Nodemailer. Up to 500 free emails/day.
-// If EMAIL_USER / EMAIL_PASS  not set → logs to console (dev-safe).
+// If EMAIL_USER / EMAIL_PASS not set → logs to console (dev-safe).
 
 import nodemailer from 'nodemailer';
 
-let _transporter = null;
+// ─── Always create a fresh transporter (no stale cache) ─────────────────────
+function createTransporter() {
+    const user = process.env.EMAIL_USER?.trim();
+    const pass = process.env.EMAIL_PASS?.trim();
 
-function getTransporter() {
-    if (_transporter) return _transporter;
-    const user = process.env.EMAIL_USER;
-    const pass = process.env.EMAIL_PASS;
-    if (!user || !pass) return null;
+    if (!user || !pass) {
+        console.warn('[EMAIL] ⚠️  EMAIL_USER or EMAIL_PASS not set — emails disabled');
+        return null;
+    }
 
-    _transporter = nodemailer.createTransport({
+    return nodemailer.createTransport({
         service: 'gmail',
-        auth: { user, pass }
+        auth: { user, pass },
+        pool: false   // disable connection pool so each send uses fresh credentials
     });
-    return _transporter;
 }
 
-// ─── Shared colour tokens ───────────────────────────────────────────────────
+// ─── Shared colour tokens ────────────────────────────────────────────────────
 const ORANGE  = '#FF6B35';
 const DARK    = '#1A1A1A';
 const CREAM   = '#FFFBEF';
 const GREEN   = '#22C55E';
 const GREY    = '#6B7280';
 
-// ── Low-level send ──────────────────────────────────────────────────────────
+// ── Low-level send ───────────────────────────────────────────────────────────
 async function sendMail({ to, subject, html }) {
     try {
-        const transporter = getTransporter();
-        const from = process.env.EMAIL_USER;
+        const from = process.env.EMAIL_USER?.trim();
+        const transporter = createTransporter();
 
         if (!transporter || !from) {
-            console.log(`\n[EMAIL-DEV] TO: ${to}\n[EMAIL-DEV] SUBJECT: ${subject}\n`);
+            console.log(`\n[EMAIL-DEV] TO: ${to}\n[EMAIL-DEV] SUBJECT: ${subject}\n[EMAIL-DEV] (Set EMAIL_USER + EMAIL_PASS to send real emails)\n`);
+            return;
+        }
+
+        // ── Sanity check: verify SMTP auth before sending ──────────────────
+        try {
+            await transporter.verify();
+        } catch (verifyErr) {
+            console.error(`[EMAIL] ✗ SMTP auth failed — check EMAIL_USER/EMAIL_PASS: ${verifyErr.message}`);
             return;
         }
 
@@ -47,7 +57,7 @@ async function sendMail({ to, subject, html }) {
         console.log(`[EMAIL] ✓ Sent to ${to} | msgId: ${info.messageId}`);
     } catch (err) {
         // Never throw — email failure must NOT break order flow
-        console.error(`[EMAIL] ✗ Failed to ${to}: ${err.message}`);
+        console.error(`[EMAIL] ✗ Failed to send to ${to}: ${err.message}`);
     }
 }
 

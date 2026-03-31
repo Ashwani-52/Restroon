@@ -501,12 +501,12 @@ function SettingsTab({ user, onLogout, onProfileUpdate }) {
             {/* Danger zone */}
             <div className="border-t-2 border-red-100 pt-6">
                 <p className="font-bangers text-xl text-red-500 mb-3">Danger Zone</p>
-                <button
+                <CartoonButton
+                    label="🚪 Logout"
+                    color="bg-red-500"
+                    size="md"
                     onClick={onLogout}
-                    className="px-6 py-3 bg-red-500 text-white font-bangers text-xl rounded-xl border-3 border-red-700 shadow-[4px_4px_0_#991B1B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] transition-all"
-                >
-                    🚪 Logout
-                </button>
+                />
             </div>
         </div>
     );
