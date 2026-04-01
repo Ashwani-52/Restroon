@@ -7,6 +7,12 @@ import { useAuth } from '../../../context/AuthContext';
 import { CartoonButton } from '../../../components/ui/CartoonButton';
 import { ImageUpload } from '../../../components/ui/ImageUpload';
 import SubscriptionPage from './SubscriptionPage';
+import LocationPicker from '../../../components/common/LocationPicker';
+import {
+    LineChart, Line, BarChart, Bar,
+    XAxis, YAxis, CartesianGrid, Tooltip,
+    ResponsiveContainer, PieChart, Pie, Cell
+} from 'recharts';
 
 // ── Ting sound via Web Audio API (no file needed) ────
 function playTing() {
@@ -626,11 +632,6 @@ export default function OwnerDashboard() {
 
 // ── Revenue Tab ────────────────────────────────
 // In OwnerDashboard.jsx — replace OwnerRevenue function
-import {
-    LineChart, Line, BarChart, Bar,
-    XAxis, YAxis, CartesianGrid, Tooltip,
-    ResponsiveContainer, PieChart, Pie, Cell
-} from 'recharts';
 
 function OwnerRevenue({ cafe }) {
     const [orders, setOrders] = useState([]);
