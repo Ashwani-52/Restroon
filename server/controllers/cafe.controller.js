@@ -40,17 +40,22 @@ export const registerCafe = async (req, res) => {
         }
         
         // ─── Geocode Address ───────────────────
-        const coords = await geocodeAddress([
-            address.street,
-            address.city,
-            address.pincode,
-            'India'
-        ]);
+        let coords = null;
+        if (address.coordinates && address.coordinates.lat && address.coordinates.lng && address.coordinates.lat !== 0) {
+            coords = address.coordinates;
+        } else {
+            coords = await geocodeAddress([
+                address.street,
+                address.city,
+                address.pincode,
+                'India'
+            ]);
+        }
 
         if (!coords) {
             return res.status(400).json({
                 success: false,
-                message: 'Location could not be verified on the map. Please check your address.'
+                message: 'Location could not be verified automatically. Please select your exact location on the map.'
             });
         }
 

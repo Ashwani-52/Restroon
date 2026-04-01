@@ -30,7 +30,7 @@ export default function LocationPicker({
     const defaultZoom = value.lat === 20.5937 ? 4 : 13;
 
     return (
-        <div className={`rounded-xl border-3 border-ink overflow-hidden z-10 relative bg-cream ${className}`}>
+        <div className={`rounded-xl border-3 border-ink overflow-hidden z-10 relative bg-cream w-full h-full ${className}`}>
             <MapContainer
                 center={[value.lat, value.lng]}
                 zoom={defaultZoom}
