@@ -65,6 +65,10 @@ const cafeSchema = new mongoose.Schema(
                 lng: { type: Number, required: [true, 'Longitude is required'] }
             }
         },
+        location: {
+            type: { type: String, default: 'Point' },
+            coordinates: { type: [Number], default: [0, 0] } // [longitude, latitude]
+        },
         deliveryRadius: {
             type: Number,
             default: DEFAULT_DELIVERY_RADIUS
@@ -105,6 +109,10 @@ const cafeSchema = new mongoose.Schema(
     },
     { timestamps: true }
 );
+
+// ─── Indexes ───────────────────────────────
+cafeSchema.index({ location: '2dsphere' });
+cafeSchema.index({ 'subscription.status': 1, status: 1 });
 
 // ─── Auto generate slug from name ──────────
 cafeSchema.pre('save', function (next) {

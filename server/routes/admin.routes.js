@@ -6,7 +6,8 @@ import {
   toggleUserStatus,
   adminGetCafes,
   adminUpdateCafeStatus,
-  adminGetOrders
+  adminGetOrders,
+  getCafeWiseRevenue
 } from '../controllers/admin.controller.js';
 import { protect }     from '../middleware/auth.middleware.js';
 import { requireRole } from '../middleware/role.middleware.js';
@@ -32,5 +33,6 @@ router.patch('/cafes/:cafeId/status',        adminUpdateCafeStatus);
 
 // ─── Order Management ──────────────────────
 router.get('/orders',                  adminGetOrders);
+router.get('/revenue/cafes',           getCafeWiseRevenue);
 
 export default router;

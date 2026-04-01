@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Bangers&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+@import 'leaflet/dist/leaflet.css';
 
 @tailwind base;
 @tailwind components;
@@ -151,4 +152,25 @@ body {
 
 .star-pop {
     animation: starPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* ── Leaflet Reset ── */
+.leaflet-container {
+    font-family: 'Space Grotesk', sans-serif;
+    border-radius: inherit;
+}
+.leaflet-popup-content-wrapper {
+    border: 3px solid var(--black);
+    border-radius: 1rem;
+    box-shadow: 4px 4px 0 var(--black);
+    background: var(--cream);
+    color: var(--black);
+}
+.leaflet-popup-tip {
+    border-top: 3px solid var(--black);
+    border-left: 3px solid var(--black);
+    background: var(--cream);
+}
+.leaflet-popup-close-button {
+    color: var(--black) !important;
 }

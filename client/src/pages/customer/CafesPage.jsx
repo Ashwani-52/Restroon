@@ -4,11 +4,13 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import api from '../../services/api';
 import Navbar from '../../components/common/Navbar';
+import StaticMap from '../../components/common/StaticMap';
 
 export default function CafesPage() {
     const [cafes, setCafes] = useState([]);
     const [search, setSearch] = useState('');
     const [loading, setLoading] = useState(true);
+    const [viewMode, setViewMode] = useState('list'); // 'list' | 'map'
 
     useEffect(() => {
         api.get(`/api/cafe?search=${search}`)
@@ -43,7 +45,27 @@ export default function CafesPage() {
                     </div>
                 </motion.div>
 
-                {/* Grid */}
+                {/* View Toggle */}
+                {!loading && cafes.length > 0 && (
+                    <div className="flex justify-center mb-8">
+                        <div className="bg-white border-3 border-ink rounded-xl p-1 inline-flex shadow-[4px_4px_0_#1A1A1A]">
+                            <button
+                                onClick={() => setViewMode('list')}
+                                className={`px-6 py-2 rounded-lg font-bangers tracking-wider transition-colors ${viewMode === 'list' ? 'bg-orange text-cream' : 'text-ink hover:bg-cream'}`}
+                            >
+                                LIST VIEW
+                            </button>
+                            <button
+                                onClick={() => setViewMode('map')}
+                                className={`px-6 py-2 rounded-lg font-bangers tracking-wider transition-colors ${viewMode === 'map' ? 'bg-orange text-cream' : 'text-ink hover:bg-cream'}`}
+                            >
+                                MAP VIEW
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Grid vs Map */}
                 {loading ? (
                     <div className="flex items-center justify-center py-20">
                         <div className="text-6xl animate-bounce">🛵</div>
@@ -53,6 +75,14 @@ export default function CafesPage() {
                         <div className="text-6xl mb-4">😔</div>
                         <p className="font-bangers text-3xl text-ink">No cafes found</p>
                     </div>
+                ) : viewMode === 'map' ? (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="h-[600px] w-full"
+                    >
+                        <StaticMap cafes={cafes} />
+                    </motion.div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {cafes.map((cafe, i) => (
@@ -63,9 +93,9 @@ export default function CafesPage() {
                                 transition={{ delay: i * 0.05 }}
                             >
                                 <Link to={`/cafe/${cafe.slug}`}>
-                                    <div className="bg-cream border-3 border-ink rounded-2xl overflow-hidden shadow-[6px_6px_0_#1A1A1A] hover:-translate-y-2 hover:shadow-[8px_8px_0_#1A1A1A] transition-all duration-200 cursor-pointer">
+                                    <div className="bg-cream border-3 border-ink rounded-2xl overflow-hidden shadow-[6px_6px_0_#1A1A1A] hover:-translate-y-2 hover:shadow-[8px_8px_0_#1A1A1A] transition-all duration-200 cursor-pointer flex flex-col h-full">
                                         {/* Cover */}
-                                        <div className="h-48 bg-gradient-to-br from-yellow to-orange flex items-center justify-center relative">
+                                        <div className="h-48 bg-gradient-to-br from-yellow to-orange flex items-center justify-center relative flex-shrink-0">
                                             {cafe.coverImage
                                                 ? <img src={cafe.coverImage} alt={cafe.name} className="w-full h-full object-cover" />
                                                 : <span className="text-7xl">🏪</span>
@@ -75,15 +105,15 @@ export default function CafesPage() {
                                             </div>
                                         </div>
 
-                                        <div className="p-5">
+                                        <div className="p-5 flex flex-col flex-1">
                                             <div className="flex items-center gap-3 mb-2">
                                                 {cafe.logo
-                                                    ? <img src={cafe.logo} className="w-10 h-10 rounded-full border-2 border-ink" alt="" />
-                                                    : <div className="w-10 h-10 bg-yellow rounded-full border-2 border-ink flex items-center justify-center">🍽️</div>
+                                                    ? <img src={cafe.logo} className="w-10 h-10 rounded-full border-2 border-ink object-cover" alt="" />
+                                                    : <div className="w-10 h-10 bg-yellow rounded-full border-2 border-ink flex flex-shrink-0 items-center justify-center">🍽️</div>
                                                 }
-                                                <div>
-                                                    <h3 className="font-bangers text-xl text-ink">{cafe.name}</h3>
-                                                    <p className="font-mono text-xs text-ink/60">{cafe.address?.city}</p>
+                                                <div className="flex flex-col overflow-hidden min-w-0">
+                                                    <h3 className="font-bangers text-xl text-ink truncate w-full" title={cafe.name}>{cafe.name}</h3>
+                                                    <p className="font-mono text-xs text-ink/60 truncate w-full" title={cafe.address?.city}>{cafe.address?.city}</p>
                                                 </div>
                                             </div>
 
@@ -93,7 +123,7 @@ export default function CafesPage() {
                                                 ))}
                                             </div>
 
-                                            <div className="flex items-center justify-between">
+                                            <div className="flex items-center justify-between mt-auto pt-2">
                                                 <div className="flex items-center gap-1">
                                                     <span>⭐</span>
                                                     <span className="font-grotesk text-sm font-semibold">{cafe.ratings?.average?.toFixed(1) || '4.5'}</span>

@@ -227,7 +227,7 @@ export const getCafeOrders = async (req, res) => {
             });
         }
 
-        const { status } = req.query;
+        const { status, page = 1, limit = 10 } = req.query;
         const query = {
             cafe: cafe._id,
             // Only show orders where payment is confirmed
@@ -237,13 +237,23 @@ export const getCafeOrders = async (req, res) => {
 
         if (status) query.status = status;
 
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
         const orders = await Order.find(query)
             .populate('customer', 'name email phone')
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(parseInt(limit));
+
+        const totalOrders = await Order.countDocuments(query);
+        const totalPages = Math.ceil(totalOrders / parseInt(limit));
 
         res.status(200).json({
             success: true,
             count: orders.length,
+            totalOrders,
+            totalPages,
+            currentPage: parseInt(page),
             orders
         });
 

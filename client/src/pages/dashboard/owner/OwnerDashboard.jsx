@@ -1204,10 +1204,6 @@ function CafeSetup({ setCafe }) {
             const payload = {
                 ...form,
                 cuisine: form.cuisine.split(',').map(s => s.trim()),
-                address: {
-                    ...form.address,
-                    coordinates: { lat: 20.5937, lng: 78.9629 } // Default India center
-                }
             };
             const res = await api.post('/api/cafe', payload);
             setCafe(res.data.cafe);
@@ -1259,6 +1255,16 @@ function CafeSetup({ setCafe }) {
                         />
                     </div>
                 ))}
+                <div>
+                    <label className="font-bangers text-lg text-ink">Exact Location</label>
+                    <p className="font-grotesk text-xs text-ink/60 mb-2">Drag the map to place the pin on your cafe.</p>
+                    <div className="h-64 mb-4">
+                        <LocationPicker 
+                            value={form.address.coordinates} 
+                            onChange={coords => setForm(f => ({ ...f, address: { ...f.address, coordinates: coords } }))} 
+                        />
+                    </div>
+                </div>
                 <CartoonButton type="submit" label={loading ? '⏳ Setting up...' : '🚀 Launch My Cafe!'} color="bg-yellow" size="lg" disabled={loading} />
             </form>
         </div>

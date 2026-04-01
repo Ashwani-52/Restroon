@@ -288,3 +288,52 @@ export const adminGetOrders = async (req, res) => {
         });
     }
 };
+
+// ──────────────────────────────────────────
+// GET CAFE-WISE REVENUE & ORDERS
+// ──────────────────────────────────────────
+export const getCafeWiseRevenue = async (req, res) => {
+    try {
+        const cafeStats = await Order.aggregate([
+            { $match: { status: ORDER_STATUS.DELIVERED, paymentConfirmed: true } },
+            {
+                $group: {
+                    _id: "$cafe",
+                    totalRevenue: { $sum: "$totalAmount" },
+                    totalOrders: { $sum: 1 }
+                }
+            },
+            {
+                $lookup: {
+                    from: "cafes",
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "cafeDetails"
+                }
+            },
+            { $unwind: "$cafeDetails" },
+            {
+                $project: {
+                    _id: 1,
+                    totalRevenue: 1,
+                    totalOrders: 1,
+                    name: "$cafeDetails.name",
+                    status: "$cafeDetails.status"
+                }
+            },
+            { $sort: { totalRevenue: -1 } }
+        ]);
+
+        res.status(200).json({
+            success: true,
+            count: cafeStats.length,
+            stats: cafeStats
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch cafe-wise revenue',
+            error: err.message
+        });
+    }
+};

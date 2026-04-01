@@ -37,7 +37,6 @@ export const registerCafe = async (req, res) => {
             });
         }
 
-        // ─── Create cafe ───────────────────────
         const cafe = await Cafe.create({
             owner: req.user._id,
             name,
@@ -46,7 +45,11 @@ export const registerCafe = async (req, res) => {
             phone: phone || '',
             address,
             deliveryRadius,
-            openingHours
+            openingHours,
+            location: {
+                type: 'Point',
+                coordinates: [address.coordinates.lng, address.coordinates.lat]
+            }
         });
 
         res.status(201).json({
@@ -120,7 +123,15 @@ export const updateMyCafe = async (req, res) => {
         if (description) cafe.description = description;
         if (cuisine) cafe.cuisine = cuisine;
         if (phone) cafe.phone = phone;
-        if (address) cafe.address = address;
+        if (address) {
+            cafe.address = address;
+            if (address.coordinates && address.coordinates.lng !== undefined && address.coordinates.lat !== undefined) {
+                cafe.location = {
+                    type: 'Point',
+                    coordinates: [address.coordinates.lng, address.coordinates.lat]
+                };
+            }
+        }
         if (deliveryRadius !== undefined) cafe.deliveryRadius = deliveryRadius;
         if (openingHours) cafe.openingHours = openingHours;
         if (isOpen !== undefined) cafe.isOpen = isOpen;
@@ -215,6 +226,49 @@ export const getActiveCafes = async (req, res) => {
         });
     }
 };
+
+// ──────────────────────────────────────────
+// GET NEARBY CAFES (Public)
+// ──────────────────────────────────────────
+export const getNearbyCafes = async (req, res) => {
+    try {
+        const { lat, lng, radiusInKm = 5 } = req.query;
+
+        if (!lat || !lng) {
+            return res.status(400).json({
+                success: false,
+                message: "Please provide valid lat and lng coordinates"
+            });
+        }
+
+        const cafes = await Cafe.find({
+            status: CAFE_STATUS.ACTIVE,
+            'subscription.status': { $in: ['active', 'trial'] },
+            location: {
+                $nearSphere: {
+                    $geometry: {
+                        type: "Point",
+                        coordinates: [parseFloat(lng), parseFloat(lat)]
+                    },
+                    $maxDistance: parseFloat(radiusInKm) * 1000 // Convert km to meters
+                }
+            }
+        }).select('-totalRevenue');
+
+        res.status(200).json({
+            success: true,
+            count: cafes.length,
+            cafes
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch nearby cafes',
+            error: err.message
+        });
+    }
+};
+
 
 // ──────────────────────────────────────────
 // GET SINGLE CAFE BY SLUG (Public)
