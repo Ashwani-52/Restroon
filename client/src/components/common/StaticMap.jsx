@@ -2,6 +2,8 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { Link } from 'react-router-dom';
 import L from 'leaflet';
 
+import 'leaflet/dist/leaflet.css'; // BUG 1 FIXED: Leaflet CSS imported
+
 const customIcon = new L.DivIcon({
     className: 'custom-leaflet-icon',
     html: `<div class="w-8 h-8 bg-orange border-3 border-ink rounded-full flex items-center justify-center text-lg shadow-[2px_2px_0_#1A1A1A] transform -translate-x-1/2 -translate-y-full hover:scale-110 transition-transform">🏪</div>`,
@@ -15,7 +17,8 @@ export default function StaticMap({ cafes, className = "" }) {
     const defaultZoom = cafes?.length > 0 ? 5 : 4;
 
     return (
-        <div className={`rounded-2xl border-3 border-ink overflow-hidden z-10 relative bg-cream shadow-[6px_6px_0_#1A1A1A] ${className}`}>
+        // BUG 2 FIXED: Added h-full w-full so MapContainer height:100% works relative to parent
+        <div className={`rounded-2xl border-3 border-ink overflow-hidden z-10 relative bg-cream shadow-[6px_6px_0_#1A1A1A] h-full w-full ${className}`}>
             <MapContainer
                 center={defaultCenter}
                 zoom={defaultZoom}
