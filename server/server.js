@@ -25,6 +25,17 @@ configurePassport();              // ← ADD — initialize passport strategies
 
 const app = express();
 
+// Trust proxy is required if you are behind a load balancer (like Render or Heroku)
+// Otherwise rate limiters block all traffic because they see the load balancer's IP
+app.set('trust proxy', 1);
+
+// Health check endpoints BEFORE any middlewares to ensure they are fast and never rate limited
+app.get('/ping', (req, res) => res.status(200).json({ success: true, message: 'pong' }));
+
+app.get('/health', (req, res) => {
+    res.status(200).send("Restroon backend is alive");
+});
+
 app.use(helmet());
 app.use(mongoSanitize());
 
@@ -51,12 +62,6 @@ app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/profile',      profileRoutes);
 app.use('/api/contact',      contactRoutes);
 app.use('/api/blogs',        blogRoutes);
-
-app.get('/ping', (req, res) => res.status(200).json({ success: true, message: 'pong' }));
-
-app.get('/health', (req, res) => {
-    res.status(200).send("Restroon backend is alive");
-});
 
 app.use((req, res) => res.status(404).json({ success: false, message: 'Route not found' }));
 app.use(errorHandler);
