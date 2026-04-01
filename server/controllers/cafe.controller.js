@@ -4,6 +4,7 @@ import {
     CAFE_STATUS,
     ROLES
 } from '../utils/constants.js';
+import { geocodeAddress } from '../utils/geocode.js';
 
 // ──────────────────────────────────────────
 // REGISTER CAFE (Owner only)
@@ -21,10 +22,11 @@ export const registerCafe = async (req, res) => {
         } = req.body;
 
         // ─── Validate required fields ──────────
-        if (!name || !address?.coordinates?.lat || !address?.coordinates?.lng) {
+        // Instead of demanding frontend GPS lat/lng, we only demand name and address parts
+        if (!name || !address || !address.street || !address.city) {
             return res.status(400).json({
                 success: false,
-                message: 'Cafe name and location coordinates are required'
+                message: 'Cafe name and complete address fields (street, city) are required'
             });
         }
 
@@ -36,6 +38,21 @@ export const registerCafe = async (req, res) => {
                 message: 'You already have a registered cafe'
             });
         }
+        
+        // ─── Geocode Address ───────────────────
+        const coords = await geocodeAddress([
+            address.street,
+            address.city,
+            address.pincode,
+            'India'
+        ]);
+
+        if (!coords) {
+            return res.status(400).json({
+                success: false,
+                message: 'Location could not be verified on the map. Please check your address.'
+            });
+        }
 
         const cafe = await Cafe.create({
             owner: req.user._id,
@@ -43,12 +60,15 @@ export const registerCafe = async (req, res) => {
             description: description || '',
             cuisine: cuisine || [],
             phone: phone || '',
-            address,
+            address: { 
+                ...address, 
+                coordinates: { lat: coords.lat, lng: coords.lng } 
+            },
             deliveryRadius,
             openingHours,
             location: {
                 type: 'Point',
-                coordinates: [address.coordinates.lng, address.coordinates.lat]
+                coordinates: [coords.lng, coords.lat]
             }
         });
 
@@ -124,12 +144,29 @@ export const updateMyCafe = async (req, res) => {
         if (cuisine) cafe.cuisine = cuisine;
         if (phone) cafe.phone = phone;
         if (address) {
-            cafe.address = address;
-            if (address.coordinates && address.coordinates.lng !== undefined && address.coordinates.lat !== undefined) {
+            // Geocode the updated address
+            const coords = await geocodeAddress([
+                address.street || cafe.address.street,
+                address.city || cafe.address.city,
+                address.pincode || cafe.address.pincode,
+                'India'
+            ]);
+            
+            if (coords) {
+                cafe.address = {
+                    ...cafe.address,
+                    ...address,
+                    coordinates: { lat: coords.lat, lng: coords.lng }
+                };
                 cafe.location = {
                     type: 'Point',
-                    coordinates: [address.coordinates.lng, address.coordinates.lat]
+                    coordinates: [coords.lng, coords.lat]
                 };
+            } else {
+                return res.status(400).json({
+                    success: false,
+                    message: "Location couldn't be verified. Keeping old address."
+                });
             }
         }
         if (deliveryRadius !== undefined) cafe.deliveryRadius = deliveryRadius;

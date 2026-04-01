@@ -5,18 +5,48 @@ import { motion } from 'framer-motion';
 import api from '../../services/api';
 import Navbar from '../../components/common/Navbar';
 import StaticMap from '../../components/common/StaticMap';
+import { getUserLocation } from '../../utils/getUserLocation';
+import { calculateDistance } from '../../utils/haversine';
 
 export default function CafesPage() {
     const [cafes, setCafes] = useState([]);
     const [search, setSearch] = useState('');
     const [loading, setLoading] = useState(true);
     const [viewMode, setViewMode] = useState('list'); // 'list' | 'map'
+    const [userLocation, setUserLocation] = useState(null);
+    const [locationError, setLocationError] = useState('');
 
     useEffect(() => {
+        getUserLocation()
+            .then(loc => setUserLocation(loc))
+            .catch(err => console.error("Location error:", err.message));
+    }, []);
+
+    useEffect(() => {
+        setLoading(true);
         api.get(`/api/cafe?search=${search}`)
-            .then(r => setCafes(r.data.cafes))
+            .then(r => {
+                let fetchedCafes = r.data.cafes;
+                if (userLocation) {
+                    fetchedCafes = fetchedCafes.filter(cafe => {
+                        if (!cafe.location || !cafe.location.coordinates) return false;
+                        const [lng, lat] = cafe.location.coordinates;
+                        const distance = calculateDistance(
+                            userLocation.lat,
+                            userLocation.lng,
+                            lat,
+                            lng
+                        );
+                        cafe.distance = distance; // temp save for rendering
+                        return distance <= 5; // 5km radius
+                    });
+                    // Sort nearest first
+                    fetchedCafes.sort((a, b) => a.distance - b.distance);
+                }
+                setCafes(fetchedCafes);
+            })
             .finally(() => setLoading(false));
-    }, [search]);
+    }, [search, userLocation]);
 
     return (
         <div className="min-h-screen retro-grid">
@@ -128,7 +158,12 @@ export default function CafesPage() {
                                                     <span>⭐</span>
                                                     <span className="font-grotesk text-sm font-semibold">{cafe.ratings?.average?.toFixed(1) || '4.5'}</span>
                                                 </div>
-                                                <span className="font-mono text-xs text-ink/60">{cafe.deliveryRadius}km delivery</span>
+                                                <div className="flex flex-col items-end">
+                                                    <span className="font-mono text-xs text-ink/60">{cafe.deliveryRadius}km delivery</span>
+                                                    {cafe.distance !== undefined && (
+                                                        <span className="font-mono text-xs text-orange font-bold mt-1">{cafe.distance.toFixed(1)} km away</span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
