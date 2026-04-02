@@ -120,29 +120,33 @@ function AdminStats() {
             {/* ── Revenue Area Chart ── */}
             <div className="bg-cream border-3 border-ink rounded-2xl p-6 shadow-[4px_4px_0_#1A1A1A]">
                 <h3 className="font-bangers text-2xl text-ink mb-4">📈 PLATFORM REVENUE TREND</h3>
-                <ResponsiveContainer width="100%" height={280}>
-                    <AreaChart data={chartData}>
-                        <defs>
-                            <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#FF6B35" stopOpacity={0.3} />
-                                <stop offset="95%" stopColor="#FF6B35" stopOpacity={0} />
-                            </linearGradient>
-                            <linearGradient id="commissionGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#FFD23F" stopOpacity={0.5} />
-                                <stop offset="95%" stopColor="#FFD23F" stopOpacity={0} />
-                            </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#1A1A1A15" />
-                        <XAxis dataKey="date" tick={{ fontFamily: 'Space Mono', fontSize: 10 }} interval="preserveStartEnd" />
-                        <YAxis tick={{ fontFamily: 'Space Mono', fontSize: 10 }} />
-                        <Tooltip
-                            contentStyle={{ fontFamily: 'Space Grotesk', border: '3px solid #1A1A1A', borderRadius: '12px' }}
-                            formatter={(val, name) => [`₹${val}`, name === 'revenue' ? 'Total Revenue' : 'My Commission']}
-                        />
-                        <Area type="monotone" dataKey="revenue" stroke="#FF6B35" strokeWidth={3} fill="url(#revenueGrad)" />
-                        <Area type="monotone" dataKey="commission" stroke="#FFD23F" strokeWidth={2} fill="url(#commissionGrad)" />
-                    </AreaChart>
-                </ResponsiveContainer>
+                <div className="w-full overflow-x-auto">
+                    <div className="min-w-[500px]">
+                        <ResponsiveContainer width="100%" height={280}>
+                            <AreaChart data={chartData}>
+                                <defs>
+                                    <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#FF6B35" stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor="#FF6B35" stopOpacity={0} />
+                                    </linearGradient>
+                                    <linearGradient id="commissionGrad" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#FFD23F" stopOpacity={0.5} />
+                                        <stop offset="95%" stopColor="#FFD23F" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#1A1A1A15" />
+                                <XAxis dataKey="date" tick={{ fontFamily: 'Space Mono', fontSize: 10 }} interval="preserveStartEnd" />
+                                <YAxis tick={{ fontFamily: 'Space Mono', fontSize: 10 }} />
+                                <Tooltip
+                                    contentStyle={{ fontFamily: 'Space Grotesk', border: '3px solid #1A1A1A', borderRadius: '12px' }}
+                                    formatter={(val, name) => [`₹${val}`, name === 'revenue' ? 'Total Revenue' : 'My Commission']}
+                                />
+                                <Area type="monotone" dataKey="revenue" stroke="#FF6B35" strokeWidth={3} fill="url(#revenueGrad)" />
+                                <Area type="monotone" dataKey="commission" stroke="#FFD23F" strokeWidth={2} fill="url(#commissionGrad)" />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
             </div>
 
             {/* ── Orders Bar + Cafe Status Pie ── */}
@@ -150,27 +154,35 @@ function AdminStats() {
 
                 <div className="bg-cream border-3 border-ink rounded-2xl p-6 shadow-[4px_4px_0_#1A1A1A]">
                     <h3 className="font-bangers text-2xl text-ink mb-4">📦 DAILY ORDERS</h3>
-                    <ResponsiveContainer width="100%" height={220}>
-                        <BarChart data={chartData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#1A1A1A15" />
-                            <XAxis dataKey="date" tick={{ fontFamily: 'Space Mono', fontSize: 10 }} interval="preserveStartEnd" />
-                            <YAxis tick={{ fontFamily: 'Space Mono', fontSize: 10 }} />
-                            <Tooltip contentStyle={{ fontFamily: 'Space Grotesk', border: '2px solid #1A1A1A', borderRadius: '10px' }} />
-                            <Bar dataKey="orders" fill="#FFD23F" radius={[6, 6, 0, 0]} stroke="#1A1A1A" strokeWidth={2} />
-                        </BarChart>
-                    </ResponsiveContainer>
+                    <div className="w-full overflow-x-auto">
+                        <div className="min-w-[300px]">
+                            <ResponsiveContainer width="100%" height={220}>
+                                <BarChart data={chartData}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#1A1A1A15" />
+                                    <XAxis dataKey="date" tick={{ fontFamily: 'Space Mono', fontSize: 10 }} interval="preserveStartEnd" />
+                                    <YAxis tick={{ fontFamily: 'Space Mono', fontSize: 10 }} />
+                                    <Tooltip contentStyle={{ fontFamily: 'Space Grotesk', border: '2px solid #1A1A1A', borderRadius: '10px' }} />
+                                    <Bar dataKey="orders" fill="#FFD23F" radius={[6, 6, 0, 0]} stroke="#1A1A1A" strokeWidth={2} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
                 </div>
 
                 <div className="bg-cream border-3 border-ink rounded-2xl p-6 shadow-[4px_4px_0_#1A1A1A]">
                     <h3 className="font-bangers text-2xl text-ink mb-4">🏪 CAFE STATUS</h3>
-                    <ResponsiveContainer width="100%" height={180}>
-                        <PieChart>
-                            <Pie data={cafeStatusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} stroke="#1A1A1A" strokeWidth={2} label={({ name, value }) => `${name}: ${value}`}>
-                                {cafeStatusData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i]} />)}
-                            </Pie>
-                            <Tooltip />
-                        </PieChart>
-                    </ResponsiveContainer>
+                    <div className="w-full overflow-x-auto">
+                        <div className="min-w-[250px]">
+                            <ResponsiveContainer width="100%" height={180}>
+                                <PieChart>
+                                    <Pie data={cafeStatusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} stroke="#1A1A1A" strokeWidth={2} label={({ name, value }) => `${name}: ${value}`}>
+                                        {cafeStatusData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i]} />)}
+                                    </Pie>
+                                    <Tooltip />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -435,59 +447,115 @@ export default function AdminDashboard() {
     const location = useLocation();
     const navigate = useNavigate();
     const tab = location.pathname.split('/').pop();
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const navItems = [
-        { path: 'stats', label: '📊 Stats' },
-        { path: 'cafes', label: '🏪 Cafes' },
-        { path: 'users', label: '👥 Users' },
-        { path: 'orders', label: '📦 Orders' }
+        { path: 'stats', label: 'STATS', icon: '📊' },
+        { path: 'cafes', label: 'CAFES', icon: '🏪' },
+        { path: 'users', label: 'USERS', icon: '👥' },
+        { path: 'orders', label: 'ORDERS', icon: '📦' }
     ];
 
+    const closeSidebar = () => setSidebarOpen(false);
+
     return (
-        <div className="min-h-screen bg-cream flex">
-            {/* Sidebar */}
-            <div className="w-64 bg-ink min-h-screen p-6 fixed left-0 top-0 bottom-0 flex flex-col">
-                {/* Back button */}
+        <div className="min-h-screen bg-[#F5F0E8] flex">
+            
+            {/* ===== OVERLAY (mobile) ===== */}
+            {sidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
+                    onClick={closeSidebar}
+                />
+            )}
+
+            {/* ===== SIDEBAR ===== */}
+            <aside className={`
+                fixed top-0 left-0 h-full w-64 bg-[#1a1a1a] z-30 flex flex-col
+                transform transition-transform duration-300 ease-in-out
+                ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+                lg:translate-x-0 lg:static lg:z-auto
+            `}>
+                {/* Close button (mobile only) */}
+                <button
+                    className="lg:hidden absolute top-4 right-4 text-white text-2xl"
+                    onClick={closeSidebar}
+                >
+                    ✕
+                </button>
+
+                {/* Logo */}
+                <div className="p-6 pb-4">
+                    <div className="flex items-center gap-2 mb-1">
+                        <span className="text-2xl">👑</span>
+                        <span className="text-yellow-400 font-black text-xl tracking-widest">SUPER ADMIN</span>
+                    </div>
+                    <div className="h-1 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-full mt-2" />
+                </div>
+
+                {/* Nav Items */}
+                <nav className="flex-1 px-3 py-4 space-y-1">
+                    {navItems.map(item => {
+                        const isActive = tab === item.path || (tab === 'admin' && item.path === 'stats');
+                        return (
+                            <Link
+                                key={item.label}
+                                to={`/dashboard/admin/${item.path}`}
+                                onClick={closeSidebar}
+                                className={`
+                                    flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm tracking-widest transition-all
+                                    ${isActive
+                                        ? 'bg-yellow-400 text-black'
+                                        : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                                    }
+                                `}
+                            >
+                                <span className="text-lg">{item.icon}</span>
+                                {item.label}
+                            </Link>
+                        );
+                    })}
+                </nav>
+
+                {/* Site Status / Maintenance Toggle */}
+                <MaintenanceToggle />
+
+                {/* Back Button */}
                 <button
                     onClick={() => navigate(-1)}
-                    className="flex items-center gap-2 text-cream/60 hover:text-yellow font-grotesk text-sm mb-6 transition-colors group"
+                    className="m-3 flex items-center justify-center gap-2 text-gray-400 hover:text-white text-sm font-bold py-2 px-3 rounded-lg hover:bg-white/10 transition"
                 >
-                    <span className="text-lg group-hover:-translate-x-1 transition-transform">←</span>
-                    Back
+                    ← Back
                 </button>
-                <div className="flex items-center gap-3 mb-8">
-                    <span className="text-2xl">👑</span>
-                    <span className="font-bangers text-2xl text-yellow">SUPER ADMIN</span>
-                </div>
-                <div className="stripe-bg h-2 rounded-full mb-6" />
-                <nav className="space-y-2">
-                    {navItems.map(({ path, label }) => (
-                        <Link
-                            key={path}
-                            to={`/dashboard/admin/${path}`}
-                            className={`block px-4 py-3 rounded-xl font-bangers text-lg transition-all ${tab === path ? 'bg-yellow text-ink' : 'text-cream hover:bg-white/10'}`}
-                        >
-                            {label}
-                        </Link>
-                    ))}
-                </nav>
-                <div className="flex-1" />
-                
-                {/* ─── Maintenance Mode Toggle ─── */}
-                <MaintenanceToggle />
-            </div>
+            </aside>
 
-            {/* Content */}
-            <div className="ml-64 flex-1 p-8">
-                <div className="max-w-5xl mx-auto">
-                    <Routes>
-                        <Route path="stats" element={<AdminStats />} />
-                        <Route path="cafes" element={<AdminCafes />} />
-                        <Route path="users" element={<AdminUsers />} />
-                        <Route path="orders" element={<AdminOrders />} />
-                        <Route index element={<AdminStats />} />
-                    </Routes>
-                </div>
+            {/* ===== MAIN CONTENT ===== */}
+            <div className="flex-1 flex flex-col min-w-0">
+
+                {/* Mobile Top Bar */}
+                <header className="lg:hidden bg-[#1a1a1a] px-4 py-3 flex items-center justify-between sticky top-0 z-10">
+                    <button
+                        onClick={() => setSidebarOpen(true)}
+                        className="text-white text-2xl p-1"
+                    >
+                        ☰
+                    </button>
+                    <span className="text-yellow-400 font-black text-lg tracking-widest">RESTROON</span>
+                    <span className="text-yellow-400 text-xl">👑</span>
+                </header>
+
+                {/* Page Content */}
+                <main className="flex-1 p-4 lg:p-6 overflow-auto">
+                    <div className="max-w-5xl mx-auto">
+                        <Routes>
+                            <Route path="stats" element={<AdminStats />} />
+                            <Route path="cafes" element={<AdminCafes />} />
+                            <Route path="users" element={<AdminUsers />} />
+                            <Route path="orders" element={<AdminOrders />} />
+                            <Route index element={<AdminStats />} />
+                        </Routes>
+                    </div>
+                </main>
             </div>
         </div>
     );
@@ -517,24 +585,33 @@ function MaintenanceToggle() {
     };
 
     return (
-        <div className="mt-8 p-4 bg-white/5 border-2 border-white/10 rounded-xl text-center">
-            <h4 className="font-bangers text-cream mb-2">🛠️ Site Status</h4>
-            <div className="flex items-center justify-between gap-2">
-                <span className={`text-xs font-mono font-bold ${isMaintenance ? 'text-orange' : 'text-green-400'}`}>
-                    {isMaintenance ? 'MAINTENANCE' : 'LIVE'}
+        <div className="m-3 p-4 bg-white/10 rounded-xl border border-white/10">
+            <div className="flex items-center gap-2 mb-2">
+                <span>🛰️</span>
+                <span className="text-white font-bold text-xs tracking-widest">SITE STATUS</span>
+            </div>
+            <div className="flex items-center justify-between mb-2">
+                <span className={`text-xs font-bold ${isMaintenance ? 'text-red-400' : 'text-green-400'}`}>
+                    {isMaintenance ? '🔴 MAINTENANCE' : '🟢 LIVE'}
                 </span>
-                <button 
+                <button
                     onClick={toggleMaintenance}
-                    className={`px-3 py-1 text-sm font-bangers rounded-lg transition-transform hover:scale-105 active:scale-95 ${
-                        isMaintenance ? 'bg-green-400 text-ink' : 'bg-red text-cream'
-                    }`}
+                    className={`
+                        px-3 py-1 rounded-full text-xs font-black tracking-wider transition-all
+                        ${isMaintenance
+                            ? 'bg-green-500 text-white hover:bg-green-400'
+                            : 'bg-red-500 text-white hover:bg-red-400'
+                        }
+                    `}
                 >
-                    Turn {isMaintenance ? 'OFF' : 'ON'}
+                    {isMaintenance ? 'TURN OFF' : 'TURN ON'}
                 </button>
             </div>
-            <p className="font-grotesk text-[10px] text-cream/40 mt-2 leading-tight">
-                Warning: Turning this ON will block all non-admin traffic.
-            </p>
+            {!isMaintenance && (
+                <p className="text-gray-400 text-xs leading-relaxed">
+                    ⚠️ Turning ON will block all non-admin traffic.
+                </p>
+            )}
         </div>
     );
 }

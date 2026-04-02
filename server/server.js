@@ -50,14 +50,15 @@ app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 app.use(cookieParser());
 app.use(passport.initialize());   // ← ADD — no sessions needed
 
+app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/admin', adminRoutes);
+
 app.use(maintenanceMode);
 app.use(generalLimiter);
 
-app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/cafe', cafeRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/order', orderRoutes);
-app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/subscription', subscriptionRoutes);
