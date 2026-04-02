@@ -21,6 +21,7 @@ import Contact           from './pages/Contact';
 import { Terms, RefundPolicy, CookiePolicy, FAQ } from './pages/LegalPages';
 import BlogList          from './pages/blog/BlogList';
 import BlogPost          from './pages/blog/BlogPost';
+import MaintenancePage   from './pages/MaintenancePage'; // ← ADD
 // ── Redirect logged-in users away from login/register ──
 function AuthGuard({ children }) {
   const { user, loading } = useAuth();
@@ -69,6 +70,7 @@ export default function App() {
             <Route path="/"           element={<LandingPage />} />
             <Route path="/cafes"      element={<CafesPage />} />
             <Route path="/cafe/:slug" element={<CafePage />} />
+            <Route path="/maintenance" element={<MaintenancePage />} />
             
             <Route path="/about"      element={<About />} />
             <Route path="/contact"    element={<Contact />} />

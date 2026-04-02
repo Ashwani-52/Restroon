@@ -471,6 +471,10 @@ export default function AdminDashboard() {
                         </Link>
                     ))}
                 </nav>
+                <div className="flex-1" />
+                
+                {/* ─── Maintenance Mode Toggle ─── */}
+                <MaintenanceToggle />
             </div>
 
             {/* Content */}
@@ -485,6 +489,52 @@ export default function AdminDashboard() {
                     </Routes>
                 </div>
             </div>
+        </div>
+    );
+}
+
+function MaintenanceToggle() {
+    const [isMaintenance, setIsMaintenance] = useState(false);
+
+    useEffect(() => {
+        api.get('/api/admin/maintenance/status')
+           .then(res => setIsMaintenance(res.data.maintenance))
+           .catch(() => {});
+    }, []);
+
+    const toggleMaintenance = async () => {
+        if (!window.confirm(`Are you sure you want to turn ${isMaintenance ? 'OFF' : 'ON'} maintenance mode?`)) return;
+        
+        try {
+            const endpoint = isMaintenance ? '/api/admin/maintenance/off' : '/api/admin/maintenance/on';
+            await api.post(endpoint);
+            setIsMaintenance(!isMaintenance);
+            alert(`Maintenance mode is now ${!isMaintenance ? 'ON' : 'OFF'}`);
+        } catch (err) {
+            console.error(err);
+            alert('Failed to update maintenance mode.');
+        }
+    };
+
+    return (
+        <div className="mt-8 p-4 bg-white/5 border-2 border-white/10 rounded-xl text-center">
+            <h4 className="font-bangers text-cream mb-2">🛠️ Site Status</h4>
+            <div className="flex items-center justify-between gap-2">
+                <span className={`text-xs font-mono font-bold ${isMaintenance ? 'text-orange' : 'text-green-400'}`}>
+                    {isMaintenance ? 'MAINTENANCE' : 'LIVE'}
+                </span>
+                <button 
+                    onClick={toggleMaintenance}
+                    className={`px-3 py-1 text-sm font-bangers rounded-lg transition-transform hover:scale-105 active:scale-95 ${
+                        isMaintenance ? 'bg-green-400 text-ink' : 'bg-red text-cream'
+                    }`}
+                >
+                    Turn {isMaintenance ? 'OFF' : 'ON'}
+                </button>
+            </div>
+            <p className="font-grotesk text-[10px] text-cream/40 mt-2 leading-tight">
+                Warning: Turning this ON will block all non-admin traffic.
+            </p>
         </div>
     );
 }

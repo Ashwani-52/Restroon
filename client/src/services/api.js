@@ -90,6 +90,10 @@ api.interceptors.response.use(
       }
     }
 
+    if (error.response?.status === 503) {
+      window.location.href = '/maintenance';
+    }
+
     return Promise.reject(error);
   }
 );

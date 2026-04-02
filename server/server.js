@@ -9,6 +9,7 @@ import { connectDB } from './config/db.js';
 import { configurePassport } from './config/passport.js';  // ← ADD
 import { authLimiter, generalLimiter } from './middleware/rateLimiter.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import maintenanceMode from './middleware/maintenanceMode.js';
 
 import authRoutes from './routes/auth.routes.js';
 import cafeRoutes from './routes/cafe.routes.js';
@@ -49,6 +50,7 @@ app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 app.use(cookieParser());
 app.use(passport.initialize());   // ← ADD — no sessions needed
 
+app.use(maintenanceMode);
 app.use(generalLimiter);
 
 app.use('/api/auth', authLimiter, authRoutes);

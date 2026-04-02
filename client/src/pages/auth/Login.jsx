@@ -130,12 +130,6 @@ export default function Login() {
                         />
                     </form>
 
-                    {/* Admin hint */}
-                    <div className="mt-4 p-3 bg-ink/5 rounded-xl border border-ink/20">
-                        <p className="font-mono text-xs text-ink/50 text-center">
-                            👑 Admin? Login with your admin email above
-                        </p>
-                    </div>
 
                     <p className="font-grotesk text-center text-sm text-ink/60 mt-4">
                         No account?{' '}
