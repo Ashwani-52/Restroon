@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import api from '../../../services/api';
 import { CartoonButton } from '../../../components/ui/CartoonButton';
-
+import AdminLayout from '../../../components/layout/AdminLayout';
 // Default trends if API fails
 const defaultTrends = [
     { name: 'Biryani', emoji: '🍛', score: 95, change: '+12%', growing: true, insight: 'Highest ordered dish across all cities' },
@@ -444,124 +444,6 @@ function AdminOrders() {
 }
 
 export default function AdminDashboard() {
-    const location = useLocation();
-    const navigate = useNavigate();
-    const tab = location.pathname.split('/').pop();
-    const [sidebarOpen, setSidebarOpen] = useState(false);
-
-    const navItems = [
-        { path: 'stats', label: 'STATS', icon: '📊' },
-        { path: 'cafes', label: 'CAFES', icon: '🏪' },
-        { path: 'users', label: 'USERS', icon: '👥' },
-        { path: 'orders', label: 'ORDERS', icon: '📦' }
-    ];
-
-    const closeSidebar = () => setSidebarOpen(false);
-
-    return (
-        <div className="min-h-screen bg-[#F5F0E8] flex">
-            
-            {/* ===== OVERLAY (mobile) ===== */}
-            {sidebarOpen && (
-                <div
-                    className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
-                    onClick={closeSidebar}
-                />
-            )}
-
-            {/* ===== SIDEBAR ===== */}
-            <aside className={`
-                fixed top-0 left-0 h-full w-64 bg-[#1a1a1a] z-30 flex flex-col
-                transform transition-transform duration-300 ease-in-out
-                ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-                lg:translate-x-0 lg:static lg:z-auto
-            `}>
-                {/* Close button (mobile only) */}
-                <button
-                    className="lg:hidden absolute top-4 right-4 text-white text-2xl"
-                    onClick={closeSidebar}
-                >
-                    ✕
-                </button>
-
-                {/* Logo */}
-                <div className="p-6 pb-4">
-                    <div className="flex items-center gap-2 mb-1">
-                        <span className="text-2xl">👑</span>
-                        <span className="text-yellow-400 font-black text-xl tracking-widest">SUPER ADMIN</span>
-                    </div>
-                    <div className="h-1 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-full mt-2" />
-                </div>
-
-                {/* Nav Items */}
-                <nav className="flex-1 px-3 py-4 space-y-1">
-                    {navItems.map(item => {
-                        const isActive = tab === item.path || (tab === 'admin' && item.path === 'stats');
-                        return (
-                            <Link
-                                key={item.label}
-                                to={`/dashboard/admin/${item.path}`}
-                                onClick={closeSidebar}
-                                className={`
-                                    flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm tracking-widest transition-all
-                                    ${isActive
-                                        ? 'bg-yellow-400 text-black'
-                                        : 'text-gray-300 hover:bg-white/10 hover:text-white'
-                                    }
-                                `}
-                            >
-                                <span className="text-lg">{item.icon}</span>
-                                {item.label}
-                            </Link>
-                        );
-                    })}
-                </nav>
-
-                {/* Site Status / Maintenance Toggle */}
-                <MaintenanceToggle />
-
-                {/* Back Button */}
-                <button
-                    onClick={() => navigate(-1)}
-                    className="m-3 flex items-center justify-center gap-2 text-gray-400 hover:text-white text-sm font-bold py-2 px-3 rounded-lg hover:bg-white/10 transition"
-                >
-                    ← Back
-                </button>
-            </aside>
-
-            {/* ===== MAIN CONTENT ===== */}
-            <div className="flex-1 flex flex-col min-w-0">
-
-                {/* Mobile Top Bar */}
-                <header className="lg:hidden bg-[#1a1a1a] px-4 py-3 flex items-center justify-between sticky top-0 z-10">
-                    <button
-                        onClick={() => setSidebarOpen(true)}
-                        className="text-white text-2xl p-1"
-                    >
-                        ☰
-                    </button>
-                    <span className="text-yellow-400 font-black text-lg tracking-widest">RESTROON</span>
-                    <span className="text-yellow-400 text-xl">👑</span>
-                </header>
-
-                {/* Page Content */}
-                <main className="flex-1 p-4 lg:p-6 overflow-auto">
-                    <div className="max-w-5xl mx-auto">
-                        <Routes>
-                            <Route path="stats" element={<AdminStats />} />
-                            <Route path="cafes" element={<AdminCafes />} />
-                            <Route path="users" element={<AdminUsers />} />
-                            <Route path="orders" element={<AdminOrders />} />
-                            <Route index element={<AdminStats />} />
-                        </Routes>
-                    </div>
-                </main>
-            </div>
-        </div>
-    );
-}
-
-function MaintenanceToggle() {
     const [isMaintenance, setIsMaintenance] = useState(false);
 
     useEffect(() => {
@@ -585,33 +467,16 @@ function MaintenanceToggle() {
     };
 
     return (
-        <div className="m-3 p-4 bg-white/10 rounded-xl border border-white/10">
-            <div className="flex items-center gap-2 mb-2">
-                <span>🛰️</span>
-                <span className="text-white font-bold text-xs tracking-widest">SITE STATUS</span>
+        <AdminLayout isMaintenance={isMaintenance} onToggleMaintenance={toggleMaintenance}>
+            <div className="max-w-5xl mx-auto">
+                <Routes>
+                    <Route path="stats" element={<AdminStats />} />
+                    <Route path="cafes" element={<AdminCafes />} />
+                    <Route path="users" element={<AdminUsers />} />
+                    <Route path="orders" element={<AdminOrders />} />
+                    <Route index element={<AdminStats />} />
+                </Routes>
             </div>
-            <div className="flex items-center justify-between mb-2">
-                <span className={`text-xs font-bold ${isMaintenance ? 'text-red-400' : 'text-green-400'}`}>
-                    {isMaintenance ? '🔴 MAINTENANCE' : '🟢 LIVE'}
-                </span>
-                <button
-                    onClick={toggleMaintenance}
-                    className={`
-                        px-3 py-1 rounded-full text-xs font-black tracking-wider transition-all
-                        ${isMaintenance
-                            ? 'bg-green-500 text-white hover:bg-green-400'
-                            : 'bg-red-500 text-white hover:bg-red-400'
-                        }
-                    `}
-                >
-                    {isMaintenance ? 'TURN OFF' : 'TURN ON'}
-                </button>
-            </div>
-            {!isMaintenance && (
-                <p className="text-gray-400 text-xs leading-relaxed">
-                    ⚠️ Turning ON will block all non-admin traffic.
-                </p>
-            )}
-        </div>
+        </AdminLayout>
     );
 }
