@@ -11,8 +11,7 @@ export default function AnimatedHeroScene() {
                 playsInline
                 preload="none"
                 loading="lazy"
-                className="w-full h-auto rounded-xl"
-                style={{ maxWidth: '100%' }}
+                className="w-full h-full object-cover rounded-xl"
             >
                 <source src={heroVideo} type="video/mp4" />
             </video>
