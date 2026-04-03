@@ -174,3 +174,39 @@ body {
 .leaflet-popup-close-button {
     color: var(--black) !important;
 }
+
+/* Admin stats grid */
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+@media (min-width: 1024px) {
+  .admin-stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 32px;
+  }
+}
+
+/* Fix content overflow on mobile */
+.admin-main-content {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Stat cards */
+.admin-stat-card {
+  padding: 18px 16px;
+  border-radius: 16px;
+  min-width: 0;
+}
+
+@media (min-width: 1024px) {
+  .admin-stat-card {
+    padding: 24px 20px;
+    border-radius: 20px;
+  }
+}

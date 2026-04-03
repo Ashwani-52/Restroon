@@ -98,7 +98,7 @@ function AdminStats() {
             </div>
 
             {/* ── KPI Cards ── */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="admin-stats-grid">
                 {[
                     { label: 'Total Users', value: stats?.users?.total || 0, icon: '👥', color: 'bg-yellow' },
                     { label: 'Active Cafes', value: stats?.cafes?.active || 0, icon: '🏪', color: 'bg-orange' },
@@ -109,7 +109,7 @@ function AdminStats() {
                     { label: 'Pending Approvals', value: stats?.cafes?.pending || 0, icon: '⏳', color: 'bg-red' },
                     { label: "Today's Revenue", value: `₹${todayRevenue.toLocaleString()}`, icon: '📈', color: 'bg-green-400' },
                 ].map(({ label, value, icon, color }) => (
-                    <div key={label} className={`${color} border-3 border-ink rounded-2xl p-4 shadow-[4px_4px_0_#1A1A1A]`}>
+                    <div key={label} className={`admin-stat-card ${color} border-3 border-ink shadow-[4px_4px_0_#1A1A1A]`}>
                         <div className="text-2xl mb-1">{icon}</div>
                         <div className="font-bangers text-2xl text-ink">{value}</div>
                         <div className="font-grotesk text-xs text-ink/70 mt-0.5">{label}</div>
