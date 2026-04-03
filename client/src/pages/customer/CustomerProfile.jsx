@@ -115,7 +115,7 @@ function OrderTracker({ orderId, onClose }) {
                         <div key={i} className="flex justify-between items-center font-grotesk text-sm">
                             <div className="flex items-center gap-2">
                                 {item.menuItem?.image && (
-                                    <img src={item.menuItem.image} alt="" className="w-8 h-8 rounded-lg object-cover border border-ink/10" />
+                                    <img src={item.menuItem.image} alt="" className="w-8 h-8 rounded-lg object-cover border border-ink/10" loading="lazy" decoding="async" />
                                 )}
                                 <span>{item.menuItem?.name || item.name || 'Item'}</span>
                                 <span className="text-ink/40">× {item.quantity}</span>
@@ -401,7 +401,7 @@ function FavouritesTab() {
                     <div key={cafe._id} className="bg-white border-2 border-ink/20 rounded-2xl p-4 flex items-center gap-4 hover:border-orange transition-all group">
                         <div className="w-14 h-14 rounded-xl overflow-hidden border-2 border-ink/10 flex-shrink-0">
                             {cafe.logo
-                                ? <img src={cafe.logo} alt={cafe.name} className="w-full h-full object-cover" />
+                                ? <img src={cafe.logo} alt={cafe.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                                 : <div className="w-full h-full bg-yellow flex items-center justify-center text-2xl">🏪</div>}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -548,7 +548,7 @@ export default function CustomerProfile() {
                 <div className="bg-white border-4 border-ink rounded-3xl p-6 mb-6 shadow-[8px_8px_0_#1A1A1A] flex items-center gap-5">
                     <div className="w-20 h-20 rounded-full border-4 border-orange overflow-hidden flex-shrink-0 shadow-[4px_4px_0_#1A1A1A] bg-yellow">
                         {user.avatar
-                            ? <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                            ? <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" loading="lazy" decoding="async" />
                             : <div className="w-full h-full flex items-center justify-center font-bangers text-3xl text-ink">{initials}</div>}
                     </div>
                     <div className="min-w-0">

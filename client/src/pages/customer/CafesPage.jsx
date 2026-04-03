@@ -127,7 +127,7 @@ export default function CafesPage() {
                                         {/* Cover */}
                                         <div className="h-48 bg-gradient-to-br from-yellow to-orange flex items-center justify-center relative flex-shrink-0">
                                             {cafe.coverImage
-                                                ? <img src={cafe.coverImage} alt={cafe.name} className="w-full h-full object-cover" />
+                                                ? <img src={cafe.coverImage} alt={cafe.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                                                 : <span className="text-7xl">🏪</span>
                                             }
                                             <div className={`absolute top-3 right-3 px-3 py-1 rounded-full border-2 border-ink font-bangers text-sm ${cafe.isOpen ? 'bg-green-400' : 'bg-red text-cream'}`}>
@@ -138,7 +138,7 @@ export default function CafesPage() {
                                         <div className="p-5 flex flex-col flex-1">
                                             <div className="flex items-center gap-3 mb-2">
                                                 {cafe.logo
-                                                    ? <img src={cafe.logo} className="w-10 h-10 rounded-full border-2 border-ink object-cover" alt="" />
+                                                    ? <img src={cafe.logo} className="w-10 h-10 rounded-full border-2 border-ink object-cover" alt="" loading="lazy" decoding="async" />
                                                     : <div className="w-10 h-10 bg-yellow rounded-full border-2 border-ink flex flex-shrink-0 items-center justify-center">🍽️</div>
                                                 }
                                                 <div className="flex flex-col overflow-hidden min-w-0">

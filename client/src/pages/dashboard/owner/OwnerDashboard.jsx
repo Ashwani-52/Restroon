@@ -345,7 +345,7 @@ function OwnerMenu({ cafe }) {
                                 <label className="block font-bangers text-ink text-sm mb-2">📸 FOOD IMAGE (optional)</label>
                                 <label className="flex items-center gap-4 cursor-pointer bg-white border-2 border-dashed border-ink rounded-xl p-3 hover:border-orange transition-colors">
                                     {imagePreview ? (
-                                        <img src={imagePreview} alt="preview" className="w-16 h-16 rounded-lg object-cover border-2 border-ink" />
+                                        <img src={imagePreview} alt="preview" className="w-16 h-16 rounded-lg object-cover border-2 border-ink" loading="lazy" decoding="async" />
                                     ) : (
                                         <div className="w-16 h-16 rounded-lg border-2 border-ink/30 bg-cream flex items-center justify-center text-2xl">🖼️</div>
                                     )}

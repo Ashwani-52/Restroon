@@ -206,12 +206,12 @@ export default function CafePage() {
 
             {/* Hero */}
             <div className="relative h-72 bg-gradient-to-br from-yellow to-orange">
-                {cafe.coverImage && <img src={cafe.coverImage} className="w-full h-full object-cover" alt="" />}
+                {cafe.coverImage && <img src={cafe.coverImage} className="w-full h-full object-cover" loading="lazy" decoding="async" alt="" />}
                 <div className="absolute inset-0 bg-ink/40" />
                 <div className="absolute bottom-6 left-6 right-6">
                     <div className="flex items-end gap-4">
                         <div className="w-20 h-20 bg-yellow border-4 border-cream rounded-2xl flex items-center justify-center text-4xl shadow-[4px_4px_0_#1A1A1A]">
-                            {cafe.logo ? <img src={cafe.logo} className="w-full h-full rounded-xl object-cover" alt="" /> : '🏪'}
+                            {cafe.logo ? <img src={cafe.logo} className="w-full h-full rounded-xl object-cover" loading="lazy" decoding="async" alt="" /> : '🏪'}
                         </div>
                         <div>
                             <h1 className="font-bangers text-4xl text-cream">{cafe.name}</h1>
@@ -259,7 +259,7 @@ export default function CafePage() {
                                 >
                                     <div className="w-20 h-20 bg-yellow rounded-xl border-2 border-ink flex-shrink-0 overflow-hidden">
                                         {item.image
-                                            ? <img src={item.image} className="w-full h-full object-cover" alt="" />
+                                            ? <img src={item.image} className="w-full h-full object-cover" loading="lazy" decoding="async" alt="" />
                                             : <div className="w-full h-full flex items-center justify-center text-3xl">🍽️</div>
                                         }
                                     </div>

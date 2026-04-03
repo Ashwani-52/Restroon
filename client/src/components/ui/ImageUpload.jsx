@@ -73,6 +73,8 @@ export function ImageUpload({
                         src={preview}
                         alt="Preview"
                         className={`w-full h-full object-cover ${circular ? 'rounded-full' : ''}`}
+                        loading="lazy"
+                        decoding="async"
                     />
                 ) : (
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">

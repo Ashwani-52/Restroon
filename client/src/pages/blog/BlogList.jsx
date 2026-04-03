@@ -94,6 +94,8 @@ const BlogList = () => {
                     src={blog.featuredImage} 
                     alt={blog.title} 
                     className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                    loading="lazy"
+                    decoding="async"
                   />
                   {/* Comic Action Tag overlay */}
                   <div className="absolute top-4 right-4 bg-yellow border-2 border-ink px-3 py-1 rounded-full font-bangers tracking-wider text-sm transform rotate-3 shadow-[2px_2px_0_#1A1A1A]">

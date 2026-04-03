@@ -64,7 +64,7 @@ const BlogPost = () => {
       >
         {/* Header Image */}
         <div className="h-[400px] md:h-[500px] relative border-b-4 border-ink">
-          <img src={blog.featuredImage} alt={blog.title} className="w-full h-full object-cover" />
+          <img src={blog.featuredImage} alt={blog.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
           
           <div className="absolute bottom-0 left-0 right-0 p-8 md:p-14 bg-gradient-to-t from-ink/90 via-ink/40 to-transparent">
             <h1 className="text-4xl md:text-5xl lg:text-7xl font-bangers text-cream leading-none tracking-wide drop-shadow-[4px_4px_0_#1A1A1A] mb-8 relative z-10">
