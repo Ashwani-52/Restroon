@@ -9,6 +9,8 @@ export default function AnimatedHeroScene() {
                 loop
                 muted
                 playsInline
+                preload="none"
+                loading="lazy"
                 className="w-full h-auto rounded-xl"
                 style={{ maxWidth: '100%' }}
             >
