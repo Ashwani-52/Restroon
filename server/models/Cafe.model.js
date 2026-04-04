@@ -66,8 +66,19 @@ const cafeSchema = new mongoose.Schema(
             }
         },
         location: {
-            type: { type: String, default: 'Point' },
-            coordinates: { type: [Number], default: [0, 0] } // [longitude, latitude]
+            type: {
+                type: String,
+                enum: ['Point'],
+                default: 'Point'
+            },
+            coordinates: {
+                type: [Number], // [longitude, latitude]
+                default: [0, 0]
+            },
+            address: {
+                type: String,
+                default: ''
+            }
         },
         deliveryRadius: {
             type: Number,

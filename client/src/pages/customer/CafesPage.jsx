@@ -24,24 +24,26 @@ export default function CafesPage() {
 
     useEffect(() => {
         setLoading(true);
-        api.get(`/api/cafe?search=${search}`)
+        let url = `/api/cafe?search=${search}`;
+        if (userLocation) {
+            url = `/api/cafe/nearby?lat=${userLocation.lat}&lng=${userLocation.lng}&radiusInKm=5`;
+            if (search) url += `&search=${search}`;
+        }
+
+        api.get(url)
             .then(r => {
                 let fetchedCafes = r.data.cafes;
                 if (userLocation) {
-                    fetchedCafes = fetchedCafes.filter(cafe => {
-                        if (!cafe.location || !cafe.location.coordinates) return false;
+                    fetchedCafes.forEach(cafe => {
+                        if (!cafe.location || !cafe.location.coordinates) return;
                         const [lng, lat] = cafe.location.coordinates;
-                        const distance = calculateDistance(
+                        cafe.distance = calculateDistance(
                             userLocation.lat,
                             userLocation.lng,
                             lat,
                             lng
                         );
-                        cafe.distance = distance; // temp save for rendering
-                        return distance <= 5; // 5km radius
                     });
-                    // Sort nearest first
-                    fetchedCafes.sort((a, b) => a.distance - b.distance);
                 }
                 setCafes(fetchedCafes);
             })

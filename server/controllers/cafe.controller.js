@@ -73,7 +73,8 @@ export const registerCafe = async (req, res) => {
             openingHours,
             location: {
                 type: 'Point',
-                coordinates: [coords.lng, coords.lat]
+                coordinates: [parseFloat(coords.lng), parseFloat(coords.lat)],
+                address: address.full || address.street || ''
             }
         });
 
@@ -165,7 +166,8 @@ export const updateMyCafe = async (req, res) => {
                 };
                 cafe.location = {
                     type: 'Point',
-                    coordinates: [coords.lng, coords.lat]
+                    coordinates: [parseFloat(coords.lng), parseFloat(coords.lat)],
+                    address: address.full || address.street || ''
                 };
             } else {
                 return res.status(400).json({
@@ -274,7 +276,7 @@ export const getActiveCafes = async (req, res) => {
 // ──────────────────────────────────────────
 export const getNearbyCafes = async (req, res) => {
     try {
-        const { lat, lng, radiusInKm = 5 } = req.query;
+        const { lat, lng, radiusInKm = 5, search } = req.query;
 
         if (!lat || !lng) {
             return res.status(400).json({
@@ -283,7 +285,7 @@ export const getNearbyCafes = async (req, res) => {
             });
         }
 
-        const cafes = await Cafe.find({
+        const query = {
             status: CAFE_STATUS.ACTIVE,
             'subscription.status': { $in: ['active', 'trial'] },
             location: {
@@ -295,7 +297,13 @@ export const getNearbyCafes = async (req, res) => {
                     $maxDistance: parseFloat(radiusInKm) * 1000 // Convert km to meters
                 }
             }
-        }).select('-totalRevenue');
+        };
+
+        if (search) {
+            query.name = { $regex: search, $options: 'i' };
+        }
+
+        const cafes = await Cafe.find(query).select('-totalRevenue');
 
         res.status(200).json({
             success: true,

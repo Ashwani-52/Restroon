@@ -1264,8 +1264,16 @@ function CafeSetup({ setCafe }) {
                     <p className="font-grotesk text-xs text-ink/60 mb-2">Drag the map to place the pin on your cafe.</p>
                     <div className="h-64 mb-4">
                         <LocationPicker 
-                            value={form.address.coordinates} 
-                            onChange={coords => setForm(f => ({ ...f, address: { ...f.address, coordinates: coords } }))} 
+                            onLocationSelect={(loc) => {
+                                setForm(f => ({
+                                    ...f,
+                                    address: {
+                                        ...f.address,
+                                        coordinates: { lat: loc.lat, lng: loc.lng },
+                                        full: loc.address
+                                    }
+                                }));
+                            }} 
                         />
                     </div>
                 </div>
