@@ -412,3 +412,42 @@ export const adminUpdateCafeStatus = async (req, res) => {
         });
     }
 };
+
+// ──────────────────────────────────────────
+// UPDATE UPI ID (Owner only)
+// ──────────────────────────────────────────
+export const updateUpiSettings = async (req, res) => {
+    try {
+        const { upiId, upiName } = req.body;
+
+        // Basic UPI ID validation — must contain @
+        if (!upiId || !upiId.includes('@')) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Invalid UPI ID. Format: yourname@upi' 
+            });
+        }
+
+        const cafe = await Cafe.findOneAndUpdate(
+            { owner: req.user._id },
+            { upiId: upiId.trim(), upiName: upiName?.trim() || '' },
+            { new: true }
+        );
+
+        res.json({ success: true, message: 'UPI ID saved ✅', cafe });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+// ──────────────────────────────────────────
+// GET UPI ID (Owner only)
+// ──────────────────────────────────────────
+export const getUpiSettings = async (req, res) => {
+    try {
+        const cafe = await Cafe.findOne({ owner: req.user._id }).select('upiId upiName');
+        res.json({ success: true, upiId: cafe?.upiId || null, upiName: cafe?.upiName || null });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};

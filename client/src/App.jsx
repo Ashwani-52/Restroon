@@ -22,6 +22,8 @@ import { Terms, RefundPolicy, CookiePolicy, FAQ } from './pages/LegalPages';
 import BlogList          from './pages/blog/BlogList';
 import BlogPost          from './pages/blog/BlogPost';
 import MaintenancePage   from './pages/MaintenancePage'; // ← ADD
+import UpiPayment        from './pages/customer/UpiPayment';
+
 // ── Redirect logged-in users away from login/register ──
 function AuthGuard({ children }) {
   const { user, loading } = useAuth();
@@ -92,6 +94,9 @@ export default function App() {
             } />
             <Route path="/order-confirmation/:orderId" element={
               <ProtectedRoute><OrderConfirmation /></ProtectedRoute>
+            } />
+            <Route path="/payment/upi/:orderId" element={
+              <ProtectedRoute><UpiPayment /></ProtectedRoute>
             } />
 
             {/* ─── OWNER DASHBOARD ───────────────── */}

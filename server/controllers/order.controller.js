@@ -433,3 +433,83 @@ export const adminGetAllOrders = async (req, res) => {
         });
     }
 };
+
+// ──────────────────────────────────────────
+// GET PAYMENT DETAILS (Customer only)
+// ──────────────────────────────────────────
+export const getPaymentDetails = async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.orderId)
+            .populate({
+                path: 'cafe',
+                select: 'upiId upiName name status'
+            });
+
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+        }
+
+        // Verify order belongs to this user
+        if (order.customer.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ success: false, message: 'Unauthorized' });
+        }
+
+        const cafe = order.cafe;
+
+        if (!cafe.upiId) {
+            return res.json({
+                success: true,
+                paymentMethod: 'cod', // fallback to cash
+                message: 'This cafe accepts Cash on Delivery only'
+            });
+        }
+
+        // Generate UPI deep link
+        const upiLink = `upi://pay?pa=${encodeURIComponent(cafe.upiId)}&pn=${encodeURIComponent(cafe.upiName || cafe.name)}&am=${order.totalAmount}&tn=Order-${order._id}&cu=INR`;
+
+        // Generate QR data (just the UPI link — frontend renders QR)
+        res.json({
+            success: true,
+            paymentMethod: 'upi',
+            upiId: cafe.upiId,
+            upiName: cafe.upiName || cafe.name,
+            amount: order.totalAmount,
+            orderId: order._id,
+            upiLink,
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+// ──────────────────────────────────────────
+// MARK ORDER PAID (Customer confirms payment)
+// ──────────────────────────────────────────
+export const markOrderPaid = async (req, res) => {
+    try {
+        // Also verify this order belongs to the customer
+        const orderQuery = { _id: req.params.orderId, customer: req.user._id };
+        const order = await Order.findOneAndUpdate(
+            orderQuery,
+            { 
+                paymentStatus: 'paid',
+                paymentMethod: 'upi',
+                paymentConfirmed: true
+            },
+            { new: true }
+        ).populate('cafe');
+
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found or unauthorized' });
+        }
+
+        // Send email now that the order is confirmed paid
+        sendOrderEmailPair(order, order.cafe, order.customerEmail).catch(err =>
+            console.error('[EMAIL] UPI email error:', err.message)
+        );
+
+        res.json({ success: true, order });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};

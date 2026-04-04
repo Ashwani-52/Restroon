@@ -125,8 +125,11 @@ export default function CafePage() {
         if (!user) { navigate('/login'); return; }
         setOrdering(true);
         try {
-            const res = await api.post('/api/order', buildOrderPayload('online'));
+            const res = await api.post('/api/order', buildOrderPayload(paymentMethod));
             setPlacedOrderId(res.data.order._id);
+            if (paymentMethod === 'upi') {
+                navigate(`/payment/upi/${res.data.order._id}`);
+            }
         } catch (err) {
             alert(err.response?.data?.message || 'Failed');
         } finally {
@@ -384,13 +387,13 @@ export default function CafePage() {
 
                                     {/* Payment Method Toggle */}
                                     <div className="flex gap-2 mb-4">
-                                        {['online', 'cod'].map(method => (
+                                        {['online', 'upi', 'cod'].map(method => (
                                             <button
                                                 key={method}
                                                 onClick={() => { setPaymentMethod(method); setPlacedOrderId(null); }}
                                                 className={`flex-1 py-2 rounded-xl border-2 border-ink font-bangers text-sm transition-all ${paymentMethod === method ? 'bg-yellow shadow-[2px_2px_0_#1A1A1A]' : 'bg-cream'}`}
                                             >
-                                                {method === 'online' ? '💳 Online' : '💵 Cash'}
+                                                {method === 'online' ? '💳 Online' : method === 'upi' ? '📱 UPI' : '💵 Cash'}
                                             </button>
                                         ))}
                                     </div>
@@ -415,8 +418,8 @@ export default function CafePage() {
                                         />
                                     )}
 
-                                    {/* Online — Create pending order first */}
-                                    {paymentMethod === 'online' && !placedOrderId && (
+                                    {/* Online/UPI — Create pending order first */}
+                                    {(paymentMethod === 'online' || paymentMethod === 'upi') && !placedOrderId && (
                                         <CartoonButton
                                             label={ordering ? '⏳ Processing...' : `💳 Proceed to Pay • ₹${total}`}
                                             color="bg-yellow"

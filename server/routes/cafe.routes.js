@@ -8,7 +8,9 @@ import {
     getCafeBySlug,
     adminGetAllCafes,
     adminUpdateCafeStatus,
-    getNearbyCafes
+    getNearbyCafes,
+    updateUpiSettings,
+    getUpiSettings
 } from '../controllers/cafe.controller.js';
 import { protect } from '../middleware/auth.middleware.js';
 import { requireRole } from '../middleware/role.middleware.js';
@@ -26,6 +28,8 @@ router.post('/', protect, requireRole(ROLES.OWNER), registerCafe);
 router.get('/my-cafe', protect, requireRole(ROLES.OWNER), getMyCafe);
 router.put('/my-cafe', protect, requireRole(ROLES.OWNER), updateMyCafe);
 router.patch('/my-cafe/toggle', protect, requireRole(ROLES.OWNER), toggleCafeStatus);
+router.put('/settings/upi', protect, requireRole(ROLES.OWNER), updateUpiSettings);
+router.get('/settings/upi', protect, requireRole(ROLES.OWNER), getUpiSettings);
 
 // ─── Admin Routes ──────────────────────────
 router.get('/admin/all', protect, requireRole(ROLES.ADMIN), adminGetAllCafes);

@@ -89,6 +89,16 @@ const cafeSchema = new mongoose.Schema(
             type: Number,
             default: 0
         },
+        upiId: {
+            type: String,
+            trim: true,
+            default: null,
+        },
+        upiName: {
+            type: String,
+            trim: true,
+            default: null,
+        },
         // Add to Cafe.model.js inside cafeSchema
         banking: {
             accountHolderName: { type: String, default: '' },

@@ -8,6 +8,7 @@ import { CartoonButton } from '../../../components/ui/CartoonButton';
 import { ImageUpload } from '../../../components/ui/ImageUpload';
 import SubscriptionPage from './SubscriptionPage';
 import LocationPicker from '../../../components/common/LocationPicker';
+import UpiSettings from '../../../components/dashboard/owner/UpiSettings';
 import {
     LineChart, Line, BarChart, Bar,
     XAxis, YAxis, CartesianGrid, Tooltip,
@@ -1026,6 +1027,8 @@ function OwnerSettings({ cafe, setCafe }) {
                     />
                 </form>
             </div>
+
+            <UpiSettings />
         </div>
     );
 }
