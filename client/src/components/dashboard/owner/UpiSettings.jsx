@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../../services/api';
-import { toast } from 'react-hot-toast';
 import { QrCode, Save, Loader2, Info } from 'lucide-react';
 
 const UpiSettings = () => {
@@ -21,7 +20,7 @@ const UpiSettings = () => {
                 setUpiName(data.upiName || '');
             }
         } catch (error) {
-            toast.error('Failed to load UPI settings');
+            alert('Failed to load UPI settings');
         } finally {
             setLoading(false);
         }
@@ -33,10 +32,10 @@ const UpiSettings = () => {
         try {
             const { data } = await api.put('/cafe/settings/upi', { upiId, upiName });
             if (data.success) {
-                toast.success('UPI details saved successfully!');
+                alert('UPI details saved successfully!');
             }
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to save UPI details');
+            alert(error.response?.data?.message || 'Failed to save UPI details');
         } finally {
             setSaving(false);
         }

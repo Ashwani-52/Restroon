@@ -2,9 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import QRCode from 'react-qr-code';
 import { CheckCircle2, ChevronLeft, Loader2, IndianRupee, Store, Info } from 'lucide-react';
-import api from '../../../services/api';
-import { toast } from 'react-hot-toast';
-import CartoonButton from '../../../components/ui/CartoonButton';
+import api from '../../services/api';
 
 const UpiPayment = () => {
     const { orderId } = useParams();
@@ -22,14 +20,14 @@ const UpiPayment = () => {
             const { data } = await api.get(`/api/order/${orderId}/payment`);
             if (data.success) {
                 if (data.paymentMethod === 'cod') {
-                    toast.error(data.message || 'This cafe only accepts cash.');
+                    alert(data.message || 'This cafe only accepts cash.');
                     navigate(`/order-confirmation/${orderId}`);
                     return;
                 }
                 setPaymentData(data);
             }
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to fetch payment details');
+            alert(error.response?.data?.message || 'Failed to fetch payment details');
             navigate('/profile');
         } finally {
             setLoading(false);
@@ -41,11 +39,11 @@ const UpiPayment = () => {
         try {
             const { data } = await api.post(`/api/order/${orderId}/paid`);
             if (data.success) {
-                toast.success('Payment confirmed successfully!');
+                alert('Payment confirmed successfully!');
                 navigate(`/order-confirmation/${orderId}`);
             }
         } catch (error) {
-            toast.error('Failed to confirm payment');
+            alert('Failed to confirm payment');
         } finally {
             setConfirming(false);
         }
@@ -108,10 +106,10 @@ const UpiPayment = () => {
                         </div>
 
                         <div className="space-y-4">
-                            <CartoonButton
+                            <button
                                 onClick={handleConfirmPayment}
                                 disabled={confirming}
-                                className="w-full py-4 text-lg bg-orange-500 hover:bg-orange-600 text-white flex justify-center items-center gap-2"
+                                className="w-full py-4 text-lg bg-orange-500 hover:bg-orange-600 text-white flex justify-center items-center gap-2 rounded-xl transition-colors font-bold"
                             >
                                 {confirming ? (
                                     <Loader2 className="w-6 h-6 animate-spin" />
@@ -121,7 +119,7 @@ const UpiPayment = () => {
                                         I Have Made The Payment
                                     </>
                                 )}
-                            </CartoonButton>
+                            </button>
                             
                             <p className="text-xs text-center text-gray-400 font-medium">
                                 By clicking confirm, you agree that you have successfully completed the transaction on your UPI app.
