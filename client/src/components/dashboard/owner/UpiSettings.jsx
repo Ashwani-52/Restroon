@@ -20,7 +20,7 @@ const UpiSettings = () => {
                 setUpiName(data.upiName || '');
             }
         } catch (error) {
-            alert('Failed to load UPI settings');
+            console.error('UPI load error:', error);
         } finally {
             setLoading(false);
         }

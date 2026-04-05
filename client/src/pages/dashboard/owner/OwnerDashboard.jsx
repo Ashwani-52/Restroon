@@ -1027,8 +1027,6 @@ function OwnerSettings({ cafe, setCafe }) {
                     />
                 </form>
             </div>
-
-            <UpiSettings />
         </div>
     );
 }
@@ -1186,6 +1184,8 @@ function OwnerBanking({ cafe }) {
                     />
                 </form>
             </div>
+            
+            <UpiSettings />
         </div>
     );
 }

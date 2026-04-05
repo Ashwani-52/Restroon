@@ -255,6 +255,7 @@ export const updateMyCafe = async (req, res) => {
         });
 
     } catch (err) {
+        console.error('🔴 Cafe update error:', err.message, err);
         res.status(500).json({
             success: false,
             message: 'Failed to update cafe',
@@ -510,6 +511,7 @@ export const updateUpiSettings = async (req, res) => {
 
         res.json({ success: true, message: 'UPI ID saved ✅', cafe });
     } catch (err) {
+        console.error('UPI save error:', err);
         res.status(500).json({ success: false, message: err.message });
     }
 };
@@ -520,8 +522,18 @@ export const updateUpiSettings = async (req, res) => {
 export const getUpiSettings = async (req, res) => {
     try {
         const cafe = await Cafe.findOne({ owner: req.user._id }).select('upiId upiName');
-        res.json({ success: true, upiId: cafe?.upiId || null, upiName: cafe?.upiName || null });
+        
+        if (!cafe) {
+            return res.json({ success: true, upiId: null, upiName: null });
+        }
+        
+        res.json({ 
+            success: true, 
+            upiId: cafe.upiId || null, 
+            upiName: cafe.upiName || null 
+        });
     } catch (err) {
+        console.error('UPI fetch error:', err);
         res.status(500).json({ success: false, message: err.message });
     }
 };
