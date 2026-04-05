@@ -1198,12 +1198,14 @@ function CafeSetup({ setCafe }) {
         deliveryRadius: 5, cuisine: ''
     });
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
     const navigate = useNavigate?.() ?? (() => { });
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError(null);
         if (!form.address.coordinates || form.address.coordinates.lat === 0) {
-            alert('Please pin your cafe location on the map!');
+            setError('Please pin your cafe location on the map!');
             return;
         }
 
@@ -1218,7 +1220,7 @@ function CafeSetup({ setCafe }) {
             setCafe(res.data.cafe);
             window.location.href = '/dashboard/owner/subscription';
         } catch (err) {
-            alert(err.response?.data?.message || 'Failed to register cafe');
+            setError(err.response?.data?.message || 'Failed to register cafe');
         } finally {
             setLoading(false);
         }
@@ -1244,7 +1246,10 @@ function CafeSetup({ setCafe }) {
                             placeholder={ph}
                             required={name !== 'description'}
                             value={form[name]}
-                            onChange={e => setForm(f => ({ ...f, [name]: e.target.value }))}
+                            onChange={e => {
+                                setError(null);
+                                setForm(f => ({ ...f, [name]: e.target.value }));
+                            }}
                             className="w-full mt-1 px-4 py-3 bg-white border-3 border-ink rounded-xl font-grotesk text-ink placeholder:text-ink/40 focus:outline-none focus:border-orange"
                         />
                     </div>
@@ -1261,7 +1266,10 @@ function CafeSetup({ setCafe }) {
                             placeholder={ph}
                             required
                             value={form.address[field]}
-                            onChange={e => setForm(f => ({ ...f, address: { ...f.address, [field]: e.target.value } }))}
+                            onChange={e => {
+                                setError(null);
+                                setForm(f => ({ ...f, address: { ...f.address, [field]: e.target.value } }));
+                            }}
                             className="w-full mt-1 px-4 py-3 bg-white border-3 border-ink rounded-xl font-grotesk text-ink placeholder:text-ink/40 focus:outline-none focus:border-orange"
                         />
                     </div>
@@ -1272,6 +1280,7 @@ function CafeSetup({ setCafe }) {
                     <div className="mb-4">
                         <LocationPicker 
                             onLocationSelect={(loc) => {
+                                setError(null);
                                 setForm(f => ({
                                     ...f,
                                     address: {
@@ -1292,6 +1301,17 @@ function CafeSetup({ setCafe }) {
                         borderRadius: 10, fontSize: 13, color: '#92400e'
                     }}>
                         ⚠️ Please pin your cafe location on the map before saving.
+                    </div>
+                )}
+
+                {error && (
+                    <div style={{
+                        marginTop: 10, padding: '10px 14px',
+                        background: '#fef2f2', border: '1px solid #fca5a5',
+                        borderRadius: 10, fontSize: 13, color: '#991b1b',
+                        fontWeight: 500
+                    }}>
+                        🚨 {error}
                     </div>
                 )}
 
