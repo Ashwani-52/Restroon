@@ -12,7 +12,7 @@ const UpiSettings = () => {
     useEffect(() => {
         const fetchUpiSettings = async () => {
             try {
-                const { data } = await api.get('/cafe/settings/upi');
+                const { data } = await api.get('/api/cafe/settings/upi');
                 if (data.success && data.upiId) {
                     setUpiId(data.upiId);
                     setUpiName(data.upiName || '');
@@ -35,7 +35,7 @@ const UpiSettings = () => {
         }
         setSaving(true);
         try {
-            const { data } = await api.put('/cafe/settings/upi', { upiId, upiName });
+            const { data } = await api.put('/api/cafe/settings/upi', { upiId, upiName });
             if (data.success) {
                 setSaved(true);
                 alert('✅ UPI ID saved! Customers will now pay directly to you.');
