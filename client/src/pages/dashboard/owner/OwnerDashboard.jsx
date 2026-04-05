@@ -1269,7 +1269,7 @@ function CafeSetup({ setCafe }) {
                 <div>
                     <label className="font-bangers text-lg text-ink">Exact Location</label>
                     <p className="font-grotesk text-xs text-ink/60 mb-2">Drag the map to place the pin on your cafe.</p>
-                    <div className="h-64 mb-4">
+                    <div className="mb-4">
                         <LocationPicker 
                             onLocationSelect={(loc) => {
                                 setForm(f => ({
