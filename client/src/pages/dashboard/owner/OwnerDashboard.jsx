@@ -1033,41 +1033,6 @@ function OwnerSettings({ cafe, setCafe }) {
 
 // Add OwnerBanking function
 function OwnerBanking({ cafe }) {
-    const [form, setForm] = useState({
-        accountHolderName: '',
-        accountNumber: '',
-        ifscCode: '',
-        upiId: ''
-    });
-    const [existing, setExisting] = useState(null);
-    const [saving, setSaving] = useState(false);
-    const [saved, setSaved] = useState(false);
-    const [error, setError] = useState('');
-
-    useEffect(() => {
-        api.get('/api/payment/bank')
-            .then(r => {
-                if (r.data.banking?.accountNumber) setExisting(r.data.banking);
-            })
-            .catch(() => { });
-    }, []);
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setSaving(true);
-        setError('');
-        try {
-            await api.post('/api/payment/bank', form);
-            setSaved(true);
-            setExisting({ ...form, accountNumber: form.accountNumber.slice(-4).padStart(form.accountNumber.length, '*') });
-            setForm({ accountHolderName: '', accountNumber: '', ifscCode: '', upiId: '' });
-        } catch (err) {
-            setError(err.response?.data?.message || 'Failed to save banking info');
-        } finally {
-            setSaving(false);
-        }
-    };
-
     return (
         <div className="max-w-xl space-y-6">
             <h2 className="font-bangers text-3xl text-ink">🏦 PAYMENT SETTINGS</h2>
@@ -1104,85 +1069,6 @@ function OwnerBanking({ cafe }) {
                 <p className="font-mono text-xs text-ink/50 mt-2">
                     Transferred automatically within 2-3 business days
                 </p>
-            </div>
-
-            {/* Existing account */}
-            {existing && (
-                <div className="bg-green-50 border-3 border-green-400 rounded-2xl p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                        <span className="text-xl">✅</span>
-                        <span className="font-bangers text-xl text-ink">ACCOUNT LINKED</span>
-                        {existing.isVerified
-                            ? <span className="bg-green-400 text-ink px-2 py-0.5 rounded-full font-bangers text-xs">VERIFIED</span>
-                            : <span className="bg-yellow text-ink px-2 py-0.5 rounded-full font-bangers text-xs">PENDING VERIFICATION</span>
-                        }
-                    </div>
-                    <div className="space-y-1 font-grotesk text-sm">
-                        <p><span className="font-semibold">Name:</span> {existing.accountHolderName}</p>
-                        <p><span className="font-semibold">Account:</span> {existing.accountNumber}</p>
-                        <p><span className="font-semibold">IFSC:</span> {existing.ifscCode}</p>
-                        {existing.upiId && <p><span className="font-semibold">UPI:</span> {existing.upiId}</p>}
-                    </div>
-                </div>
-            )}
-
-            {/* Form */}
-            <div className="bg-cream border-3 border-ink rounded-2xl p-6 shadow-[4px_4px_0_#1A1A1A]">
-                <h3 className="font-bangers text-2xl text-ink mb-4">
-                    {existing ? '🔄 UPDATE ACCOUNT' : '➕ ADD BANK ACCOUNT'}
-                </h3>
-
-                {error && (
-                    <div className="bg-red/10 border-2 border-red rounded-xl p-3 mb-4">
-                        <p className="font-grotesk text-sm text-red">{error}</p>
-                    </div>
-                )}
-
-                {saved && (
-                    <div className="bg-green-100 border-2 border-green-400 rounded-xl p-3 mb-4">
-                        <p className="font-grotesk text-sm text-green-700">✅ Banking info saved! Verification in 24-48 hours.</p>
-                    </div>
-                )}
-
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    {[
-                        { name: 'accountHolderName', label: 'Account Holder Name', type: 'text', placeholder: 'As per bank records' },
-                        { name: 'accountNumber', label: 'Account Number', type: 'text', placeholder: 'Enter account number' },
-                        { name: 'ifscCode', label: 'IFSC Code', type: 'text', placeholder: 'e.g. SBIN0001234' },
-                        { name: 'upiId', label: 'UPI ID (Optional)', type: 'text', placeholder: 'yourname@upi' },
-                    ].map(({ name, label, type, placeholder }) => (
-                        <div key={name}>
-                            <label className="font-bangers text-lg text-ink">{label}</label>
-                            <input
-                                type={type}
-                                placeholder={placeholder}
-                                value={form[name]}
-                                onChange={e => setForm(f => ({
-                                    ...f,
-                                    [name]: name === 'ifscCode' ? e.target.value.toUpperCase() : e.target.value
-                                }))}
-                                required={name !== 'upiId'}
-                                autoComplete="off"
-                                className="w-full mt-1 px-4 py-3 bg-white border-3 border-ink rounded-xl font-grotesk focus:outline-none focus:border-orange"
-                            />
-                        </div>
-                    ))}
-
-                    <div className="bg-red/5 border border-red/30 rounded-xl p-3">
-                        <p className="font-grotesk text-xs text-red/80">
-                            ⚠️ Enter exact details as per your bank records.
-                            Incorrect details may delay payments.
-                        </p>
-                    </div>
-
-                    <CartoonButton
-                        type="submit"
-                        label={saving ? '⏳ Saving...' : '🏦 Save Banking Info'}
-                        color="bg-yellow"
-                        size="lg"
-                        disabled={saving}
-                    />
-                </form>
             </div>
             
             <UpiSettings />

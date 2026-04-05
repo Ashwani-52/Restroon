@@ -1,41 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../../services/api';
-import { QrCode, Save, Loader2, Info } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 const UpiSettings = () => {
     const [upiId, setUpiId] = useState('');
     const [upiName, setUpiName] = useState('');
     const [loading, setLoading] = useState(true);
+    const [saved, setSaved] = useState(false);
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
+        const fetchUpiSettings = async () => {
+            try {
+                const { data } = await api.get('/cafe/settings/upi');
+                if (data.success && data.upiId) {
+                    setUpiId(data.upiId);
+                    setUpiName(data.upiName || '');
+                    setSaved(true);
+                }
+            } catch (error) {
+                console.error('UPI load error:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
         fetchUpiSettings();
     }, []);
 
-    const fetchUpiSettings = async () => {
-        try {
-            const { data } = await api.get('/cafe/settings/upi');
-            if (data.success) {
-                setUpiId(data.upiId || '');
-                setUpiName(data.upiName || '');
-            }
-        } catch (error) {
-            console.error('UPI load error:', error);
-        } finally {
-            setLoading(false);
+    const handleSaveUpi = async () => {
+        if (!upiId || !upiId.includes('@')) {
+            alert('Please enter a valid UPI ID (must contain @)');
+            return;
         }
-    };
-
-    const handleSave = async (e) => {
-        e.preventDefault();
         setSaving(true);
         try {
             const { data } = await api.put('/cafe/settings/upi', { upiId, upiName });
             if (data.success) {
-                alert('UPI details saved successfully!');
+                setSaved(true);
+                alert('✅ UPI ID saved! Customers will now pay directly to you.');
             }
         } catch (error) {
-            alert(error.response?.data?.message || 'Failed to save UPI details');
+            alert('❌ ' + (error.response?.data?.message || 'Failed to save UPI'));
         } finally {
             setSaving(false);
         }
@@ -50,60 +56,110 @@ const UpiSettings = () => {
     }
 
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8 mt-4">
-            <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 bg-orange-50 rounded-lg">
-                    <QrCode className="w-6 h-6 text-orange-500" />
-                </div>
+        <div style={{
+            background: '#fff', borderRadius: 16, padding: 24,
+            border: '2px solid #e5e7eb', marginTop: 16
+        }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                <span style={{ fontSize: 28 }}>📱</span>
                 <div>
-                    <h2 className="text-xl font-bold font-comic text-gray-800">Direct UPI Payments</h2>
-                    <p className="text-gray-500 text-sm">Receive payments directly to your bank account with zero fees.</p>
+                    <div style={{ fontWeight: 900, fontSize: 17 }}>Direct UPI Payments</div>
+                    <div style={{ color: '#888', fontSize: 13 }}>
+                        Receive payments directly to your bank account with zero fees.
+                    </div>
                 </div>
             </div>
 
-            <div className="bg-blue-50 text-blue-800 p-4 rounded-lg mb-6 flex gap-3 text-sm">
-                <Info className="w-5 h-5 flex-shrink-0" />
-                <p>When customers choose UPI, they will scan a QR code to pay <strong>directly to you</strong>. You will need to manually verify the payment screen before handing over the food.</p>
+            {/* Info box */}
+            <div style={{
+                background: '#eff6ff', border: '1px solid #bfdbfe',
+                borderRadius: 10, padding: '12px 14px', margin: '16px 0',
+                fontSize: 13, color: '#1d4ed8', lineHeight: 1.5
+            }}>
+                ℹ️ When customers choose UPI, they will scan a QR code to pay{' '}
+                <strong>directly to you.</strong> You will need to manually verify 
+                the payment screen before handing over the food.
             </div>
 
-            <form onSubmit={handleSave} className="space-y-4 max-w-md">
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Business Name (Optional)
-                    </label>
-                    <input
-                        type="text"
-                        value={upiName}
-                        onChange={(e) => setUpiName(e.target.value)}
-                        placeholder="e.g. My Cafe Name"
-                        className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all"
-                    />
-                    <p className="text-xs text-gray-400 mt-1">This will show up when customers scan the QR code.</p>
+            {/* Saved badge */}
+            {saved && (
+                <div style={{
+                    background: '#f0fdf4', border: '1px solid #86efac',
+                    borderRadius: 10, padding: '10px 14px', marginBottom: 16,
+                    fontSize: 13, color: '#16a34a', fontWeight: 700
+                }}>
+                    ✅ UPI Active — Customers can now pay directly to your account
                 </div>
+            )}
 
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Your UPI ID <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                        type="text"
-                        value={upiId}
-                        onChange={(e) => setUpiId(e.target.value)}
-                        placeholder="e.g. yourname@ybl, 9876543210@paytm"
-                        required
-                        className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all"
-                    />
+            {/* Business Name */}
+            <div style={{ marginBottom: 14 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, color: '#555', letterSpacing: '0.05em' }}>
+                    BUSINESS NAME (OPTIONAL)
+                </label>
+                <input
+                    value={upiName}
+                    onChange={e => setUpiName(e.target.value)}
+                    placeholder="Oven Express"
+                    style={{
+                        width: '100%', marginTop: 6, padding: '12px 14px',
+                        borderRadius: 10, border: '2px solid #e5e7eb',
+                        fontSize: 14, outline: 'none', boxSizing: 'border-box'
+                    }}
+                />
+                <div style={{ fontSize: 11, color: '#aaa', marginTop: 4 }}>
+                    This will show up when customers scan the QR code.
                 </div>
+            </div>
 
-                <button
-                    type="submit"
-                    disabled={saving}
-                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 transition-colors"
-                >
-                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                    Save UPI Settings
-                </button>
-            </form>
+            {/* UPI ID */}
+            <div style={{ marginBottom: 20 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, color: '#555', letterSpacing: '0.05em' }}>
+                    YOUR UPI ID *
+                </label>
+                <input
+                    value={upiId}
+                    onChange={e => setUpiId(e.target.value)}
+                    placeholder="e.g. yourname@ybl, 9876543210@paytm"
+                    style={{
+                        width: '100%', marginTop: 6, padding: '12px 14px',
+                        borderRadius: 10, border: `2px solid ${upiId && !upiId.includes('@') ? '#ef4444' : '#e5e7eb'}`,
+                        fontSize: 14, fontFamily: 'monospace',
+                        outline: 'none', boxSizing: 'border-box'
+                    }}
+                />
+                {upiId && !upiId.includes('@') && (
+                    <div style={{ fontSize: 11, color: '#ef4444', marginTop: 4 }}>
+                        ❌ Invalid format — must contain @ symbol
+                    </div>
+                )}
+                <div style={{ fontSize: 11, color: '#aaa', marginTop: 4 }}>
+                    Examples: cafe@okicici · 9876543210@paytm · cafe@ybl
+                </div>
+            </div>
+
+            {/* ✅ SAVE BUTTON */}
+            <button
+                onClick={handleSaveUpi}
+                disabled={saving || !upiId || !upiId.includes('@')}
+                style={{
+                    width: '100%', padding: '14px',
+                    background: saving || !upiId || !upiId.includes('@') 
+                        ? '#e5e7eb' : '#FFD700',
+                    border: 'none', borderRadius: 12,
+                    fontWeight: 900, fontSize: 15,
+                    letterSpacing: '0.08em',
+                    cursor: saving || !upiId || !upiId.includes('@') 
+                        ? 'not-allowed' : 'pointer',
+                    color: '#000',
+                    boxShadow: !saving && upiId && upiId.includes('@') 
+                        ? '0 4px 0 #b8960c' : 'none',
+                    transition: 'all 0.15s',
+                    marginBottom: 40
+                }}
+            >
+                {saving ? '⏳ Saving...' : saved ? '✅ UPDATE UPI ID' : '💾 SAVE UPI ID'}
+            </button>
         </div>
     );
 };
