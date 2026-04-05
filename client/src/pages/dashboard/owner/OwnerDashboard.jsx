@@ -1202,6 +1202,11 @@ function CafeSetup({ setCafe }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!form.address.coordinates || form.address.coordinates.lat === 0) {
+            alert('Please pin your cafe location on the map!');
+            return;
+        }
+
         setLoading(true);
         // Get coordinates from city name (simplified)
         try {
@@ -1219,8 +1224,10 @@ function CafeSetup({ setCafe }) {
         }
     };
 
+    const hasLocation = form.address.coordinates && form.address.coordinates.lat !== 0;
+
     return (
-        <div className="max-w-xl">
+        <div style={{ maxWidth: 860, margin: '0 auto', padding: '24px 20px', paddingBottom: 80, overflowY: 'visible' }}>
             <h2 className="font-bangers text-4xl text-ink mb-2">🏪 SETUP YOUR CAFE</h2>
             <p className="font-grotesk text-ink/70 mb-6">Tell us about your restaurant</p>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -1277,7 +1284,39 @@ function CafeSetup({ setCafe }) {
                         />
                     </div>
                 </div>
-                <CartoonButton type="submit" label={loading ? '⏳ Setting up...' : '🚀 Launch My Cafe!'} color="bg-yellow" size="lg" disabled={loading} />
+
+                {!hasLocation && (
+                    <div style={{
+                        marginTop: 10, padding: '10px 14px',
+                        background: '#fef9ec', border: '1px solid #fde68a',
+                        borderRadius: 10, fontSize: 13, color: '#92400e'
+                    }}>
+                        ⚠️ Please pin your cafe location on the map before saving.
+                    </div>
+                )}
+
+                <button
+                    type="submit"
+                    disabled={loading || !hasLocation}
+                    style={{
+                        width: '100%',
+                        marginTop: 24,
+                        padding: '16px',
+                        background: loading ? '#ccc' : (!hasLocation ? '#e5e7eb' : '#FFD700'),
+                        border: '3px solid #1A1A1A',
+                        borderRadius: 14,
+                        fontWeight: 900,
+                        fontSize: 16,
+                        letterSpacing: '0.08em',
+                        cursor: loading || !hasLocation ? 'not-allowed' : 'pointer',
+                        color: '#000',
+                        boxShadow: !loading && hasLocation ? '4px 4px 0 #1A1A1A' : 'none',
+                        transition: 'all 0.15s',
+                        marginBottom: 40,
+                    }}
+                >
+                    {loading ? '⏳ Saving...' : '💾 SAVE CHANGES'}
+                </button>
             </form>
         </div>
     );
