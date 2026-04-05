@@ -25,6 +25,8 @@ router.get('/slug/:slug', getCafeBySlug);
 
 // ─── Owner Routes ──────────────────────────
 router.post('/', protect, requireRole(ROLES.OWNER), registerCafe);
+router.put('/', protect, requireRole(ROLES.OWNER), updateMyCafe); // Handle PUT /api/cafe requests
+router.put('/setup', protect, requireRole(ROLES.OWNER), registerCafe); // Handle PUT /api/cafe/setup
 router.get('/my-cafe', protect, requireRole(ROLES.OWNER), getMyCafe);
 router.put('/my-cafe', protect, requireRole(ROLES.OWNER), updateMyCafe);
 router.patch('/my-cafe/toggle', protect, requireRole(ROLES.OWNER), toggleCafeStatus);

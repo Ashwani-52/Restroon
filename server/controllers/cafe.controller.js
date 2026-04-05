@@ -11,19 +11,51 @@ import { geocodeAddress } from '../utils/geocode.js';
 // ──────────────────────────────────────────
 export const registerCafe = async (req, res) => {
     try {
-        const {
+        console.log('📥 Cafe setup body:', req.body);
+
+        // Accept either nested `address` or flat `street`, `city`, etc.
+        let {
             name,
             description,
             cuisine,
+            cuisines,
             phone,
+            contact,
             address,
+            street,
+            city,
+            pincode,
+            lat,
+            lng,
             deliveryRadius,
             openingHours
         } = req.body;
 
+        // Normalize flat fields to nested objects if missing
+        if (!address || typeof address === 'string') {
+            address = {
+                street: street || (typeof address === 'string' ? address : ''),
+                city: city || '',
+                pincode: pincode || '',
+                coordinates: {
+                    lat: parseFloat(lat) || 0,
+                    lng: parseFloat(lng) || 0
+                },
+                full: typeof address === 'string' ? address : ''
+            };
+        }
+
+        const cafeName = name || '';
+        const cafePhone = phone || contact || '';
+        const cafeCuisine = cuisine || cuisines || [];
+
+        // Convert string to array for cuisine if needed
+        const cuisineArray = Array.isArray(cafeCuisine) 
+            ? cafeCuisine 
+            : (typeof cafeCuisine === 'string' ? cafeCuisine.split(',').map(s => s.trim()).filter(Boolean) : []);
+
         // ─── Validate required fields ──────────
-        // Instead of demanding frontend GPS lat/lng, we only demand name and address parts
-        if (!name || !address || !address.street || !address.city) {
+        if (!cafeName || !address.street || !address.city) {
             return res.status(400).json({
                 success: false,
                 message: 'Cafe name and complete address fields (street, city) are required'
@@ -52,22 +84,22 @@ export const registerCafe = async (req, res) => {
             ]);
         }
 
-        if (!coords) {
+        if (!coords || isNaN(coords.lat) || isNaN(coords.lng)) {
             return res.status(400).json({
                 success: false,
-                message: 'Location could not be verified automatically. Please select your exact location on the map.'
+                message: 'Location could not be verified. Please provide valid coordinates.'
             });
         }
 
         const cafe = await Cafe.create({
             owner: req.user._id,
-            name,
+            name: cafeName,
             description: description || '',
-            cuisine: cuisine || [],
-            phone: phone || '',
+            cuisine: cuisineArray,
+            phone: cafePhone,
             address: { 
                 ...address, 
-                coordinates: { lat: coords.lat, lng: coords.lng } 
+                coordinates: { lat: parseFloat(coords.lat), lng: parseFloat(coords.lng) } 
             },
             deliveryRadius,
             openingHours,
@@ -85,9 +117,10 @@ export const registerCafe = async (req, res) => {
         });
 
     } catch (err) {
+        console.error('🔴 Cafe setup error:', err.message, err);
         res.status(500).json({
             success: false,
-            message: 'Failed to register cafe',
+            message: err.message || 'Failed to register cafe',
             error: err.message
         });
     }
@@ -123,16 +156,29 @@ export const getMyCafe = async (req, res) => {
 // ──────────────────────────────────────────
 export const updateMyCafe = async (req, res) => {
     try {
-        const {
+        // Accept either nested `address` or flat `street`, `city`, etc.
+        let {
             name,
             description,
             cuisine,
+            cuisines,
             phone,
+            contact,
             address,
+            street,
+            city,
+            pincode,
+            lat,
+            lng,
             deliveryRadius,
             openingHours,
             isOpen
         } = req.body;
+
+        // Normalize flat fields
+        const cafeName = name;
+        const cafePhone = phone || contact;
+        const cafeCuisine = cuisine || cuisines;
 
         // ─── Find cafe owned by this user ──────
         const cafe = await Cafe.findOne({ owner: req.user._id });
@@ -145,29 +191,49 @@ export const updateMyCafe = async (req, res) => {
         }
 
         // ─── Update only provided fields ───────
-        if (name) cafe.name = name;
-        if (description) cafe.description = description;
-        if (cuisine) cafe.cuisine = cuisine;
-        if (phone) cafe.phone = phone;
-        if (address) {
+        if (cafeName) cafe.name = cafeName;
+        if (description !== undefined) cafe.description = description;
+
+        if (cafeCuisine) {
+            cafe.cuisine = Array.isArray(cafeCuisine) 
+                ? cafeCuisine 
+                : (typeof cafeCuisine === 'string' ? cafeCuisine.split(',').map(s => s.trim()).filter(Boolean) : []);
+        }
+
+        if (cafePhone) cafe.phone = cafePhone;
+
+        const hasAddressUpdate = address || street || city || pincode || lat || lng;
+        if (hasAddressUpdate) {
+            // Build temporary new address payload
+            const newAddress = address && typeof address === 'object' ? address : {};
+            if (street) newAddress.street = street;
+            if (city) newAddress.city = city;
+            if (pincode) newAddress.pincode = pincode;
+            if (lat && lng) {
+                newAddress.coordinates = { lat: parseFloat(lat), lng: parseFloat(lng) };
+            }
+
             // Geocode the updated address
-            const coords = await geocodeAddress([
-                address.street || cafe.address.street,
-                address.city || cafe.address.city,
-                address.pincode || cafe.address.pincode,
-                'India'
-            ]);
+            let coords = newAddress.coordinates;
+            if (!coords || typeof coords.lat !== 'number' || coords.lat === 0) {
+                coords = await geocodeAddress([
+                    newAddress.street || cafe.address.street,
+                    newAddress.city || cafe.address.city,
+                    newAddress.pincode || cafe.address.pincode,
+                    'India'
+                ]);
+            }
             
-            if (coords) {
+            if (coords && !isNaN(coords.lat)) {
                 cafe.address = {
                     ...cafe.address,
-                    ...address,
-                    coordinates: { lat: coords.lat, lng: coords.lng }
+                    ...newAddress,
+                    coordinates: { lat: parseFloat(coords.lat), lng: parseFloat(coords.lng) }
                 };
                 cafe.location = {
                     type: 'Point',
                     coordinates: [parseFloat(coords.lng), parseFloat(coords.lat)],
-                    address: address.full || address.street || ''
+                    address: newAddress.full || newAddress.street || cafe.address.street || ''
                 };
             } else {
                 return res.status(400).json({
