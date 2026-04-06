@@ -275,6 +275,50 @@ export const getCafeOrders = async (req, res) => {
 };
 
 // ──────────────────────────────────────────
+// GET CAFE INCOMING ORDERS (Owner only)
+// ──────────────────────────────────────────
+export const getCafeIncomingOrders = async (req, res) => {
+    try {
+        const cafe = await Cafe.findOne({ owner: req.user._id });
+
+        if (!cafe) {
+            return res.status(404).json({
+                success: false,
+                message: 'No cafe found'
+            });
+        }
+
+        const query = {
+            cafe: cafe._id,
+            paymentConfirmed: true,
+            status: { $in: [
+                ORDER_STATUS.PLACED, 
+                ORDER_STATUS.ACCEPTED, 
+                ORDER_STATUS.PREPARING, 
+                ORDER_STATUS.OUT_FOR_DELIVERY
+            ] }
+        };
+
+        const orders = await Order.find(query)
+            .populate('customer', 'name email phone')
+            .sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            count: orders.length,
+            orders
+        });
+
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch incoming orders',
+            error: err.message
+        });
+    }
+};
+
+// ──────────────────────────────────────────
 // UPDATE ORDER STATUS (Owner only)
 // ──────────────────────────────────────────
 export const updateOrderStatus = async (req, res) => {

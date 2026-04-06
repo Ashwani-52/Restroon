@@ -122,26 +122,41 @@ function OwnerOrders({ cafe }) {
     const prevOrderIds = useRef(new Set());
 
     const fetchOrders = async () => {
-        const res = await api.get(`/api/order/cafe/all?status=${filter}`);
-        const fetched = res.data.orders;
+        try {
+            const incomingStatuses = ['placed', 'accepted', 'preparing', 'out_for_delivery'];
+            
+            // Fetch incoming orders to detect new ones and populate active tabs
+            const incRes = await api.get('/api/order/cafe/incoming');
+            const inc = incRes.data.orders;
+            
+            const newPlaced = inc.filter(
+                o => o.status === 'placed' && !prevOrderIds.current.has(o._id)
+            );
+            
+            // Show alert for newly placed orders if we previously had data
+            if (newPlaced.length > 0 && prevOrderIds.current.size > 0) {
+                setNewOrder(newPlaced[0]);
+                try { new Audio('/notification.mp3').play(); } catch { }
+            }
+            
+            prevOrderIds.current = new Set(inc.map(o => o._id));
 
-        // Detect new placed orders
-        const newPlaced = fetched.filter(
-            o => o.status === 'placed' && !prevOrderIds.current.has(o._id)
-        );
-        if (newPlaced.length > 0) {
-            setNewOrder(newPlaced[0]);
-            // Play notification sound
-            try { new Audio('/notification.mp3').play(); } catch { }
+            // Set orders based on selected tab
+            if (incomingStatuses.includes(filter)) {
+                setOrders(inc.filter(o => o.status === filter));
+            } else {
+                const res = await api.get(`/api/order/cafe/all?status=${filter}`);
+                setOrders(res.data.orders);
+            }
+        } catch (error) {
+            console.error('Fetch orders error:', error);
         }
-        prevOrderIds.current = new Set(fetched.map(o => o._id));
-        setOrders(fetched);
     };
 
     useEffect(() => {
         if (!cafe) return;
         fetchOrders();
-        const interval = setInterval(fetchOrders, 8000); // Poll every 8s
+        const interval = setInterval(fetchOrders, 30000); // Poll every 30s
         return () => clearInterval(interval);
     }, [cafe, filter]);
 

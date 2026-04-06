@@ -4,6 +4,7 @@ import {
     getMyOrders,
     getOrderById,
     getCafeOrders,
+    getCafeIncomingOrders,
     updateOrderStatus,
     cancelOrder,
     adminGetAllOrders,
@@ -28,6 +29,7 @@ router.get('/:orderId', protect, getOrderById);
 
 // ─── Owner Routes ──────────────────────────
 router.get('/cafe/all', protect, requireRole(ROLES.OWNER), getCafeOrders);
+router.get('/cafe/incoming', protect, requireRole(ROLES.OWNER), getCafeIncomingOrders);
 router.patch('/:orderId/status', protect, requireRole(ROLES.OWNER), updateOrderStatus);
 
 // ─── Admin Routes ──────────────────────────
