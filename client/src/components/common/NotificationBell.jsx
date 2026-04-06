@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Bell } from 'lucide-react';
-import api from '../../../services/api';
+import api from '../../services/api';
 import { useNavigate } from 'react-router-dom';
 
 const NotificationBell = () => {
