@@ -63,6 +63,11 @@ export default function CafePage() {
 
     const cartItems = cafeId === cafe?._id ? cart : [];
 
+    // Calculate totals
+    const foodTotal = total;
+    const platformFee = Math.ceil(foodTotal * 5 / 100);
+    const grandTotal = foodTotal + platformFee;
+
     const scrollToCart = () => {
         cartRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
@@ -77,6 +82,7 @@ export default function CafePage() {
         note: orderType === 'dine_in' ? 'Dine-in order' : '',
         customerName: customerName.trim(),
         customerPhone: customerPhone.trim(),
+        foodTotal,
     });
 
     // ── COD order ─────────────────────────────────────────
@@ -139,7 +145,7 @@ export default function CafePage() {
                 }
 
                 const shortId = newOrderId.slice(-6).toUpperCase();
-                const upiLink = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(upiName || 'Cafe')}&am=${total}&tn=Restroon-${shortId}&cu=INR`;
+                const upiLink = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(upiName || 'Cafe')}&am=${grandTotal}&tn=Restroon-${shortId}&cu=INR`;
 
                 window.location.href = upiLink;
 
@@ -394,11 +400,20 @@ export default function CafePage() {
                                         </div>
                                     )}
 
-                                    {/* Total */}
-                                    <div className="border-t-2 border-ink pt-3 mb-4">
-                                        <div className="flex justify-between">
-                                            <span className="font-bangers text-xl text-ink">TOTAL</span>
-                                            <span className="font-bangers text-2xl text-orange">₹{total}</span>
+                                    {/* Total Summary */}
+                                    <div className="bg-[#f9fafb] rounded-xl p-[14px] mb-[16px] shadow-[inset_0_0_0_1px_rgba(0,0,0,0.05)] border-2 border-ink shadow-[2px_2px_0_#1A1A1A]">
+                                        <div className="flex justify-between items-center text-sm mb-1.5 font-grotesk font-semibold text-ink/70">
+                                            <span>Food Total</span>
+                                            <span>₹{foodTotal}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-sm mb-2 font-grotesk text-ink/60">
+                                            <span>Platform Fee (5%)</span>
+                                            <span>₹{platformFee}</span>
+                                        </div>
+                                        <div className="h-px bg-[#e5e7eb] mb-2" />
+                                        <div className="flex justify-between items-center font-bangers text-[17px] text-ink">
+                                            <span>TOTAL</span>
+                                            <span className="text-red">₹{grandTotal}</span>
                                         </div>
                                     </div>
 
@@ -418,7 +433,7 @@ export default function CafePage() {
                                     {/* COD Button */}
                                     {paymentMethod === 'cod' && (
                                         <CartoonButton
-                                            label={ordering ? '⏳ Placing...' : `🛵 Place Order • ₹${total}`}
+                                            label={ordering ? '⏳ Placing...' : `🛵 Place Order • ₹${grandTotal}`}
                                             color="bg-yellow"
                                             size="lg"
                                             disabled={ordering || !isFormValid}
@@ -429,7 +444,7 @@ export default function CafePage() {
                                     {/* UPI — Create pending order first then redirect */}
                                     {paymentMethod === 'upi' && !placedOrderId && (
                                         <CartoonButton
-                                            label={ordering ? '⏳ Processing...' : `💳 Proceed to Pay • ₹${total}`}
+                                            label={ordering ? '⏳ Processing...' : `💳 Proceed to Pay • ₹${grandTotal}`}
                                             color="bg-yellow"
                                             size="lg"
                                             disabled={ordering || !isFormValid}
