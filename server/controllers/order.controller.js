@@ -66,7 +66,7 @@ export const placeOrder = async (req, res) => {
         }
 
         // ─── Validate items + calculate total ──
-        let totalAmount = 0;
+        let foodTotal = 0;
         const orderItems = [];
 
         for (const item of items) {
@@ -100,8 +100,12 @@ export const placeOrder = async (req, res) => {
                 image: menuItem.image
             });
 
-            totalAmount += menuItem.price * item.quantity;
+            foodTotal += menuItem.price * item.quantity;
         }
+
+        const platformFeePercent = 5;
+        const platformFeeAmount = Math.ceil((foodTotal * platformFeePercent) / 100);
+        const totalAmount = foodTotal + platformFeeAmount;
 
         // ─── Create order ──────────────────────
         const isCOD = !paymentMethod || paymentMethod === 'cod';
@@ -114,6 +118,9 @@ export const placeOrder = async (req, res) => {
             customer: req.user._id,
             cafe: cafeId,
             items: orderItems,
+            foodTotal,
+            platformFeePercent,
+            platformFeeAmount,
             totalAmount,
             paymentMethod: paymentMethod || 'cod',
             orderType: orderType || 'delivery',
@@ -123,7 +130,8 @@ export const placeOrder = async (req, res) => {
             customerPhone: customerPhone || '',
             customerEmail: resolvedEmail,
             // COD orders are confirmed immediately; online orders wait for payment
-            paymentConfirmed: isCOD
+            paymentConfirmed: isCOD,
+            paymentStatus: 'pending'
         });
 
         res.status(201).json({

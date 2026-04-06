@@ -7,8 +7,10 @@ import { useAuth } from '../../../context/AuthContext';
 import { CartoonButton } from '../../../components/ui/CartoonButton';
 import { ImageUpload } from '../../../components/ui/ImageUpload';
 import SubscriptionPage from './SubscriptionPage';
+import PlatformCommission from './PlatformCommission';
 import LocationPicker from '../../../components/common/LocationPicker';
 import UpiSettings from '../../../components/dashboard/owner/UpiSettings';
+import NotificationBell from '../../../components/common/NotificationBell';
 import {
     LineChart, Line, BarChart, Bar,
     XAxis, YAxis, CartesianGrid, Tooltip,
@@ -464,6 +466,7 @@ export default function OwnerDashboard() {
         { path: 'revenue', label: '💰 Revenue' },
         { path: 'settings', label: '⚙️ Settings' },
         { path: 'banking', label: '🏦 Banking' },
+        { path: 'commission', label: '🧾 Platform Fees' },
         { path: 'subscription', label: '💳 Subscription' }
     ];
 
@@ -480,9 +483,14 @@ export default function OwnerDashboard() {
                 Home
             </button>
 
-            <div className="flex items-center gap-3 mb-8">
-                <span className="text-2xl">🛵</span>
-                <span className="font-bangers text-2xl text-yellow">RESTROON</span>
+            <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-3">
+                    <span className="text-2xl">🛵</span>
+                    <span className="font-bangers text-2xl text-yellow">RESTROON</span>
+                </div>
+                <div className="bg-white/10 rounded-full">
+                    <NotificationBell />
+                </div>
             </div>
 
             {/* Cafe Info */}
@@ -579,12 +587,19 @@ export default function OwnerDashboard() {
                         onClick={() => setSidebarOpen(true)}
                         className="text-yellow text-2xl font-bold leading-none px-2"
                     >☰</button>
-                    <span className="font-bangers text-xl text-yellow">🛵 RESTROON</span>
-                    {cafe && (
-                        <div className={`text-xs font-bangers px-2 py-1 rounded-full ${cafe.isOpen ? 'bg-green-400 text-ink' : 'bg-red text-cream'}`}>
-                            {cafe.isOpen ? 'OPEN' : 'CLOSED'}
+                    <div className="flex gap-4 items-center">
+                        <span className="font-bangers text-xl text-yellow">🛵 RESTROON</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="bg-white/10 rounded-full">
+                            <NotificationBell />
                         </div>
-                    )}
+                        {cafe && (
+                            <div className={`text-xs font-bangers px-2 py-1 rounded-full ${cafe.isOpen ? 'bg-green-400 text-ink' : 'bg-red text-cream'}`}>
+                                {cafe.isOpen ? 'OPEN' : 'CLOSED'}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Page content */}
@@ -596,6 +611,7 @@ export default function OwnerDashboard() {
                             <Route path="revenue" element={<OwnerRevenue cafe={cafe} />} />
                             <Route path="settings" element={<OwnerSettings cafe={cafe} setCafe={setCafe} />} />
                             <Route path="banking" element={<OwnerBanking cafe={cafe} />} />
+                            <Route path="commission" element={<PlatformCommission />} />
                             <Route path="subscription" element={<SubscriptionPage />} />
                             <Route path="setup" element={<CafeSetup setCafe={setCafe} />} />
                             <Route index element={<OwnerOrders cafe={cafe} />} />

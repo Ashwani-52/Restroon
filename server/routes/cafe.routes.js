@@ -10,7 +10,9 @@ import {
     adminUpdateCafeStatus,
     getNearbyCafes,
     updateUpiSettings,
-    getUpiSettings
+    getUpiSettings,
+    updateUpiQr,
+    getPaymentInfo
 } from '../controllers/cafe.controller.js';
 import { protect } from '../middleware/auth.middleware.js';
 import { requireRole } from '../middleware/role.middleware.js';
@@ -22,6 +24,7 @@ const router = express.Router();
 router.get('/', getActiveCafes);
 router.get('/nearby', getNearbyCafes);
 router.get('/slug/:slug', getCafeBySlug);
+router.get('/:id/payment-info', getPaymentInfo);
 
 // ─── Owner Routes ──────────────────────────
 router.post('/', protect, requireRole(ROLES.OWNER), registerCafe);
@@ -32,6 +35,7 @@ router.put('/my-cafe', protect, requireRole(ROLES.OWNER), updateMyCafe);
 router.patch('/my-cafe/toggle', protect, requireRole(ROLES.OWNER), toggleCafeStatus);
 router.put('/settings/upi', protect, requireRole(ROLES.OWNER), updateUpiSettings);
 router.get('/settings/upi', protect, requireRole(ROLES.OWNER), getUpiSettings);
+router.put('/settings/upi-qr', protect, requireRole(ROLES.OWNER), updateUpiQr);
 
 // ─── Admin Routes ──────────────────────────
 router.get('/admin/all', protect, requireRole(ROLES.ADMIN), adminGetAllCafes);

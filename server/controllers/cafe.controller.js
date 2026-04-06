@@ -521,19 +521,58 @@ export const updateUpiSettings = async (req, res) => {
 // ──────────────────────────────────────────
 export const getUpiSettings = async (req, res) => {
     try {
-        const cafe = await Cafe.findOne({ owner: req.user._id }).select('upiId upiName');
+        const cafe = await Cafe.findOne({ owner: req.user._id }).select('upiId upiName upiQrImage');
         
         if (!cafe) {
-            return res.json({ success: true, upiId: null, upiName: null });
+            return res.json({ success: true, upiId: null, upiName: null, upiQrImage: null });
         }
         
         res.json({ 
             success: true, 
             upiId: cafe.upiId || null, 
-            upiName: cafe.upiName || null 
+            upiName: cafe.upiName || null,
+            upiQrImage: cafe.upiQrImage || null
         });
     } catch (err) {
         console.error('UPI fetch error:', err);
         res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+export const updateUpiQr = async (req, res) => {
+    try {
+        const cafe = await Cafe.findOne({ owner: req.user._id });
+        if (!cafe) {
+            return res.status(404).json({ success: false, message: 'Cafe not found' });
+        }
+        
+        // This expects cloudinary middleware to have populated req.body.logo (or we use upiQrImage)
+        // If we're strictly uploading QR image, it should come via req.file and cloudinary handles it.
+        // But for generic usage, let's say it's passed in body.
+        const { upiQrImage } = req.body;
+        if (upiQrImage) cafe.upiQrImage = upiQrImage;
+        
+        await cafe.save();
+        res.json({ success: true, message: 'UPI QR updated successfully', upiQrImage: cafe.upiQrImage });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const getPaymentInfo = async (req, res) => {
+    try {
+        const cafe = await Cafe.findById(req.params.id).select('upiId upiName upiQrImage name');
+        if (!cafe) {
+            return res.status(404).json({ success: false, message: 'Cafe not found' });
+        }
+        res.json({
+            success: true,
+            upiId: cafe.upiId,
+            upiName: cafe.upiName,
+            upiQrImage: cafe.upiQrImage,
+            name: cafe.name
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
     }
 };

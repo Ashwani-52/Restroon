@@ -22,9 +22,19 @@ import subscriptionRoutes from './routes/subscription.routes.js';
 import profileRoutes      from './routes/profile.routes.js';
 import contactRoutes      from './routes/contact.routes.js';
 import blogRoutes         from './routes/blog.routes.js';
+import commissionRoutes   from './routes/commission.routes.js';
+import notificationRoutes from './routes/notification.routes.js';
+import cron from 'node-cron';
+import { sendCommissionReminders } from './utils/sendCommissionReminder.js';
 configurePassport();              // ← ADD — initialize passport strategies
 
 const app = express();
+
+// Set up cron job for daily commission reminders at 21:00
+cron.schedule('0 21 * * *', () => {
+    console.log('[CRON] Running daily commission reminder script');
+    sendCommissionReminders();
+});
 
 // Trust proxy is required if you are behind a load balancer (like Render or Heroku)
 // Otherwise rate limiters block all traffic because they see the load balancer's IP
@@ -65,6 +75,8 @@ app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/profile',      profileRoutes);
 app.use('/api/contact',      contactRoutes);
 app.use('/api/blogs',        blogRoutes);
+app.use('/api/commission',   commissionRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.use((req, res) => res.status(404).json({ success: false, message: 'Route not found' }));
 app.use(errorHandler);

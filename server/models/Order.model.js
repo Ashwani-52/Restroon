@@ -46,7 +46,7 @@ const orderSchema = new mongoose.Schema(
         },
         paymentMethod: {
             type: String,
-            enum: ['cod', 'online'],
+            enum: ['cod', 'upi'],
             default: 'cod'
         },
         razorpayOrderId: { type: String, default: '' },
@@ -80,6 +80,11 @@ const orderSchema = new mongoose.Schema(
         paymentConfirmed: { type: Boolean, default: false },
         platformFee: { type: Number, default: 0 },
         totalCharged: { type: Number, default: 0 },
+        foodTotal: { type: Number, default: 0 },
+        platformFeePercent: { type: Number, default: 5 },
+        platformFeeAmount: { type: Number, default: 0 },
+        commissionPaid: { type: Boolean, default: false },
+        commissionPaidAt: { type: Date, default: null }
     },
     { timestamps: true }
 );

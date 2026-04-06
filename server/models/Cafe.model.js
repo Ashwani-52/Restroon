@@ -110,6 +110,10 @@ const cafeSchema = new mongoose.Schema(
             trim: true,
             default: null,
         },
+        upiQrImage: {
+            type: String,
+            default: null,
+        },
         // Add to Cafe.model.js inside cafeSchema
         banking: {
             accountHolderName: { type: String, default: '' },
