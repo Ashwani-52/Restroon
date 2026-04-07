@@ -82,7 +82,21 @@ const userSchema = new mongoose.Schema(
                 type: mongoose.Schema.Types.ObjectId,
                 ref: 'Cafe'
             }
-        ]
+        ],
+        // ─── Subscription status fields ────────
+        subscriptionStatus: {
+            type: String,
+            enum: ['inactive', 'active', 'expired'],
+            default: 'inactive'
+        },
+        subscriptionEndDate: {
+            type: Date,
+            default: null
+        },
+        currentPlan: {
+            type: String,
+            default: null
+        }
     },
     { timestamps: true }
 );

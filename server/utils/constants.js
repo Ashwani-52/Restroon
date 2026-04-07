@@ -66,22 +66,24 @@ export const ORDER_NOTE_MAX = 200;
 export const PLATFORM_FEE_PERCENT = Number(process.env.PLATFORM_FEE_PERCENT) || 4;
 // server/utils/constants.js — add these
 export const SUBSCRIPTION_PLANS = {
-    starter: {
-        name: 'Starter',
-        price: 0,
-        features: ['1 Cafe', '50 Orders/month', 'Basic Menu'],
-        ordersLimit: 50
+    monthly: {
+        label: '1 Month',
+        amount: 150000,   // paise
+        days: 30
     },
-    growth: {
-        name: 'Growth',
-        price: 999,
-        features: ['Unlimited Orders', 'Analytics', 'Priority Support'],
-        ordersLimit: -1   // unlimited
+    quarterly: {
+        label: '3 Months',
+        amount: 399900,
+        days: 90
     },
-    pro: {
-        name: 'Pro',
-        price: 2499,
-        features: ['3 Cafes', 'Everything in Growth', 'Custom Domain'],
-        ordersLimit: -1
+    biannual: {
+        label: '6 Months',
+        amount: 749900,
+        days: 180
+    },
+    annual: {
+        label: '12 Months',
+        amount: 1399900,
+        days: 365
     }
 };
