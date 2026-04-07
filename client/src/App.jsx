@@ -23,6 +23,7 @@ import BlogList          from './pages/blog/BlogList';
 import BlogPost          from './pages/blog/BlogPost';
 import MaintenancePage   from './pages/MaintenancePage'; // ← ADD
 import UpiPayment        from './pages/customer/UpiPayment';
+import PaymentConfirm    from './pages/customer/PaymentConfirm';
 
 // ── Redirect logged-in users away from login/register ──
 function AuthGuard({ children }) {
@@ -97,6 +98,9 @@ export default function App() {
             } />
             <Route path="/payment/upi/:orderId" element={
               <ProtectedRoute><UpiPayment /></ProtectedRoute>
+            } />
+            <Route path="/payment/confirm" element={
+              <ProtectedRoute><PaymentConfirm /></ProtectedRoute>
             } />
 
             {/* ─── OWNER DASHBOARD ───────────────── */}

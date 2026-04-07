@@ -130,29 +130,33 @@ export default function CafePage() {
         if (!user) { navigate('/login'); return; }
         setOrdering(true);
         try {
-            const res = await api.post('/api/order', buildOrderPayload(paymentMethod));
-            const newOrderId = res.data.order._id;
-            setPlacedOrderId(newOrderId);
-            
-            if (paymentMethod === 'upi') {
-                const cafeRes = await api.get(`/api/cafe/${cafe._id}/payment-info`);
-                const { upiId, upiName } = cafeRes.data;
+            const cafeRes = await api.get(`/api/cafe/${cafe._id}/payment-info`);
+            const { upiId, upiName } = cafeRes.data;
 
-                if (!upiId) {
-                    alert('This cafe has not set up UPI yet. Please pay cash on delivery.');
-                    navigate(`/order-confirmation/${newOrderId}`);
-                    return;
-                }
-
-                const shortId = newOrderId.slice(-6).toUpperCase();
-                const upiLink = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(upiName || 'Cafe')}&am=${grandTotal}&tn=Restroon-${shortId}&cu=INR`;
-
-                window.location.href = upiLink;
-
-                setTimeout(() => {
-                    navigate(`/order-confirmation/${newOrderId}?payment=upi&confirm=true`);
-                }, 3000);
+            if (!upiId) {
+                alert('This cafe has not set up UPI yet. Please pay cash on delivery.');
+                setOrdering(false);
+                return;
             }
+
+            const pendingOrderData = {
+                ...buildOrderPayload('upi'),
+                upiId,
+                upiName,
+                savedAt: Date.now(),
+            };
+            sessionStorage.setItem('pendingOrder', JSON.stringify(pendingOrderData));
+
+            const shortRef = Date.now().toString().slice(-6);
+            const upiParams = `pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(upiName || 'Cafe')}&am=${grandTotal}&tn=Restroon-${shortRef}&cu=INR`;
+            const upiLink = `upi://pay?${upiParams}`;
+
+            navigate(`/payment/confirm?cafe=${cafe._id}`);
+
+            setTimeout(() => {
+                window.location.href = upiLink;
+            }, 300);
+
         } catch (err) {
             alert(err.response?.data?.message || 'Failed');
         } finally {
