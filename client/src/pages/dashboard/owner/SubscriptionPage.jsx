@@ -1,220 +1,513 @@
 // src/pages/dashboard/owner/SubscriptionPage.jsx
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import api from '../../../services/api';
-import { CartoonButton } from '../../../components/ui/CartoonButton';
+import { useState, useEffect } from "react";
+import api from "../../../services/api";
 
+// ── Same plan config as registration ──────────────────
 const PLANS = [
-    {
-        key: 'starter',
-        name: 'Starter',
-        price: 0,
-        color: 'bg-yellow',
-        icon: '🌱',
-        features: ['1 Cafe listing', '50 Orders/month', 'Basic Menu builder', 'Email Support'],
-        isPopular: false
-    },
-    {
-        key: 'growth',
-        name: 'Growth',
-        price: 999,
-        color: 'bg-orange',
-        icon: '🚀',
-        features: ['1 Cafe listing', 'Unlimited Orders', 'Menu + Photos', 'Revenue Analytics', 'Priority Support'],
-        isPopular: true
-    },
-    {
-        key: 'pro',
-        name: 'Pro',
-        price: 2499,
-        color: 'bg-red',
-        icon: '👑',
-        features: ['3 Cafe listings', 'Everything in Growth', 'Custom Domain', 'Dedicated Support'],
-        isPopular: false
-    }
+  {
+    id:           "trial",
+    emoji:        "🌱",
+    label:        "1 Day Trial",
+    price:        0,
+    priceLabel:   "FREE",
+    duration:     "24 Hours",
+    note:         "Card verified via ₹1 auth — refunded instantly",
+    features: [
+      "Full platform access",
+      "Unlimited orders",
+      "All features unlocked",
+      "No commitment",
+    ],
+    color:  "#22c55e",
+    bg:     "#dcfce7",
+    border: "#16a34a",
+  },
+  {
+    id:           "starter",
+    emoji:        "🚀",
+    label:        "Starter",
+    price:        999,
+    priceLabel:   "₹999",
+    duration:     "1 Month",
+    note:         null,
+    features: [
+      "1 Cafe listing",
+      "Unlimited Orders",
+      "Menu + Photos",
+      "Revenue Analytics",
+      "Priority Support",
+    ],
+    color:  "#f97316",
+    bg:     "#fff7ed",
+    border: "#f97316",
+  },
+  {
+    id:           "growth",
+    emoji:        "⚡",
+    label:        "Growth",
+    price:        2499,
+    priceLabel:   "₹2,499",
+    duration:     "3 Months",
+    note:         "Save ₹498",
+    features: [
+      "1 Cafe listing",
+      "Unlimited Orders",
+      "Menu + Photos",
+      "Revenue Analytics",
+      "Priority Support",
+      "Custom Domain",
+    ],
+    color:   "#f97316",
+    bg:      "#fff7ed",
+    border:  "#f97316",
+    popular: true,
+  },
+  {
+    id:           "pro",
+    emoji:        "👑",
+    label:        "Pro",
+    price:        7999,
+    priceLabel:   "₹7,999",
+    duration:     "12 Months",
+    note:         "Best value — Save ₹3,989",
+    features: [
+      "3 Cafe listings",
+      "Unlimited Orders",
+      "Everything in Growth",
+      "Custom Domain",
+      "Dedicated Support",
+      "Early access to features",
+    ],
+    color:  "#7c3aed",
+    bg:     "#f5f3ff",
+    border: "#7c3aed",
+  },
 ];
 
-export default function SubscriptionPage() {
-    const [current, setCurrent] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [paying, setPaying] = useState(null); // which plan is being paid
-    const navigate = useNavigate();
-
-    useEffect(() => {
-        api.get('/api/subscription').then(r => setCurrent(r.data.subscription));
-    }, []);
-
-    const loadRazorpay = () => new Promise(resolve => {
-        if (window.Razorpay) { resolve(true); return; }
-        const s = document.createElement('script');
-        s.src = 'https://checkout.razorpay.com/v1/checkout.js';
-        s.onload = () => resolve(true);
-        s.onerror = () => resolve(false);
-        document.body.appendChild(s);
-    });
-
-    const handleSelect = async (plan) => {
-        setPaying(plan.key);
-        try {
-            const res = await api.post('/api/subscription/create', { plan: plan.key });
-
-            if (res.data.free) {
-                setCurrent({ plan: 'starter', status: 'active' });
-                alert('✅ Starter plan activated!');
-                navigate('/dashboard/owner');
-                return;
-            }
-
-            // ─── Load Razorpay ──────────────────────
-            const loaded = await loadRazorpay();
-            if (!loaded) { alert('Failed to load payment. Check internet.'); return; }
-
-            const options = {
-                key: res.data.keyId,
-                amount: res.data.amount,
-                currency: 'INR',
-                name: 'Restroon',
-                description: `${plan.name} Plan — Monthly Subscription`,
-                order_id: res.data.razorpayOrderId,
-                theme: { color: '#FFD23F' },
-                modal: { ondismiss: () => setPaying(null) },
-                handler: async (response) => {
-                    try {
-                        const verifyRes = await api.post('/api/subscription/verify', {
-                            razorpay_order_id: response.razorpay_order_id,
-                            razorpay_payment_id: response.razorpay_payment_id,
-                            razorpay_signature: response.razorpay_signature,
-                            plan: plan.key
-                        });
-                        setCurrent(verifyRes.data.subscription);
-                        alert(`✅ ${plan.name} plan activated!`);
-                        navigate('/dashboard/owner');
-                    } catch {
-                        alert('Payment done but activation failed. Contact support.');
-                    }
-                }
-            };
-
-            const rzp = new window.Razorpay(options);
-            rzp.on('payment.failed', () => {
-                alert('Payment failed. Please try again.');
-                setPaying(null);
-            });
-            rzp.open();
-
-        } catch (err) {
-            alert(err.response?.data?.message || 'Something went wrong');
-        } finally {
-            setPaying(null);
-        }
-    };
-
+// ── Status badge ────────────────────────────────────────
+const StatusBadge = ({ status, daysLeft, plan, endDate }) => {
+  if (status === "active") {
     return (
-        <div className="min-h-screen retro-grid py-16 px-6">
-            <div className="max-w-5xl mx-auto">
-
-                {/* Header */}
-                <motion.div
-                    className="text-center mb-12"
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                >
-                    <h1 className="font-bangers text-6xl text-ink mb-3">
-                        CHOOSE YOUR <span className="text-orange">PLAN</span> 💰
-                    </h1>
-                    <p className="font-grotesk text-xl text-ink/70">
-                        Subscription payment goes directly to Restroon platform.
-                    </p>
-
-                    {/* Current plan badge */}
-                    {current && (
-                        <div className="inline-flex items-center gap-2 bg-green-100 border-2 border-green-500 rounded-full px-4 py-2 mt-4">
-                            <span className="text-green-600 font-bangers">✅ Current: {current.plan?.toUpperCase()} — {current.status?.toUpperCase()}</span>
-                        </div>
-                    )}
-                </motion.div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-10">
-                    {PLANS.map((plan, i) => (
-                        <motion.div
-                            key={plan.key}
-                            className={`
-                                ${plan.color} border-4 border-ink rounded-3xl p-8 relative flex flex-col
-                                shadow-[8px_8px_0_#1A1A1A]
-                                ${plan.isPopular ? 'md:scale-105 z-10 shadow-[10px_10px_0_#1A1A1A]' : 'z-0'}
-                                ${current?.plan === plan.key ? 'ring-4 ring-green-400' : ''}
-                            `}
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: i * 0.1 }}
-                        >
-                            {/* Popular Badge */}
-                            {plan.isPopular && (
-                                <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-ink text-yellow border-3 border-ink rounded-full px-4 py-1 z-20">
-                                    <span className="font-bangers text-lg">⭐ POPULAR</span>
-                                </div>
-                            )}
-
-                            {/* Current badge */}
-                            {current?.plan === plan.key && (
-                                <div className="absolute -top-5 right-4 bg-green-400 text-ink border-2 border-ink rounded-full px-3 py-1 z-20">
-                                    <span className="font-bangers text-sm">✅ ACTIVE</span>
-                                </div>
-                            )}
-
-                            <div className="text-5xl mb-3">{plan.icon}</div>
-                            <h3 className="font-bangers text-3xl text-ink mb-1">{plan.name}</h3>
-
-                            <div className="font-bangers text-5xl text-ink mb-1">
-                                {plan.price === 0 ? 'FREE' : `₹${plan.price}`}
-                            </div>
-                            {plan.price > 0 && (
-                                <p className="font-mono text-sm text-ink/60 mb-4">/month</p>
-                            )}
-
-                            <div className="border-t-2 border-ink/20 my-4" />
-
-                            <ul className="space-y-3 mb-8 flex-1">
-                                {plan.features.map(f => (
-                                    <li key={f} className="flex items-start gap-3 font-grotesk text-sm text-ink font-medium">
-                                        <span className="w-5 h-5 bg-ink text-cream rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">✓</span>
-                                        {f}
-                                    </li>
-                                ))}
-                            </ul>
-
-                            <div className="mt-auto flex justify-center w-full">
-                                {current?.plan === plan.key && current?.status === 'active' ? (
-                                    <div className="w-full py-3 bg-green-400 border-3 border-ink rounded-2xl text-center font-bangers text-ink text-lg">
-                                        ✅ Current Plan
-                                    </div>
-                                ) : (
-                                    <CartoonButton
-                                        label={paying === plan.key ? '⏳ Processing...' : plan.price === 0 ? '🌱 Start Free' : `💳 Get ${plan.name}`}
-                                        color="bg-cream"
-                                        size="md"
-                                        disabled={paying !== null}
-                                        onClick={() => handleSelect(plan)}
-                                    />
-                                )}
-                            </div>
-                        </motion.div>
-                    ))}
-                </div>
-
-                {/* Security note */}
-                <div className="mt-8 bg-ink border-3 border-ink rounded-2xl p-4 flex gap-3">
-                    <span className="text-2xl">🔒</span>
-                    <div>
-                        <p className="font-bangers text-yellow text-lg">SECURE PAYMENT</p>
-                        <p className="font-grotesk text-cream/70 text-sm">
-                            Subscription payments are processed by Razorpay and go directly to the Restroon platform account.
-                            Your cafe will be activated immediately after payment.
-                        </p>
-                    </div>
-                </div>
-            </div>
+      <div style={{
+        background:     "#dcfce7",
+        border:         "1.5px solid #16a34a",
+        borderRadius:   "12px",
+        padding:        "16px 20px",
+        marginBottom:   "24px",
+        display:        "flex",
+        justifyContent: "space-between",
+        alignItems:     "center",
+        flexWrap:       "wrap",
+        gap:            "10px",
+      }}>
+        <div>
+          <p style={{ margin: 0, fontWeight: "800", fontSize: "15px", color: "#15803d" }}>
+            ✅ Subscription Active
+          </p>
+          <p style={{ margin: "3px 0 0", fontSize: "13px", color: "#166534" }}>
+            {plan?.toUpperCase()} plan · Expires{" "}
+            {new Date(endDate).toLocaleDateString("en-IN", {
+              day: "numeric", month: "long", year: "numeric",
+            })}
+          </p>
         </div>
+        <div style={{
+          background:   "#15803d",
+          color:        "white",
+          padding:      "6px 16px",
+          borderRadius: "20px",
+          fontWeight:   "800",
+          fontSize:     "13px",
+        }}>
+          {daysLeft} day{daysLeft !== 1 ? "s" : ""} left
+        </div>
+      </div>
     );
+  }
+
+  if (status === "expired") {
+    return (
+      <div style={{
+        background:   "#fee2e2",
+        border:       "1.5px solid #ef4444",
+        borderRadius: "12px",
+        padding:      "16px 20px",
+        marginBottom: "24px",
+      }}>
+        <p style={{ margin: 0, fontWeight: "800", color: "#b91c1c", fontSize: "15px" }}>
+          ⚠️ Subscription Expired
+        </p>
+        <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#7f1d1d" }}>
+          Your cafe is hidden from customers. Renew to go live again.
+        </p>
+      </div>
+    );
+  }
+
+  return null;
+};
+
+// ── Main Component ────────────────────────────────────
+export default function SubscriptionPage() {
+  const [subStatus,     setSubStatus]     = useState(null);
+  const [loadingStatus, setLoadingStatus] = useState(true);
+  const [selectedPlan,  setSelectedPlan]  = useState(null);
+  const [payLoading,    setPayLoading]    = useState(false);
+  const [payError,      setPayError]      = useState("");
+  const [paySuccess,    setPaySuccess]    = useState(null);
+
+  // Load Razorpay SDK once
+  useEffect(() => {
+    if (document.getElementById("razorpay-sdk")) return;
+    const script   = document.createElement("script");
+    script.id      = "razorpay-sdk";
+    script.src     = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async   = true;
+    document.body.appendChild(script);
+  }, []);
+
+  // Fetch current subscription status
+  const fetchStatus = async () => {
+    try {
+      const { data } = await api.get("/api/cafe-registration/subscription-status");
+      setSubStatus(data);
+    } catch (err) {
+      console.error("Failed to fetch subscription:", err);
+    } finally {
+      setLoadingStatus(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStatus();
+  }, []);
+
+  // Razorpay payment handler
+  const handlePay = async () => {
+    if (!selectedPlan) return;
+    setPayLoading(true);
+    setPayError("");
+
+    try {
+      // Get the owner's cafeId first
+      const { data: cafeData } = await api.get("/api/cafe-registration/my-cafe");
+      const cafeId = cafeData.cafeId;
+
+      // Create Razorpay order
+      const { data: orderData } = await api.post("/api/cafe-registration/create-order", {
+        cafeId,
+        plan: selectedPlan.id,
+      });
+
+      const options = {
+        key:         orderData.key,
+        amount:      orderData.amount,
+        currency:    "INR",
+        name:        "Restroon",
+        description: `${selectedPlan.label} — ${selectedPlan.duration}`,
+        image:       "/logo.png",
+        order_id:    orderData.orderId,
+        theme:       { color: "#f97316" },
+
+        handler: async (response) => {
+          try {
+            const { data: verifyData } = await api.post("/api/cafe-registration/verify-and-activate", {
+              cafeId,
+              plan:                selectedPlan.id,
+              razorpay_order_id:   response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature:  response.razorpay_signature,
+            });
+
+            if (verifyData.success) {
+              setPaySuccess({
+                plan:    selectedPlan.label,
+                endDate: verifyData.endDate,
+              });
+              setSelectedPlan(null);
+              await fetchStatus(); // refresh badge
+            }
+          } catch {
+            setPayError("Payment received but verification failed. Contact support@restroon.com");
+          } finally {
+            setPayLoading(false);
+          }
+        },
+
+        modal: {
+          ondismiss: () => {
+            setPayLoading(false);
+            setPayError("Payment cancelled.");
+          },
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      setPayError(err.response?.data?.message || "Failed to initiate payment. Try again.");
+      setPayLoading(false);
+    }
+  };
+
+  // ── Derive display values from subStatus ───────────────
+  const activeStatus  = subStatus?.isActive  ? "active"  : subStatus?.hasSubscription ? "expired" : null;
+  const daysLeft      = subStatus?.daysLeft   ?? 0;
+  const activePlan    = subStatus?.plan       ?? null;
+  const activeEndDate = subStatus?.endDate    ?? null;
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#fffdf5", padding: "32px 24px" }}>
+      <div style={{ maxWidth: "760px", margin: "0 auto" }}>
+
+        {/* Header */}
+        <div style={{ textAlign: "center", marginBottom: "28px" }}>
+          <h1 style={{ fontSize: "30px", fontWeight: "900", marginBottom: "6px" }}>
+            CHOOSE YOUR <span style={{ color: "#f97316" }}>PLAN</span> 💰
+          </h1>
+          <p style={{ color: "#888", fontSize: "14px" }}>
+            Subscription payment goes directly to Restroon platform.
+          </p>
+        </div>
+
+        {/* Current subscription status */}
+        {loadingStatus ? (
+          <div style={{
+            background: "#f3f4f6", borderRadius: "12px", padding: "16px",
+            marginBottom: "24px", textAlign: "center", color: "#888", fontSize: "14px",
+          }}>
+            Loading subscription status...
+          </div>
+        ) : (
+          <StatusBadge
+            status={activeStatus}
+            daysLeft={daysLeft}
+            plan={activePlan}
+            endDate={activeEndDate}
+          />
+        )}
+
+        {/* Payment success banner */}
+        {paySuccess && (
+          <div style={{
+            background:   "#dcfce7", border: "2px solid #16a34a",
+            borderRadius: "14px", padding: "20px", marginBottom: "24px", textAlign: "center",
+          }}>
+            <p style={{ fontSize: "32px", margin: "0 0 8px" }}>🎉</p>
+            <p style={{ fontWeight: "800", fontSize: "16px", color: "#15803d", margin: "0 0 4px" }}>
+              {paySuccess.plan} Plan Activated!
+            </p>
+            <p style={{ fontSize: "13px", color: "#166534", margin: 0 }}>
+              Active until{" "}
+              {new Date(paySuccess.endDate).toLocaleDateString("en-IN", {
+                day: "numeric", month: "long", year: "numeric",
+              })}
+            </p>
+          </div>
+        )}
+
+        {/* Plan cards grid */}
+        <div style={{
+          display:             "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+          gap:                 "14px",
+          marginBottom:        "20px",
+        }}>
+          {PLANS.map((plan) => {
+            const isSelected = selectedPlan?.id === plan.id;
+            const isCurrent  = activePlan === plan.id && subStatus?.isActive;
+
+            return (
+              <div
+                key={plan.id}
+                onClick={() => !isCurrent && setSelectedPlan(plan)}
+                style={{
+                  border:       `2px solid ${isSelected ? plan.color : isCurrent ? "#22c55e" : "#1a1a1a"}`,
+                  borderRadius: "16px",
+                  padding:      "20px",
+                  cursor:       isCurrent ? "default" : "pointer",
+                  background:   isSelected ? plan.bg : isCurrent ? "#f0fdf4" : "white",
+                  position:     "relative",
+                  boxShadow:    isSelected ? `3px 3px 0 ${plan.color}` : "3px 3px 0 #1a1a1a",
+                  transition:   "box-shadow 0.1s, border-color 0.1s",
+                }}
+              >
+                {/* Popular badge */}
+                {plan.popular && !isCurrent && (
+                  <div style={{
+                    position:     "absolute", top: "-12px", left: "50%", transform: "translateX(-50%)",
+                    background:   "#f97316", color: "white", padding: "3px 14px",
+                    borderRadius: "20px", fontSize: "11px", fontWeight: "800",
+                    border:       "1.5px solid #1a1a1a", whiteSpace: "nowrap",
+                  }}>
+                    ⭐ POPULAR
+                  </div>
+                )}
+
+                {/* Current plan badge */}
+                {isCurrent && (
+                  <div style={{
+                    position:     "absolute", top: "-12px", left: "50%", transform: "translateX(-50%)",
+                    background:   "#22c55e", color: "white", padding: "3px 14px",
+                    borderRadius: "20px", fontSize: "11px", fontWeight: "800",
+                    border:       "1.5px solid #1a1a1a", whiteSpace: "nowrap",
+                  }}>
+                    ✅ CURRENT PLAN
+                  </div>
+                )}
+
+                {/* Plan header */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+                  <div>
+                    <div style={{ fontSize: "24px", marginBottom: "4px" }}>{plan.emoji}</div>
+                    <div style={{ fontWeight: "900", fontSize: "18px", letterSpacing: "0.5px" }}>
+                      {plan.label.toUpperCase()}
+                    </div>
+                    <div style={{ fontSize: "12px", color: "#888", marginTop: "2px" }}>
+                      {plan.duration}
+                    </div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontWeight: "900", fontSize: "24px", color: plan.color, lineHeight: "1" }}>
+                      {plan.id === "trial" ? "FREE" : plan.priceLabel}
+                    </div>
+                    {plan.id === "trial" && (
+                      <div style={{ fontSize: "10px", color: "#888", marginTop: "2px" }}>₹1 card auth</div>
+                    )}
+                    {plan.note && (
+                      <div style={{ fontSize: "11px", color: "#22c55e", fontWeight: "700", marginTop: "2px" }}>
+                        {plan.note}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div style={{ height: "1px", background: "#f3f4f6", marginBottom: "12px" }} />
+
+                {/* Features */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "16px" }}>
+                  {plan.features.map((f) => (
+                    <div key={f} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: "#374151" }}>
+                      <span style={{
+                        background:     plan.color + "20", color: plan.color, borderRadius: "50%",
+                        width:          "18px", height: "18px", display: "flex", alignItems: "center",
+                        justifyContent: "center", fontSize: "10px", flexShrink: 0,
+                      }}>✓</span>
+                      {f}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Trial card-auth note */}
+                {plan.id === "trial" && (
+                  <div style={{
+                    background:   "#fef3c7", border: "1px solid #fbbf24",
+                    borderRadius: "8px", padding: "8px 10px",
+                    fontSize:     "11px", color: "#92400e", marginBottom: "12px",
+                  }}>
+                    💳 ₹1 charged for card verification — refunded immediately
+                  </div>
+                )}
+
+                {/* Selection bar / days remaining */}
+                {!isCurrent ? (
+                  <div style={{
+                    width: "100%", height: "4px", borderRadius: "4px",
+                    background: isSelected ? plan.color : "#f3f4f6", transition: "background 0.15s",
+                  }} />
+                ) : (
+                  <div style={{ textAlign: "center", fontSize: "12px", color: "#15803d", fontWeight: "700", marginTop: "8px" }}>
+                    {daysLeft} days remaining
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Pay error */}
+        {payError && (
+          <div style={{
+            background:   "#fee2e2", border: "1px solid #fca5a5",
+            borderRadius: "10px", padding: "12px 16px",
+            marginBottom: "14px", fontSize: "13px", color: "#b91c1c",
+          }}>
+            ❌ {payError}
+          </div>
+        )}
+
+        {/* Selected plan summary + pay CTA */}
+        {selectedPlan && (
+          <div style={{
+            background:   "white", border: `2px solid ${selectedPlan.color}`,
+            borderRadius: "14px", padding: "20px", marginBottom: "16px",
+            boxShadow:    `3px 3px 0 ${selectedPlan.color}`,
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+              <div>
+                <p style={{ margin: 0, fontWeight: "800", fontSize: "16px" }}>
+                  {selectedPlan.emoji} {selectedPlan.label} — {selectedPlan.duration}
+                </p>
+                <p style={{ margin: "3px 0 0", fontSize: "13px", color: "#888" }}>
+                  {selectedPlan.id === "trial"
+                    ? "₹1 card verification (refunded) then FREE for 24 hours"
+                    : `₹${selectedPlan.price} one-time payment`}
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedPlan(null)}
+                style={{ background: "none", border: "none", fontSize: "18px", cursor: "pointer", color: "#9ca3af" }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <button
+              onClick={handlePay}
+              disabled={payLoading}
+              style={{
+                width:         "100%", padding: "14px",
+                background:    selectedPlan.color, color: "white",
+                border:        "2px solid #1a1a1a", borderRadius: "12px",
+                fontWeight:    "900", fontSize: "16px",
+                cursor:        payLoading ? "wait" : "pointer",
+                boxShadow:     "3px 3px 0 #1a1a1a", letterSpacing: "0.5px",
+              }}
+            >
+              {payLoading
+                ? "Opening payment..."
+                : selectedPlan.id === "trial"
+                ? "🌱 Start Free Trial →"
+                : `Pay ${selectedPlan.priceLabel} →`}
+            </button>
+          </div>
+        )}
+
+        {!selectedPlan && !paySuccess && (
+          <p style={{ textAlign: "center", fontSize: "13px", color: "#9ca3af" }}>
+            👆 Tap any plan to select it
+          </p>
+        )}
+
+        {/* Secure payment banner */}
+        <div style={{
+          background:   "#1a1a1a", borderRadius: "14px", padding: "18px 20px",
+          display:      "flex", alignItems: "center", gap: "14px", marginTop: "20px",
+        }}>
+          <span style={{ fontSize: "28px" }}>🔒</span>
+          <div>
+            <p style={{ color: "white", fontWeight: "800", fontSize: "14px", margin: 0 }}>
+              SECURE PAYMENT
+            </p>
+            <p style={{ color: "#9ca3af", fontSize: "12px", margin: "4px 0 0", lineHeight: "1.5" }}>
+              Subscription payments are processed by Razorpay and go directly to the Restroon
+              platform account. Your cafe will be activated immediately after payment.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
 }

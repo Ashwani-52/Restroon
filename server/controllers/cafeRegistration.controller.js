@@ -255,3 +255,58 @@ export const getRegistrationStatus = async (req, res) => {
         res.status(500).json({ success: false, message: err.message });
     }
 };
+
+/* ─────────────────────────────────────────────────────────
+   GET my cafe (cafeId + name) — used by dashboard renewal
+   GET /api/cafe-registration/my-cafe
+───────────────────────────────────────────────────────── */
+export const getMyCafe = async (req, res) => {
+    try {
+        const cafe = await Cafe.findOne({ owner: req.user._id }).select('_id name isRegistered');
+        if (!cafe) {
+            return res.status(404).json({ success: false, message: 'No cafe found' });
+        }
+        res.json({ success: true, cafeId: cafe._id, name: cafe.name });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+/* ─────────────────────────────────────────────────────────
+   GET subscription status — for dashboard subscription page
+   GET /api/cafe-registration/subscription-status
+───────────────────────────────────────────────────────── */
+export const getSubscriptionStatus = async (req, res) => {
+    try {
+        const cafe = await Cafe.findOne({ owner: req.user._id })
+            .select('subscription isSubscribed');
+
+        if (!cafe) {
+            return res.json({ success: true, hasSubscription: false, isActive: false });
+        }
+
+        const sub = cafe.subscription;
+        if (!sub || !sub.plan) {
+            return res.json({ success: true, hasSubscription: false, isActive: false });
+        }
+
+        const now     = new Date();
+        const endDate = sub.endDate ? new Date(sub.endDate) : null;
+        const isActive = sub.status === 'active' && endDate && endDate > now;
+        const daysLeft = isActive
+            ? Math.ceil((endDate - now) / (1000 * 60 * 60 * 24))
+            : 0;
+
+        res.json({
+            success:         true,
+            hasSubscription: true,
+            isActive,
+            plan:            sub.plan,
+            status:          sub.status,
+            endDate:         endDate?.toISOString(),
+            daysLeft,
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
