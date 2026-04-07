@@ -24,6 +24,7 @@ import contactRoutes      from './routes/contact.routes.js';
 import blogRoutes         from './routes/blog.routes.js';
 import commissionRoutes   from './routes/commission.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
+import cafeRegRoutes      from './routes/cafeRegistration.routes.js';
 import cron from 'node-cron';
 import { sendCommissionReminders } from './utils/sendCommissionReminder.js';
 configurePassport();              // ← ADD — initialize passport strategies
@@ -77,6 +78,7 @@ app.use('/api/contact',      contactRoutes);
 app.use('/api/blogs',        blogRoutes);
 app.use('/api/commission',   commissionRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/cafe-registration', cafeRegRoutes);
 
 app.use((req, res) => res.status(404).json({ success: false, message: 'Route not found' }));
 app.use(errorHandler);

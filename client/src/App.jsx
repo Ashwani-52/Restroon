@@ -24,6 +24,7 @@ import BlogPost          from './pages/blog/BlogPost';
 import MaintenancePage   from './pages/MaintenancePage'; // ← ADD
 import UpiPayment        from './pages/customer/UpiPayment';
 import PaymentConfirm    from './pages/customer/PaymentConfirm';
+import RegisterCafe      from './pages/owner/RegisterCafe';
 
 // ── Redirect logged-in users away from login/register ──
 function AuthGuard({ children }) {
@@ -106,6 +107,11 @@ export default function App() {
             {/* ─── OWNER DASHBOARD ───────────────── */}
             <Route path="/dashboard/owner/*" element={
               <ProtectedRoute role="owner"><OwnerDashboard /></ProtectedRoute>
+            } />
+
+            {/* ─── OWNER — Register Cafe ─────────── */}
+            <Route path="/register-cafe" element={
+              <ProtectedRoute role="owner"><RegisterCafe /></ProtectedRoute>
             } />
 
             {/* ─── ADMIN DASHBOARD ───────────────── */}

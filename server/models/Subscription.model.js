@@ -7,13 +7,18 @@ const subscriptionSchema = new mongoose.Schema(
             ref: 'User',
             required: true
         },
+        cafe: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Cafe',
+            default: null
+        },
         planId: {
             type: String,
             required: true
         },
         planLabel: {
             type: String,
-            required: true
+            default: ''
         },
         isTrial: {
             type: Boolean,

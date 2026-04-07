@@ -66,24 +66,29 @@ export const ORDER_NOTE_MAX = 200;
 export const PLATFORM_FEE_PERCENT = Number(process.env.PLATFORM_FEE_PERCENT) || 4;
 // server/utils/constants.js — add these
 export const SUBSCRIPTION_PLANS = {
+    trial: {
+        label: '1-Day Free Trial',
+        amount: 0,        // ₹0 — free
+        days: 1
+    },
     monthly: {
         label: '1 Month',
-        amount: 150000,   // paise
+        amount: 1500,     // ₹1,500
         days: 30
     },
     quarterly: {
         label: '3 Months',
-        amount: 399900,
+        amount: 3999,     // ₹3,999
         days: 90
     },
     biannual: {
         label: '6 Months',
-        amount: 749900,
+        amount: 6999,     // ₹6,999
         days: 180
     },
     annual: {
         label: '12 Months',
-        amount: 1399900,
+        amount: 11999,    // ₹11,999
         days: 365
     }
 };

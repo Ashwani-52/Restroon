@@ -131,6 +131,34 @@ const cafeSchema = new mongoose.Schema(
             endDate: { type: Date },
             razorpayPaymentId: { type: String, default: '' }
         },
+
+        // ─── Registration Flow Fields ────────────────
+        isRegistered: { type: Boolean, default: false },     // true only after payment verified
+        isSubscribed: { type: Boolean, default: false },
+        subscriptionId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Subscription',
+            default: null
+        },
+        registrationStep: {
+            type: String,
+            enum: ['details', 'subscription', 'complete'],
+            default: 'details'
+        },
+        // Temporary storage for cafe details before payment
+        tempDetails: {
+            name:    { type: String },
+            address: { type: String },
+            city:    { type: String },
+            state:   { type: String },
+            pincode: { type: String },
+            phone:   { type: String },
+            cuisine: { type: String },
+            location: {
+                type:        { type: String, default: 'Point' },
+                coordinates: { type: [Number], default: [0, 0] }
+            }
+        },
     },
     { timestamps: true }
 );
