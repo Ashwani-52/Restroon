@@ -4,7 +4,7 @@ import Order from '../models/Order.model.js';
 import Cafe from '../models/Cafe.model.js';
 import { sendOrderEmailPair } from '../utils/email.js';
 import { PLATFORM_FEE_PERCENT } from '../utils/constants.js';
-import { cafeRazorpay } from '../config/razorpay.js';
+import { getCafeRazorpay } from '../config/razorpay.js';
 
 // ──────────────────────────────────────────────
 // CREATE RAZORPAY ORDER
@@ -30,7 +30,7 @@ export const createRazorpayOrder = async (req, res) => {
         const totalCharged = baseAmount + platformFee;      // ₹104 (customer pays)
 
         // ─── Create Razorpay order via CAFE account ─
-        const razorpayOrder = await cafeRazorpay.orders.create({
+        const razorpayOrder = await getCafeRazorpay().orders.create({
             amount: totalCharged * 100,  // in paise
             currency: 'INR',
             receipt: `order_${orderId}`,

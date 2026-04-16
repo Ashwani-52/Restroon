@@ -6,7 +6,7 @@ import Cafe            from '../models/Cafe.model.js';
 import Subscription    from '../models/Subscription.model.js';
 import User            from '../models/User.model.js';
 import { SUBSCRIPTION_PLANS } from '../utils/constants.js';
-import { adminRazorpay } from '../config/razorpay.js';
+import { getAdminRazorpay } from '../config/razorpay.js';
 
 /* ─────────────────────────────────────────────────────────
    STEP 1 — Save temp cafe details
@@ -96,7 +96,7 @@ export const createRegistrationOrder = async (req, res) => {
         }
 
         // Paid plan — create Razorpay order via admin account (amount must be in paise)
-        const order = await adminRazorpay.orders.create({
+        const order = await getAdminRazorpay().orders.create({
             amount:   plan.amount * 100, // rupees → paise
             currency: 'INR',
             receipt:  `cafe_reg_${cafeId}_${Date.now()}`,

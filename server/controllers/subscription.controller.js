@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import User from '../models/User.model.js';
 import Subscription from '../models/Subscription.model.js';
 import { SUBSCRIPTION_PLANS } from '../utils/constants.js';
-import { adminRazorpay } from '../config/razorpay.js';
+import { getAdminRazorpay } from '../config/razorpay.js';
 
 // ─────────────────────────────────────────────
 // POST /api/subscription/start-trial
@@ -62,7 +62,7 @@ export const createSubscriptionOrder = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Invalid plan' });
         }
 
-        const order = await adminRazorpay.orders.create({
+        const order = await getAdminRazorpay().orders.create({
             amount: plan.amount * 100,  // rupees → paise
             currency: 'INR',
             receipt: `sub_${req.user._id}_${Date.now()}`,
