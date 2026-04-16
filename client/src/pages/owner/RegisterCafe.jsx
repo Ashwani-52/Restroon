@@ -170,7 +170,7 @@ export default function RegisterCafe() {
       if (!loaded) { setError('Failed to load payment gateway. Please try again.'); setLoading(false); return; }
 
       const options = {
-        key:        data.keyId || import.meta.env.VITE_RAZORPAY_KEY,
+        key:        data.keyId,  // ✅ admin key from backend — no frontend env fallback
         amount:     data.amount,
         currency:   data.currency,
         order_id:   data.orderId,

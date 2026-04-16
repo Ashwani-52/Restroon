@@ -176,7 +176,7 @@ export default function PricingSection() {
             if (!data.success) throw new Error(data.message);
 
             const options = {
-                key: import.meta.env.VITE_RAZORPAY_KEY,
+                key: data.keyId,  // ✅ admin key from backend — never hardcoded on frontend
                 amount: data.amount,
                 currency: 'INR',
                 name: 'Restroon',

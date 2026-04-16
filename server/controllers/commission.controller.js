@@ -49,7 +49,8 @@ export const createPayment = async (req, res) => {
             success: true,
             orderId: razorpayOrder.id,
             amount: razorpayOrder.amount,
-            currency: razorpayOrder.currency
+            currency: razorpayOrder.currency,
+            keyId: process.env.RAZORPAY_KEY_ID  // ✅ admin key — frontend uses this
         });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });

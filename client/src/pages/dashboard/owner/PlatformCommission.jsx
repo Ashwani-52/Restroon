@@ -41,8 +41,14 @@ export default function PlatformCommission() {
                 return;
             }
 
+            // ✅ keyId comes from backend (admin Razorpay account) — never read from frontend env
+            if (!data.keyId) {
+                alert('Payment configuration error. Please contact support.');
+                return;
+            }
+
             const options = {
-                key: import.meta.env.VITE_RAZORPAY_KEY_ID, 
+                key: data.keyId,  // ✅ admin key from backend response
                 amount: data.amount,
                 currency: data.currency,
                 name: "Restroon",
