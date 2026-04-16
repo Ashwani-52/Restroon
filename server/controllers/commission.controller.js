@@ -1,12 +1,7 @@
 import Order from '../models/Order.model.js';
 import Notification from '../models/Notification.model.js';
-import Razorpay from 'razorpay';
 import crypto from 'crypto';
-
-const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+import { getAdminRazorpay } from '../config/razorpay.js';
 
 export const getTodayCommission = async (req, res) => {
     try {
@@ -48,7 +43,7 @@ export const createPayment = async (req, res) => {
             receipt: `comm_receipt_${Date.now()}`
         };
 
-        const razorpayOrder = await razorpay.orders.create(options);
+        const razorpayOrder = await getAdminRazorpay().orders.create(options);
         
         res.json({
             success: true,
@@ -72,7 +67,7 @@ export const verifyPayment = async (req, res) => {
 
         const sign = razorpay_order_id + "|" + razorpay_payment_id;
         const expectedSign = crypto
-            .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+            .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)  // admin secret
             .update(sign.toString())
             .digest("hex");
 
