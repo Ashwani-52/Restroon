@@ -151,7 +151,7 @@ const StatusBadge = ({ status, daysLeft, plan, endDate }) => {
 export default function SubscriptionPage() {
   const [subStatus,     setSubStatus]     = useState(null);
   const [loadingStatus, setLoadingStatus] = useState(true);
-  const [selectedPlan,  setSelectedPlan]  = useState(null);
+  const [selectedPlan,  setSelectedPlan]  = useState(PLANS[0]); // ✅ default to trial
   const [payLoading,    setPayLoading]    = useState(false);
   const [payError,      setPayError]      = useState("");
   const [paySuccess,    setPaySuccess]    = useState(null);
@@ -184,25 +184,23 @@ export default function SubscriptionPage() {
 
   // Razorpay payment handler
   const handlePay = async () => {
-    if (!selectedPlan) return;
+    if (!selectedPlan) {
+      setPayError("Please select a plan first");
+      return;
+    }
     setPayLoading(true);
     setPayError("");
 
     try {
-      // Get the owner's cafeId first
-      const { data: cafeData } = await api.get("/api/cafe-registration/my-cafe");
-      const cafeId = cafeData.cafeId;
-
-      // Create Razorpay order
-      const { data: orderData } = await api.post("/api/cafe-registration/create-order", {
-        cafeId,
-        plan: selectedPlan.id,
+      // Create Razorpay order via subscription endpoint (admin Razorpay account)
+      const { data: orderData } = await api.post("/api/subscription/create-order", {
+        planId: selectedPlan.id,  // ✅ correct field name
       });
 
       const options = {
-        key:         orderData.key,
+        key:         orderData.keyId,   // ✅ keyId returned from backend (admin key)
         amount:      orderData.amount,
-        currency:    "INR",
+        currency:    orderData.currency || "INR",
         name:        "Restroon",
         description: `${selectedPlan.label} — ${selectedPlan.duration}`,
         image:       "/logo.png",
@@ -211,21 +209,20 @@ export default function SubscriptionPage() {
 
         handler: async (response) => {
           try {
-            const { data: verifyData } = await api.post("/api/cafe-registration/verify-and-activate", {
-              cafeId,
-              plan:                selectedPlan.id,
+            const { data: verifyData } = await api.post("/api/subscription/verify", {
               razorpay_order_id:   response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature:  response.razorpay_signature,
+              planId:              selectedPlan.id,  // ✅ correct field name
             });
 
             if (verifyData.success) {
               setPaySuccess({
                 plan:    selectedPlan.label,
-                endDate: verifyData.endDate,
+                endDate: verifyData.subscription?.endDate,
               });
               setSelectedPlan(null);
-              await fetchStatus(); // refresh badge
+              await fetchStatus();
             }
           } catch {
             setPayError("Payment received but verification failed. Contact support@restroon.com");
@@ -243,6 +240,10 @@ export default function SubscriptionPage() {
       };
 
       const rzp = new window.Razorpay(options);
+      rzp.on("payment.failed", (resp) => {
+        setPayError(resp.error?.description || "Payment failed. Please try again.");
+        setPayLoading(false);
+      });
       rzp.open();
     } catch (err) {
       setPayError(err.response?.data?.message || "Failed to initiate payment. Try again.");

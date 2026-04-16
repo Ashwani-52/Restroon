@@ -82,7 +82,7 @@ const cafeSchema = new mongoose.Schema(
         },
         deliveryRadius: {
             type: Number,
-            default: DEFAULT_DELIVERY_RADIUS
+            default: 100000  // 100km in metres (MongoDB uses metres for $nearSphere)
         },
         isOpen: {
             type: Boolean,
@@ -125,10 +125,14 @@ const cafeSchema = new mongoose.Schema(
         },
         // Add to Cafe.model.js inside cafeSchema
         subscription: {
-            plan: { type: String, enum: ['starter', 'growth', 'pro'], default: 'starter' },
+            plan: {
+                type: String,
+                enum: ['trial', 'starter', 'monthly', 'growth', 'quarterly', 'biannual', 'annual', 'pro'],
+                default: 'trial'
+            },
             status: { type: String, enum: ['active', 'expired', 'trial'], default: 'trial' },
             startDate: { type: Date },
-            endDate: { type: Date },
+            endDate:   { type: Date },
             razorpayPaymentId: { type: String, default: '' }
         },
 

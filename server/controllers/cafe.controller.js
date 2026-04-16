@@ -343,7 +343,7 @@ export const getActiveCafes = async (req, res) => {
 // ──────────────────────────────────────────
 export const getNearbyCafes = async (req, res) => {
     try {
-        const { lat, lng, radiusInKm = 5, search } = req.query;
+        const { lat, lng, radiusInKm = 100, search } = req.query; // ✅ default 100km
 
         if (!lat || !lng) {
             return res.status(400).json({
@@ -354,14 +354,15 @@ export const getNearbyCafes = async (req, res) => {
 
         const query = {
             status: CAFE_STATUS.ACTIVE,
+            // ✅ Include all subscription statuses that allow the cafe to be visible
             'subscription.status': { $in: ['active', 'trial'] },
             location: {
                 $nearSphere: {
                     $geometry: {
                         type: "Point",
-                        coordinates: [parseFloat(lng), parseFloat(lat)]
+                        coordinates: [parseFloat(lng), parseFloat(lat)] // ⚠️ lng first for GeoJSON
                     },
-                    $maxDistance: parseFloat(radiusInKm) * 1000 // Convert km to meters
+                    $maxDistance: parseFloat(radiusInKm) * 1000 // km → metres
                 }
             }
         };
