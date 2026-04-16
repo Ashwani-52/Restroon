@@ -214,40 +214,74 @@ export default function SubscriptionPage() {
     setPayError("");
 
     try {
-      // Create Razorpay order via subscription endpoint (admin Razorpay account)
-      const { data: orderData } = await api.post("/api/subscription/create-order", {
-        planId: selectedPlan.id,  // ✅ correct field name
+      // ── Step 0: ensure Razorpay SDK is loaded ──────────────
+      if (!window.Razorpay) {
+        await new Promise((resolve, reject) => {
+          const existing = document.getElementById("razorpay-sdk");
+          if (existing) { existing.onload = resolve; return; }
+          const s = document.createElement("script");
+          s.id    = "razorpay-sdk";
+          s.src   = "https://checkout.razorpay.com/v1/checkout.js";
+          s.onload  = resolve;
+          s.onerror = reject;
+          document.body.appendChild(s);
+        });
+      }
+
+      // ── Step 1: get cafeId for this owner ─────────────────
+      const { data: cafeData } = await api.get("/api/cafe-registration/my-cafe");
+      const cafeId = cafeData.cafeId;
+
+      // ── Step 2: create Razorpay order ─────────────────────
+      const { data: orderData } = await api.post("/api/cafe-registration/create-order", {
+        planId: selectedPlan.id,  // ✅ exact backend key
+        cafeId,
       });
 
+      // ── Free plan shortcut (trial amount === 0) ────────────
+      if (orderData.isFree) {
+        await api.post("/api/cafe-registration/verify-and-activate", {
+          cafeId,
+          planId: selectedPlan.id,
+          isFree: true,
+        });
+        setPaySuccess({ plan: selectedPlan.label, endDate: null });
+        setSelectedPlan(null);
+        await fetchStatus();
+        setPayLoading(false);
+        return;
+      }
+
+      // ── Step 3: open Razorpay modal ───────────────────────
       const options = {
-        key:         orderData.keyId,   // ✅ keyId returned from backend (admin key)
+        key:         orderData.keyId,         // ✅ admin key from backend
         amount:      orderData.amount,
         currency:    orderData.currency || "INR",
         name:        "Restroon",
         description: `${selectedPlan.label} — ${selectedPlan.duration}`,
-        image:       "/logo.png",
         order_id:    orderData.orderId,
         theme:       { color: "#f97316" },
 
         handler: async (response) => {
           try {
-            const { data: verifyData } = await api.post("/api/subscription/verify", {
+            const { data: verifyData } = await api.post("/api/cafe-registration/verify-and-activate", {
+              cafeId,
+              planId:              selectedPlan.id,
               razorpay_order_id:   response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature:  response.razorpay_signature,
-              planId:              selectedPlan.id,  // ✅ correct field name
+              isFree:              false,
             });
 
             if (verifyData.success) {
-              setPaySuccess({
-                plan:    selectedPlan.label,
-                endDate: verifyData.subscription?.endDate,
-              });
+              setPaySuccess({ plan: selectedPlan.label, endDate: verifyData.endDate });
               setSelectedPlan(null);
               await fetchStatus();
+            } else {
+              setPayError(verifyData.message || "Verification failed. Contact support@restroon.com");
             }
-          } catch {
-            setPayError("Payment received but verification failed. Contact support@restroon.com");
+          } catch (verifyErr) {
+            setPayError(verifyErr.response?.data?.message || "Payment received but verification failed. Contact support@restroon.com");
           } finally {
             setPayLoading(false);
           }
@@ -267,11 +301,15 @@ export default function SubscriptionPage() {
         setPayLoading(false);
       });
       rzp.open();
+
     } catch (err) {
-      setPayError(err.response?.data?.message || "Failed to initiate payment. Try again.");
+      // Show the ACTUAL backend error, not a generic message
+      const msg = err.response?.data?.message || err.message || "Failed to initiate payment.";
+      setPayError(`❌ ${msg}`);
       setPayLoading(false);
     }
   };
+
 
   // ── Derive display values from subStatus ───────────────
   const activeStatus  = subStatus?.isActive  ? "active"  : subStatus?.hasSubscription ? "expired" : null;
