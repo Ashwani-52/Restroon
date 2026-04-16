@@ -120,7 +120,8 @@ export const createRegistrationOrder = async (req, res) => {
         });
     } catch (err) {
         console.error('createRegistrationOrder error:', err);
-        res.status(500).json({ success: false, message: err.message });
+        const msg = err.error?.description || err.message || JSON.stringify(err);
+        res.status(500).json({ success: false, message: msg });
     }
 };
 

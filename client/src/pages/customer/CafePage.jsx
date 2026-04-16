@@ -18,7 +18,7 @@ export default function CafePage() {
     const [address, setAddress] = useState({ street: '', city: '', pincode: '' });
     const [orderType, setOrderType] = useState('delivery');
     const [placedOrderId, setPlacedOrderId] = useState(null);
-    const [paymentMethod, setPaymentMethod] = useState('upi');
+    const [paymentMethod, setPaymentMethod] = useState('online');
     const [customerName, setCustomerName] = useState('');
     const [customerPhone, setCustomerPhone] = useState('');
     const [showSavePrompt, setShowSavePrompt] = useState(false); // save-address prompt
@@ -125,41 +125,82 @@ export default function CafePage() {
         navigate(`/order-confirmation/${savedOrderId}`);
     };
 
-    // ── Create pending order for UPI payment ───────────
-    const createPendingOrder = async () => {
+    // ── Create online order via Razorpay ───────────
+    const handleOnlinePayment = async () => {
         if (!user) { navigate('/login'); return; }
         setOrdering(true);
         try {
-            const cafeRes = await api.get(`/api/cafe/${cafe._id}/payment-info`);
-            const { upiId, upiName } = cafeRes.data;
+            // 1. Create order in DB
+            const res = await api.post('/api/order', buildOrderPayload('online'));
+            const orderId = res.data.order._id;
 
-            if (!upiId) {
-                alert('This cafe has not set up UPI yet. Please pay cash on delivery.');
-                setOrdering(false);
-                return;
+            // 2. Create Razorpay order (backend handles fees and uses Cafe credentials)
+            const { data: rzpData } = await api.post('/api/payment/create-order', { orderId });
+
+            // 3. Load Razorpay script if not loaded
+            if (!window.Razorpay) {
+                await new Promise((resolve) => {
+                    const script = document.createElement("script");
+                    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+                    script.onload = resolve;
+                    document.body.appendChild(script);
+                });
             }
 
-            const pendingOrderData = {
-                ...buildOrderPayload('upi'),
-                upiId,
-                upiName,
-                savedAt: Date.now(),
+            // 4. Open Razorpay modal
+            const options = {
+                key:         rzpData.keyId,       // Cafe's Razorpay Key
+                amount:      rzpData.amount,      // Amount in paise
+                currency:    rzpData.currency || "INR",
+                name:        cafe.name,
+                description: `Food Order #${orderId.slice(-6)}`,
+                image:       cafe.logo || "/logo.png",
+                order_id:    rzpData.razorpayOrderId,
+                theme:       { color: "#FF6B35" },
+                handler: async (response) => {
+                    setOrdering(true);
+                    try {
+                        const { data: verifyData } = await api.post('/api/payment/verify', {
+                            razorpay_order_id:   response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature:  response.razorpay_signature,
+                            orderId:             orderId,
+                        });
+
+                        if (verifyData.success) {
+                            // Clear cart and navigate
+                            clearCart();
+                            navigate(`/order-confirmation/${orderId}`);
+                        } else {
+                            alert("Payment verification failed! Please contact support.");
+                            navigate(`/order-confirmation/${orderId}`);
+                        }
+                    } catch (err) {
+                        alert(err.response?.data?.message || "Payment verification failed!");
+                        navigate(`/order-confirmation/${orderId}`);
+                    } finally {
+                        setOrdering(false);
+                    }
+                },
+                modal: {
+                    ondismiss: () => {
+                        setOrdering(false);
+                        alert("Payment cancelled. You can retry paying from your orders page.");
+                        // Optional: Navigate to order confirmation where they can see the pending order
+                        navigate(`/order-confirmation/${orderId}`);
+                    }
+                }
             };
-            sessionStorage.setItem('pendingOrder', JSON.stringify(pendingOrderData));
 
-            const shortRef = Date.now().toString().slice(-6);
-            const upiParams = `pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(upiName || 'Cafe')}&am=${grandTotal}&tn=Restroon-${shortRef}&cu=INR`;
-            const upiLink = `upi://pay?${upiParams}`;
-
-            navigate(`/payment/confirm?cafe=${cafe._id}`);
-
-            setTimeout(() => {
-                window.location.href = upiLink;
-            }, 300);
+            const rzp = new window.Razorpay(options);
+            rzp.on("payment.failed", (resp) => {
+                alert(resp.error?.description || "Payment failed.");
+                setOrdering(false);
+            });
+            rzp.open();
 
         } catch (err) {
-            alert(err.response?.data?.message || 'Failed');
-        } finally {
+            alert(err.response?.data?.message || 'Failed to initiate payment');
             setOrdering(false);
         }
     };
@@ -423,13 +464,13 @@ export default function CafePage() {
 
                                     {/* Payment Method Toggle */}
                                     <div className="flex gap-2 mb-4">
-                                        {['upi', 'cod'].map(method => (
+                                        {['online', 'cod'].map(method => (
                                             <button
                                                 key={method}
                                                 onClick={() => { setPaymentMethod(method); setPlacedOrderId(null); }}
                                                 className={`flex-1 py-2 rounded-xl border-2 border-ink font-bangers text-sm transition-all ${paymentMethod === method ? 'bg-yellow shadow-[2px_2px_0_#1A1A1A]' : 'bg-cream'}`}
                                             >
-                                                {method === 'upi' ? '📱 UPI' : '💵 Cash'}
+                                                {method === 'online' ? '💳 Pay Online' : '💵 Cash'}
                                             </button>
                                         ))}
                                     </div>
@@ -445,14 +486,14 @@ export default function CafePage() {
                                         />
                                     )}
 
-                                    {/* UPI — Create pending order first then redirect */}
-                                    {paymentMethod === 'upi' && !placedOrderId && (
+                                    {/* Online Payment Button */}
+                                    {paymentMethod === 'online' && !placedOrderId && (
                                         <CartoonButton
                                             label={ordering ? '⏳ Processing...' : `💳 Proceed to Pay • ₹${grandTotal}`}
                                             color="bg-yellow"
                                             size="lg"
                                             disabled={ordering || !isFormValid}
-                                            onClick={createPendingOrder}
+                                            onClick={handleOnlinePayment}
                                         />
                                     )}
 

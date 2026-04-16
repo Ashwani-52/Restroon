@@ -95,7 +95,8 @@ export const createSubscriptionOrder = async (req, res) => {
         });
     } catch (err) {
         console.error('[createSubscriptionOrder]', err);
-        res.status(500).json({ success: false, message: err.message });
+        const msg = err.error?.description || err.message || JSON.stringify(err);
+        res.status(500).json({ success: false, message: msg });
     }
 };
 
