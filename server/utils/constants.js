@@ -62,33 +62,34 @@ export const CAFE_DESC_MAX = 500;
 export const MENU_ITEM_NAME_MAX = 100;
 export const MENU_ITEM_DESC_MAX = 300;
 export const ORDER_NOTE_MAX = 200;
-// server/utils/constants.js — add this
 export const PLATFORM_FEE_PERCENT = Number(process.env.PLATFORM_FEE_PERCENT) || 4;
-// server/utils/constants.js — add these
+
+// server/utils/constants.js — subscription plans
+// amounts are in RUPEES — the controller converts to paise (* 100)
 export const SUBSCRIPTION_PLANS = {
     trial: {
-        label: '1-Day Free Trial',
-        amount: 0,        // ₹0 — free
+        label: '1 Day Trial',
+        amount: 1,        // ₹1 — card auth, refunded immediately
         days: 1
     },
     monthly: {
-        label: '1 Month',
-        amount: 1500,     // ₹1,500
+        label: 'Monthly',
+        amount: 999,      // ₹999
         days: 30
     },
     quarterly: {
-        label: '3 Months',
-        amount: 3999,     // ₹3,999
+        label: 'Quarterly',
+        amount: 2499,     // ₹2,499
         days: 90
     },
     biannual: {
         label: '6 Months',
-        amount: 6999,     // ₹6,999
+        amount: 4999,     // ₹4,999
         days: 180
     },
     annual: {
-        label: '12 Months',
-        amount: 11999,    // ₹11,999
+        label: 'Annual',
+        amount: 7999,     // ₹7,999
         days: 365
     }
 };

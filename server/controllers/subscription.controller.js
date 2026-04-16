@@ -10,7 +10,6 @@ import { getAdminRazorpay } from '../config/razorpay.js';
 // ─────────────────────────────────────────────
 export const startTrial = async (req, res) => {
     try {
-        // Block if already used a trial
         const existingTrial = await Subscription.findOne({
             user: req.user._id,
             isTrial: true
@@ -55,11 +54,21 @@ export const startTrial = async (req, res) => {
 // ─────────────────────────────────────────────
 export const createSubscriptionOrder = async (req, res) => {
     try {
-        const { planId } = req.body;
+        // Accept both "planId" (SubscriptionPage/PricingSection) and "plan" (legacy)
+        const planId = req.body.planId || req.body.plan;
+
+        console.log('[subscription] PLAN RECEIVED:', planId);
+        console.log('[subscription] USER ID:', req.user?._id);
+        console.log('[subscription] VALID PLANS:', Object.keys(SUBSCRIPTION_PLANS));
+
         const plan = SUBSCRIPTION_PLANS[planId];
 
-        if (!plan) {
-            return res.status(400).json({ success: false, message: 'Invalid plan' });
+        if (!planId || !plan) {
+            console.error(`[subscription] INVALID PLAN: "${planId}"`);
+            return res.status(400).json({
+                success: false,
+                message: `Invalid plan "${planId}". Valid: ${Object.keys(SUBSCRIPTION_PLANS).join(', ')}`
+            });
         }
 
         const order = await getAdminRazorpay().orders.create({
@@ -74,13 +83,15 @@ export const createSubscriptionOrder = async (req, res) => {
             }
         });
 
+        console.log(`[subscription] ORDER CREATED: ${order.id} plan=${planId} amount=₹${plan.amount}`);
+
         res.json({
             success: true,
             orderId: order.id,
             amount: order.amount,
             currency: order.currency,
             planLabel: plan.label,
-            keyId: process.env.ADMIN_RAZORPAY_KEY_ID  // always send admin key for subscriptions
+            keyId: process.env.ADMIN_RAZORPAY_KEY_ID  // always send admin key to frontend
         });
     } catch (err) {
         console.error('[createSubscriptionOrder]', err);
@@ -97,26 +108,33 @@ export const verifySubscriptionPayment = async (req, res) => {
             razorpay_order_id,
             razorpay_payment_id,
             razorpay_signature,
-            planId
         } = req.body;
+
+        // Accept both "planId" and "plan" field names
+        const planId = req.body.planId || req.body.plan;
+
+        console.log('[subscription] VERIFYING plan:', planId, 'payment:', razorpay_payment_id);
+
+        const plan = SUBSCRIPTION_PLANS[planId];
+        if (!planId || !plan) {
+            return res.status(400).json({
+                success: false,
+                message: `Invalid plan during verification: "${planId}"`
+            });
+        }
 
         // Verify HMAC signature using ADMIN secret
         const body = `${razorpay_order_id}|${razorpay_payment_id}`;
         const expectedSig = crypto
-            .createHmac('sha256', process.env.ADMIN_RAZORPAY_KEY_SECRET)  // admin secret
+            .createHmac('sha256', process.env.ADMIN_RAZORPAY_KEY_SECRET)
             .update(body)
             .digest('hex');
 
         if (expectedSig !== razorpay_signature) {
             return res.status(400).json({
                 success: false,
-                message: 'Payment verification failed'
+                message: 'Payment verification failed — signature mismatch'
             });
-        }
-
-        const plan = SUBSCRIPTION_PLANS[planId];
-        if (!plan) {
-            return res.status(400).json({ success: false, message: 'Invalid plan' });
         }
 
         const startDate = new Date();
@@ -127,11 +145,11 @@ export const verifySubscriptionPayment = async (req, res) => {
             user: req.user._id,
             planId,
             planLabel: plan.label,
-            isTrial: false,
+            isTrial: planId === 'trial',
             status: 'active',
             startDate,
             endDate,
-            amount: plan.amount / 100,
+            amount: plan.amount,
             razorpayOrderId: razorpay_order_id,
             razorpayPaymentId: razorpay_payment_id
         });
@@ -141,6 +159,18 @@ export const verifySubscriptionPayment = async (req, res) => {
             subscriptionEndDate: endDate,
             currentPlan: planId
         });
+
+        // ₹1 trial refund — non-blocking, failure doesn't affect activation
+        if (planId === 'trial') {
+            try {
+                await getAdminRazorpay().payments.refund(razorpay_payment_id, { amount: 100 });
+                console.log('[subscription] Trial ₹1 refunded:', razorpay_payment_id);
+            } catch (refundErr) {
+                console.error('[subscription] Refund failed (non-critical):', refundErr.message);
+            }
+        }
+
+        console.log(`[subscription] ACTIVATED: ${planId} → expires ${endDate.toISOString()}`);
 
         res.json({
             success: true,
@@ -185,4 +215,17 @@ export const getSubscriptionStatus = async (req, res) => {
         console.error('[getSubscriptionStatus]', err);
         res.status(500).json({ success: false, message: err.message });
     }
+};
+
+// ─────────────────────────────────────────────
+// GET /api/subscription/plans  (public — no auth)
+// ─────────────────────────────────────────────
+export const getPlans = (req, res) => {
+    const publicPlans = Object.entries(SUBSCRIPTION_PLANS).map(([id, p]) => ({
+        id,
+        label: p.label,
+        amount: p.amount,
+        days: p.days,
+    }));
+    res.json({ success: true, plans: publicPlans });
 };
