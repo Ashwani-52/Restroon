@@ -116,7 +116,7 @@ export const createRegistrationOrder = async (req, res) => {
             currency: order.currency,
             planId,
             cafeId,
-            keyId:    process.env.RAZORPAY_KEY_ID  // always send admin key for subscriptions
+            keyId:    process.env.ADMIN_RAZORPAY_KEY_ID  // always send admin key for subscriptions
         });
     } catch (err) {
         console.error('createRegistrationOrder error:', err);
@@ -154,7 +154,7 @@ export const verifyAndActivate = async (req, res) => {
         if (!isFree) {
             const body      = razorpay_order_id + '|' + razorpay_payment_id;
             const expected  = crypto
-                .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)  // admin secret
+                .createHmac('sha256', process.env.ADMIN_RAZORPAY_KEY_SECRET)  // admin secret
                 .update(body)
                 .digest('hex');
 

@@ -14,12 +14,12 @@ let _cafeRazorpay  = null;
 // ── Admin account — receives subscription fees from cafes ──────────────
 export const getAdminRazorpay = () => {
     if (!_adminRazorpay) {
-        if (!process.env.RAZORPAY_KEY_ID) {
-            throw new Error('RAZORPAY_KEY_ID is not set in environment variables');
+        if (!process.env.ADMIN_RAZORPAY_KEY_ID) {
+            throw new Error('ADMIN_RAZORPAY_KEY_ID is not set in environment variables');
         }
         _adminRazorpay = new Razorpay({
-            key_id:     process.env.RAZORPAY_KEY_ID,
-            key_secret: process.env.RAZORPAY_KEY_SECRET,
+            key_id:     process.env.ADMIN_RAZORPAY_KEY_ID,
+            key_secret: process.env.ADMIN_RAZORPAY_KEY_SECRET,
         });
     }
     return _adminRazorpay;

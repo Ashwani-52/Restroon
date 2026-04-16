@@ -80,7 +80,7 @@ export const createSubscriptionOrder = async (req, res) => {
             amount: order.amount,
             currency: order.currency,
             planLabel: plan.label,
-            keyId: process.env.RAZORPAY_KEY_ID  // always send admin key for subscriptions
+            keyId: process.env.ADMIN_RAZORPAY_KEY_ID  // always send admin key for subscriptions
         });
     } catch (err) {
         console.error('[createSubscriptionOrder]', err);
@@ -103,7 +103,7 @@ export const verifySubscriptionPayment = async (req, res) => {
         // Verify HMAC signature using ADMIN secret
         const body = `${razorpay_order_id}|${razorpay_payment_id}`;
         const expectedSig = crypto
-            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)  // admin secret
+            .createHmac('sha256', process.env.ADMIN_RAZORPAY_KEY_SECRET)  // admin secret
             .update(body)
             .digest('hex');
 

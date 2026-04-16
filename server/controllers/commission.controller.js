@@ -50,7 +50,7 @@ export const createPayment = async (req, res) => {
             orderId: razorpayOrder.id,
             amount: razorpayOrder.amount,
             currency: razorpayOrder.currency,
-            keyId: process.env.RAZORPAY_KEY_ID  // ✅ admin key — frontend uses this
+            keyId: process.env.ADMIN_RAZORPAY_KEY_ID  // ✅ admin key — frontend uses this
         });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
@@ -68,7 +68,7 @@ export const verifyPayment = async (req, res) => {
 
         const sign = razorpay_order_id + "|" + razorpay_payment_id;
         const expectedSign = crypto
-            .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)  // admin secret
+            .createHmac("sha256", process.env.ADMIN_RAZORPAY_KEY_SECRET)  // admin secret
             .update(sign.toString())
             .digest("hex");
 
