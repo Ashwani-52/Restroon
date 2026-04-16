@@ -74,7 +74,7 @@ export const createSubscriptionOrder = async (req, res) => {
         const order = await getAdminRazorpay().orders.create({
             amount: plan.amount * 100,  // rupees → paise
             currency: 'INR',
-            receipt: `sub_${req.user._id}_${Date.now()}`,
+            receipt: `sub_${req.user._id.toString().slice(-6)}_${Date.now()}`,
             notes: {
                 userId: req.user._id.toString(),
                 planId,

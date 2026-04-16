@@ -99,7 +99,7 @@ export const createRegistrationOrder = async (req, res) => {
         const order = await getAdminRazorpay().orders.create({
             amount:   plan.amount * 100, // rupees → paise
             currency: 'INR',
-            receipt:  `cafe_reg_${cafeId}_${Date.now()}`,
+            receipt:  `cr_${cafeId.toString().slice(-6)}_${Date.now()}`,
             notes: {
                 cafeId:  cafeId.toString(),
                 ownerId: userId.toString(),
