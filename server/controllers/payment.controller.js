@@ -1,15 +1,10 @@
 // server/controllers/payment.controller.js
-import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import Order from '../models/Order.model.js';
 import Cafe from '../models/Cafe.model.js';
 import { sendOrderEmailPair } from '../utils/email.js';
 import { PLATFORM_FEE_PERCENT } from '../utils/constants.js';
-
-const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET
-});
+import { cafeRazorpay } from '../config/razorpay.js';
 
 // ──────────────────────────────────────────────
 // CREATE RAZORPAY ORDER
@@ -34,8 +29,8 @@ export const createRazorpayOrder = async (req, res) => {
         const platformFee = Math.ceil(baseAmount * PLATFORM_FEE_PERCENT / 100); // ₹4
         const totalCharged = baseAmount + platformFee;      // ₹104 (customer pays)
 
-        // ─── Create Razorpay order ──────────────
-        const razorpayOrder = await razorpay.orders.create({
+        // ─── Create Razorpay order via CAFE account ─
+        const razorpayOrder = await cafeRazorpay.orders.create({
             amount: totalCharged * 100,  // in paise
             currency: 'INR',
             receipt: `order_${orderId}`,
@@ -43,7 +38,8 @@ export const createRazorpayOrder = async (req, res) => {
                 orderId: orderId.toString(),
                 cafeId: order.cafe._id.toString(),
                 platformFee: platformFee.toString(),
-                baseAmount: baseAmount.toString()
+                baseAmount: baseAmount.toString(),
+                type: 'food_order'
             }
         });
 
@@ -61,7 +57,7 @@ export const createRazorpayOrder = async (req, res) => {
             platformFee,
             baseAmount,
             totalCharged,
-            keyId: process.env.RAZORPAY_KEY_ID
+            keyId: process.env.CAFE_RAZORPAY_KEY_ID  // always send cafe key for food orders
         });
 
     } catch (err) {
@@ -82,10 +78,10 @@ export const verifyPayment = async (req, res) => {
             orderId
         } = req.body;
 
-        // ─── Verify signature (security) ────────
+        // ─── Verify signature using CAFE secret ────
         const body = `${razorpay_order_id}|${razorpay_payment_id}`;
         const expected = crypto
-            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+            .createHmac('sha256', process.env.CAFE_RAZORPAY_KEY_SECRET)  // cafe secret
             .update(body)
             .digest('hex');
 
@@ -107,34 +103,16 @@ export const verifyPayment = async (req, res) => {
         order.paymentConfirmed = true;  // ← owner popup fires only now
         await order.save();
 
-        // ─── Auto transfer to cafe (if linked account exists) ─
+        // ─── Note: With cafeRazorpay, money goes directly to cafe account ──
+        // ─── No transfer needed; update cafe revenue directly ────────────────
         const cafe = order.cafe;
-        if (cafe?.banking?.razorpayAccountId) {
-            try {
-                const transferAmount = order.totalAmount * 100; // in paise (without platform fee)
-
-                await razorpay.transfers.create({
-                    account: cafe.banking.razorpayAccountId,
-                    amount: transferAmount,
-                    currency: 'INR',
-                    source: { id: razorpay_payment_id, type: 'payment' },
-                    description: `Payment for order ${order._id}`,
-                    notes: {
-                        orderId: order._id.toString(),
-                        cafeId: cafe._id.toString()
-                    }
-                });
-
-                // ─── Update cafe revenue ──────────────
-                await Cafe.findByIdAndUpdate(
-                    cafe._id,
-                    { $inc: { totalRevenue: order.totalAmount } }
-                );
-
-            } catch (transferErr) {
-                // Log but don't fail — payment already captured
-                console.error('Transfer failed (manual payout needed):', transferErr.message);
-            }
+        try {
+            await Cafe.findByIdAndUpdate(
+                cafe._id,
+                { $inc: { totalRevenue: order.totalAmount } }
+            );
+        } catch (revenueErr) {
+            console.error('Revenue update failed:', revenueErr.message);
         }
 
         res.status(200).json({

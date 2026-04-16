@@ -1,14 +1,9 @@
 // server/controllers/subscription.controller.js
-import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import User from '../models/User.model.js';
 import Subscription from '../models/Subscription.model.js';
 import { SUBSCRIPTION_PLANS } from '../utils/constants.js';
-
-const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET
-});
+import { adminRazorpay } from '../config/razorpay.js';
 
 // ─────────────────────────────────────────────
 // POST /api/subscription/start-trial
@@ -67,22 +62,25 @@ export const createSubscriptionOrder = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Invalid plan' });
         }
 
-        const order = await razorpay.orders.create({
-            amount: plan.amount,
+        const order = await adminRazorpay.orders.create({
+            amount: plan.amount * 100,  // rupees → paise
             currency: 'INR',
             receipt: `sub_${req.user._id}_${Date.now()}`,
             notes: {
                 userId: req.user._id.toString(),
                 planId,
-                planLabel: plan.label
+                planLabel: plan.label,
+                type: 'subscription'
             }
         });
 
         res.json({
             success: true,
             orderId: order.id,
-            amount: plan.amount,
-            planLabel: plan.label
+            amount: order.amount,
+            currency: order.currency,
+            planLabel: plan.label,
+            keyId: process.env.RAZORPAY_KEY_ID  // always send admin key for subscriptions
         });
     } catch (err) {
         console.error('[createSubscriptionOrder]', err);
@@ -102,10 +100,10 @@ export const verifySubscriptionPayment = async (req, res) => {
             planId
         } = req.body;
 
-        // Verify HMAC signature
+        // Verify HMAC signature using ADMIN secret
         const body = `${razorpay_order_id}|${razorpay_payment_id}`;
         const expectedSig = crypto
-            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)  // admin secret
             .update(body)
             .digest('hex');
 

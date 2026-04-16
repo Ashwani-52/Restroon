@@ -1,17 +1,12 @@
 // server/controllers/cafeRegistration.controller.js
 // Handles the 3-step cafe registration + subscription payment flow
 
-import Razorpay        from 'razorpay';
 import crypto          from 'crypto';
 import Cafe            from '../models/Cafe.model.js';
 import Subscription    from '../models/Subscription.model.js';
 import User            from '../models/User.model.js';
 import { SUBSCRIPTION_PLANS } from '../utils/constants.js';
-
-const razorpay = new Razorpay({
-    key_id:     process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+import { adminRazorpay } from '../config/razorpay.js';
 
 /* ─────────────────────────────────────────────────────────
    STEP 1 — Save temp cafe details
@@ -100,15 +95,16 @@ export const createRegistrationOrder = async (req, res) => {
             });
         }
 
-        // Paid plan — create Razorpay order (amount must be in paise)
-        const order = await razorpay.orders.create({
+        // Paid plan — create Razorpay order via admin account (amount must be in paise)
+        const order = await adminRazorpay.orders.create({
             amount:   plan.amount * 100, // rupees → paise
             currency: 'INR',
             receipt:  `cafe_reg_${cafeId}_${Date.now()}`,
             notes: {
                 cafeId:  cafeId.toString(),
                 ownerId: userId.toString(),
-                planId
+                planId,
+                type:    'subscription'
             }
         });
 
@@ -120,7 +116,7 @@ export const createRegistrationOrder = async (req, res) => {
             currency: order.currency,
             planId,
             cafeId,
-            keyId:    process.env.RAZORPAY_KEY_ID
+            keyId:    process.env.RAZORPAY_KEY_ID  // always send admin key for subscriptions
         });
     } catch (err) {
         console.error('createRegistrationOrder error:', err);
@@ -154,11 +150,11 @@ export const verifyAndActivate = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Cafe not found' });
         }
 
-        // ── Verify Razorpay signature (skip for free trial) ──
+        // ── Verify Razorpay signature using ADMIN secret (skip for free trial) ──
         if (!isFree) {
             const body      = razorpay_order_id + '|' + razorpay_payment_id;
             const expected  = crypto
-                .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+                .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)  // admin secret
                 .update(body)
                 .digest('hex');
 
