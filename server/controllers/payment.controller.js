@@ -25,13 +25,13 @@ export const createRazorpayOrder = async (req, res) => {
         }
 
         // ─── Calculate platform fee ─────────────
-        const baseAmount = order.totalAmount;             // e.g. ₹100
-        const platformFee = Math.ceil(baseAmount * PLATFORM_FEE_PERCENT / 100); // ₹4
-        const totalCharged = baseAmount + platformFee;      // ₹104 (customer pays)
+        const totalCharged = order.totalAmount;             // includes platform fee from order model
+        const baseAmount = order.foodTotal;               // original food amount
+        const platformFee = order.platformFeeAmount || 0;
 
         // ─── Create Razorpay order via CAFE account ─
         const razorpayOrder = await getCafeRazorpay().orders.create({
-            amount: totalCharged * 100,  // in paise
+            amount: Math.round(totalCharged * 100),  // in paise
             currency: 'INR',
             receipt: `order_${orderId}`,
             notes: {
@@ -52,7 +52,7 @@ export const createRazorpayOrder = async (req, res) => {
         res.status(200).json({
             success: true,
             razorpayOrderId: razorpayOrder.id,
-            amount: totalCharged * 100,   // in paise for Razorpay SDK
+            amount: Math.round(totalCharged * 100),   // in paise for Razorpay SDK
             currency: 'INR',
             platformFee,
             baseAmount,

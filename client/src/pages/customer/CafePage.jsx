@@ -7,6 +7,7 @@ import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import Navbar from '../../components/common/Navbar';
 import { CartoonButton } from '../../components/ui/CartoonButton';
+import { useRazorpay } from '../../hooks/useRazorpay';
 
 export default function CafePage() {
     const { slug } = useParams();
@@ -29,6 +30,7 @@ export default function CafePage() {
     const { cart, cafeId, total, count, addToCart, updateQty, decreaseQty, clearCart } = useCart();
     const { user } = useAuth();
     const navigate = useNavigate();
+    const { initiatePayment } = useRazorpay();
 
     useEffect(() => {
         Promise.all([
@@ -134,73 +136,28 @@ export default function CafePage() {
             const res = await api.post('/api/order', buildOrderPayload('online'));
             const orderId = res.data.order._id;
 
-            // 2. Create Razorpay order (backend handles fees and uses Cafe credentials)
-            const { data: rzpData } = await api.post('/api/payment/create-order', { orderId });
-
-            // 3. Load Razorpay script if not loaded
-            if (!window.Razorpay) {
-                await new Promise((resolve) => {
-                    const script = document.createElement("script");
-                    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-                    script.onload = resolve;
-                    document.body.appendChild(script);
-                });
-            }
-
-            // 4. Open Razorpay modal
-            const options = {
-                key:         rzpData.keyId,       // Cafe's Razorpay Key
-                amount:      rzpData.amount,      // Amount in paise
-                currency:    rzpData.currency || "INR",
-                name:        cafe.name,
-                description: `Food Order #${orderId.slice(-6)}`,
-                image:       cafe.logo || "/logo.png",
-                order_id:    rzpData.razorpayOrderId,
-                theme:       { color: "#FF6B35" },
-                handler: async (response) => {
-                    setOrdering(true);
-                    try {
-                        const { data: verifyData } = await api.post('/api/payment/verify', {
-                            razorpay_order_id:   response.razorpay_order_id,
-                            razorpay_payment_id: response.razorpay_payment_id,
-                            razorpay_signature:  response.razorpay_signature,
-                            orderId:             orderId,
-                        });
-
-                        if (verifyData.success) {
-                            // Clear cart and navigate
-                            clearCart();
-                            navigate(`/order-confirmation/${orderId}`);
-                        } else {
-                            alert("Payment verification failed! Please contact support.");
-                            navigate(`/order-confirmation/${orderId}`);
-                        }
-                    } catch (err) {
-                        alert(err.response?.data?.message || "Payment verification failed!");
-                        navigate(`/order-confirmation/${orderId}`);
-                    } finally {
-                        setOrdering(false);
-                    }
+            initiatePayment({
+                orderId,
+                cafeName: cafe.name,
+                cafeLogo: cafe.logo,
+                customerName,
+                customerPhone,
+                onSuccess: () => {
+                    clearCart();
+                    navigate(`/order-confirmation/${orderId}`);
                 },
-                modal: {
-                    ondismiss: () => {
-                        setOrdering(false);
-                        alert("Payment cancelled. You can retry paying from your orders page.");
-                        // Optional: Navigate to order confirmation where they can see the pending order
-                        navigate(`/order-confirmation/${orderId}`);
-                    }
+                onFailure: (msg) => {
+                    alert(msg || "Payment failed or could not be initiated.");
+                    setOrdering(false);
+                },
+                onDismiss: () => {
+                    alert("Payment cancelled. You can retry paying from your orders page.");
+                    navigate(`/order-confirmation/${orderId}`);
+                    setOrdering(false);
                 }
-            };
-
-            const rzp = new window.Razorpay(options);
-            rzp.on("payment.failed", (resp) => {
-                alert(resp.error?.description || "Payment failed.");
-                setOrdering(false);
             });
-            rzp.open();
-
         } catch (err) {
-            alert(err.response?.data?.message || 'Failed to initiate payment');
+            alert(err.response?.data?.message || 'Failed to initiate order');
             setOrdering(false);
         }
     };
@@ -209,8 +166,21 @@ export default function CafePage() {
     const isFormValid = customerName.trim() && customerPhone.trim() && isAddressValid;
 
     if (loading) return (
-        <div className="min-h-screen retro-grid flex items-center justify-center">
-            <div className="text-6xl animate-bounce">🛵</div>
+        <div className="min-h-screen retro-grid">
+            <Navbar />
+            <div className="max-w-7xl mx-auto px-6 pt-28">
+                <div className="animate-pulse space-y-8">
+                    <div className="h-72 bg-ink/10 rounded-3xl" />
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div className="lg:col-span-2 space-y-4">
+                            {[1, 2, 3, 4].map(i => (
+                                <div key={i} className="h-32 bg-ink/10 rounded-2xl" />
+                            ))}
+                        </div>
+                        <div className="h-96 bg-ink/10 rounded-3xl" />
+                    </div>
+                </div>
+            </div>
         </div>
     );
 

@@ -320,8 +320,9 @@ export const getActiveCafes = async (req, res) => {
         }
 
         const cafes = await Cafe.find(query)
-            .select('-totalRevenue')     // hide revenue from customers
-            .sort({ 'ratings.average': -1 });
+            .select('name slug logo coverImage address.city cuisine ratings.average deliveryRadius location isOpen')
+            .sort({ 'ratings.average': -1 })
+            .lean();
 
         res.status(200).json({
             success: true,
@@ -371,7 +372,9 @@ export const getNearbyCafes = async (req, res) => {
             query.name = { $regex: search, $options: 'i' };
         }
 
-        const cafes = await Cafe.find(query).select('-totalRevenue');
+        const cafes = await Cafe.find(query)
+            .select('name slug logo coverImage address.city cuisine ratings.average deliveryRadius location isOpen')
+            .lean();
 
         res.status(200).json({
             success: true,
