@@ -26,7 +26,7 @@ export default function CafesPage() {
         setLoading(true);
         let url = `/api/cafe?search=${search}`;
         if (userLocation) {
-            url = `/api/cafe/nearby?lat=${userLocation.lat}&lng=${userLocation.lng}&radiusInKm=5`;
+            url = `/api/cafe/nearby?lat=${userLocation.lat}&lng=${userLocation.lng}&radiusInKm=70`;
             if (search) url += `&search=${search}`;
         }
 

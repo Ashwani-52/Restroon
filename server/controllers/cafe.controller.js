@@ -311,8 +311,8 @@ export const getActiveCafes = async (req, res) => {
     try {
         const { lat, lng, search } = req.query;
 
-        // ─── Base query — only active cafes ────
-        const query = { status: CAFE_STATUS.ACTIVE };
+        // ─── Base query — temporaily remove filters for testing ────
+        const query = { /* status: CAFE_STATUS.ACTIVE */ };
 
         // ─── Search by name ────────────────────
         if (search) {
@@ -343,7 +343,7 @@ export const getActiveCafes = async (req, res) => {
 // ──────────────────────────────────────────
 export const getNearbyCafes = async (req, res) => {
     try {
-        const { lat, lng, radiusInKm = 100, search } = req.query; // ✅ default 100km
+        const { lat, lng, radiusInKm = 70, search } = req.query; // ✅ default 70km
 
         if (!lat || !lng) {
             return res.status(400).json({
@@ -353,9 +353,9 @@ export const getNearbyCafes = async (req, res) => {
         }
 
         const query = {
-            status: CAFE_STATUS.ACTIVE,
-            // ✅ Include all subscription statuses that allow the cafe to be visible
-            'subscription.status': { $in: ['active', 'trial'] },
+            // Temporarily comment out status filters for testing
+            // status: CAFE_STATUS.ACTIVE,
+            // 'subscription.status': { $in: ['active', 'trial'] },
             location: {
                 $nearSphere: {
                     $geometry: {
