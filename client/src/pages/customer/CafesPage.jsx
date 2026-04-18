@@ -1,5 +1,12 @@
 // src/pages/customer/CafesPage.jsx
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import api from '../../services/api';
+import Navbar from '../../components/common/Navbar';
 import CafeCard from '../../components/ui/CafeCard';
+import StaticMap from '../../components/common/StaticMap';
+import { getUserLocation } from '../../utils/getUserLocation';
+import { calculateDistance } from '../../utils/haversine';
 
 // Skeleton Loader Component
 const CafeSkeleton = () => (
@@ -31,7 +38,6 @@ export default function CafesPage() {
     const [loading, setLoading] = useState(true);
     const [viewMode, setViewMode] = useState('list'); // 'list' | 'map'
     const [userLocation, setUserLocation] = useState(null);
-    const [locationError, setLocationError] = useState('');
 
     useEffect(() => {
         getUserLocation()
@@ -64,6 +70,7 @@ export default function CafesPage() {
                 }
                 setCafes(fetchedCafes);
             })
+            .catch(err => console.error("Fetch cafes error:", err))
             .finally(() => {
                 // Small delay to prevent flickering on fast connections
                 setTimeout(() => setLoading(false), 300);
@@ -141,8 +148,6 @@ export default function CafesPage() {
                             <CafeCard key={cafe._id} cafe={cafe} index={i} />
                         ))}
                     </div>
-                )
-  </div>
                 )}
             </div>
         </div>
