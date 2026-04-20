@@ -63,6 +63,14 @@ export const MENU_ITEM_NAME_MAX = 100;
 export const MENU_ITEM_DESC_MAX = 300;
 export const ORDER_NOTE_MAX = 200;
 export const PLATFORM_FEE_PERCENT = Number(process.env.PLATFORM_FEE_PERCENT) || 4;
+export const PLATFORM_FEE_FLAT = 15;
+export const DELIVERY_CHARGE_FALLBACK = 35;
+export const DELIVERY_TIERS = [
+    { maxKm: 2, charge: 10 },
+    { maxKm: 5, charge: 20 },
+    { maxKm: 8, charge: 35 },
+    { maxKm: Infinity, charge: 50 }
+];
 
 // server/utils/constants.js — subscription plans
 // amounts are in RUPEES — the controller converts to paise (* 100)

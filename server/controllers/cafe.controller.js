@@ -2,9 +2,11 @@ import Cafe from '../models/Cafe.model.js';
 import User from '../models/User.model.js';
 import {
     CAFE_STATUS,
-    ROLES
+    ROLES,
+    DELIVERY_CHARGE_FALLBACK
 } from '../utils/constants.js';
 import { geocodeAddress } from '../utils/geocode.js';
+import { haversineDistance, deliveryChargeFromDistance } from '../utils/haversine.js';
 
 // ──────────────────────────────────────────
 // REGISTER CAFE (Owner only)
@@ -579,5 +581,44 @@ export const getPaymentInfo = async (req, res) => {
         });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// ─── GET DELIVERY CHARGE ──────────────────
+export const getDeliveryCharge = async (req, res) => {
+    try {
+        const { lat, lng } = req.query;
+        const cafe = await Cafe.findById(req.params.id).select('address.coordinates name');
+        
+        if (!cafe) return res.status(404).json({ success: false, message: 'Cafe not found' });
+        
+        const cafeLat = cafe.address?.coordinates?.lat;
+        const cafeLng = cafe.address?.coordinates?.lng;
+        
+        if (!lat || !lng || !cafeLat || !cafeLng) {
+            return res.json({ 
+                success: true, 
+                charge: DELIVERY_CHARGE_FALLBACK, 
+                distance: null,
+                message: 'Using default charge — coordinates unavailable'
+            });
+        }
+        
+        const distKm = haversineDistance(cafeLat, cafeLng, parseFloat(lat), parseFloat(lng));
+        const charge = deliveryChargeFromDistance(distKm);
+        
+        res.json({ 
+            success: true, 
+            charge,
+            distance: Math.round(distKm * 10) / 10,  // 1 decimal
+            tiers: [
+                { label: '0–2 km', charge: 10 },
+                { label: '2–5 km', charge: 20 },
+                { label: '5–8 km', charge: 35 },
+                { label: '8+ km',  charge: 50 },
+            ]
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
     }
 };

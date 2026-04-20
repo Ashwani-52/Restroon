@@ -23,6 +23,8 @@ export default function CafePage() {
     const [customerName, setCustomerName] = useState('');
     const [customerPhone, setCustomerPhone] = useState('');
     const [showSavePrompt, setShowSavePrompt] = useState(false); // save-address prompt
+    const [deliveryCharge, setDeliveryCharge] = useState(35); // default ₹35 fallback
+    const [deliveryDistance, setDeliveryDistance] = useState(null);
     const [savedOrderId, setSavedOrderId] = useState(null);     // orderId after COD success
 
     const cartRef = useRef(null);
@@ -65,14 +67,11 @@ export default function CafePage() {
 
     const cartItems = cafeId === cafe?._id ? cart : [];
 
-    // ── Flat fee structure (matches backend constants) ────────────
-    const PLATFORM_FEE = 15;      // ₹15 per order → admin commission
-    const DELIVERY_CHARGE = 10;   // ₹10 per delivery → stays in cafe
-
+    // ── Fee structure (Now Dynamic) ────────────
+    const PLATFORM_FEE = 15;      
     const foodTotal      = total;
     const platformFee    = foodTotal > 0 ? PLATFORM_FEE : 0;
-    const deliveryCharge = (orderType === 'delivery' && foodTotal > 0) ? DELIVERY_CHARGE : 0;
-    const grandTotal     = foodTotal + platformFee + deliveryCharge;
+    const grandTotal     = foodTotal + platformFee + (orderType === 'delivery' ? deliveryCharge : 0);
 
     const [detectingLocation, setDetectingLocation] = useState(false);
 
@@ -84,11 +83,29 @@ export default function CafePage() {
     const getGPSCoords = () => new Promise((resolve) => {
         if (!navigator.geolocation) return resolve(null);
         navigator.geolocation.getCurrentPosition(
-            (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+            (pos) => {
+                const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                fetchDeliveryCharge(coords);
+                resolve(coords);
+            },
             () => resolve(null),  // silently fail — don't block order
             { timeout: 5000, maximumAge: 60000 }
         );
     });
+
+    // ── Fetch live delivery charge from backend when GPS is known ──
+    const fetchDeliveryCharge = async (coords) => {
+        if (!cafe?._id || !coords?.lat || !coords?.lng) return;
+        try {
+            const { data } = await api.get(
+                `/api/cafe/${cafe._id}/delivery-charge?lat=${coords.lat}&lng=${coords.lng}`
+            );
+            if (data.success) {
+                setDeliveryCharge(data.charge);
+                setDeliveryDistance(data.distance); // for display
+            }
+        } catch (_) { /* silently keep fallback */ }
+    };
 
     // ── Auto-detect address from GPS (OpenStreetMap Nominatim — free, no API key) ──
     const detectAddressFromGPS = async () => {
@@ -129,6 +146,7 @@ export default function CafePage() {
             const pincode = a.postcode || '';
 
             setAddress({ street, city, pincode });
+            fetchDeliveryCharge(coords);
         } catch (err) {
             if (err.code === 1) {
                 alert('📍 Location permission denied. Please allow location access and try again.');
@@ -513,7 +531,7 @@ export default function CafePage() {
                                         </div>
                                         {orderType === 'delivery' && (
                                             <div className="flex justify-between items-center text-sm mb-2 font-grotesk text-ink/60">
-                                                <span>Delivery Charge</span>
+                                                <span>Delivery Charge {deliveryDistance ? `(${deliveryDistance}km)` : ''}</span>
                                                 <span>₹{deliveryCharge}</span>
                                             </div>
                                         )}

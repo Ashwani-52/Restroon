@@ -12,7 +12,8 @@ import {
     updateUpiSettings,
     getUpiSettings,
     updateUpiQr,
-    getPaymentInfo
+    getPaymentInfo,
+    getDeliveryCharge
 } from '../controllers/cafe.controller.js';
 import { protect } from '../middleware/auth.middleware.js';
 import { requireRole } from '../middleware/role.middleware.js';
@@ -25,6 +26,7 @@ router.get('/', getActiveCafes);
 router.get('/nearby', getNearbyCafes);
 router.get('/slug/:slug', getCafeBySlug);
 router.get('/:id/payment-info', getPaymentInfo);
+router.get('/:id/delivery-charge', getDeliveryCharge);
 
 // ─── Owner Routes ──────────────────────────
 router.post('/', protect, requireRole(ROLES.OWNER), registerCafe);

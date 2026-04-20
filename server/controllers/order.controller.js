@@ -5,8 +5,11 @@ import { sendOrderEmailPair } from '../utils/email.js';
 import User from '../models/User.model.js';
 import {
     ORDER_STATUS,
-    CAFE_STATUS
+    CAFE_STATUS,
+    PLATFORM_FEE_FLAT,
+    DELIVERY_CHARGE_FALLBACK
 } from '../utils/constants.js';
+import { haversineDistance, deliveryChargeFromDistance } from '../utils/haversine.js';
 
 // ──────────────────────────────────────────
 // PLACE ORDER (Customer only)
@@ -104,9 +107,27 @@ export const placeOrder = async (req, res) => {
             foodTotal += menuItem.price * item.quantity;
         }
 
-        // ─── Fee structure (Flat fees) ──────────────────
-        const platformFeeAmount = 15;
-        const deliveryCharge = (orderType === 'delivery') ? 10 : 0;
+        // ─── Fee structure (Distance-based) ──────────
+        const platformFeeAmount = PLATFORM_FEE_FLAT; // ₹15 flat always
+
+        // Distance-based delivery charge
+        let deliveryCharge = 0;
+        if (orderType !== 'dine_in') {
+            const customerLat = deliveryAddress?.coordinates?.lat;
+            const customerLng = deliveryAddress?.coordinates?.lng;
+            const cafeLat = cafe.address?.coordinates?.lat;
+            const cafeLng = cafe.address?.coordinates?.lng;
+
+            if (customerLat && customerLng && cafeLat && cafeLng) {
+                const distKm = haversineDistance(cafeLat, cafeLng, customerLat, customerLng);
+                deliveryCharge = deliveryChargeFromDistance(distKm);
+                console.log(`[ORDER] Distance: ${distKm.toFixed(2)}km → delivery ₹${deliveryCharge}`);
+            } else {
+                deliveryCharge = DELIVERY_CHARGE_FALLBACK; // ₹35 fallback when no GPS
+                console.log('[ORDER] No GPS coords — using fallback delivery charge ₹35');
+            }
+        }
+
         const totalAmount = foodTotal + platformFeeAmount + deliveryCharge;
 
         // ─── Create order ──────────────────────
