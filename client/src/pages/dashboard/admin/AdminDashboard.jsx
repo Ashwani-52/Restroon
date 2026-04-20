@@ -17,11 +17,10 @@ const defaultTrends = [
 ];
 
 // Replace AdminStats function in AdminDashboard.jsx
-import {
-    LineChart, Line, BarChart, Bar, AreaChart, Area,
     XAxis, YAxis, CartesianGrid, Tooltip,
     ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
+import CommissionWidget from '../../../components/admin/CommissionWidget';
 
 function AdminStats() {
     const [stats, setStats] = useState(null);
@@ -250,6 +249,9 @@ function AdminStats() {
                     </table>
                 </div>
             </div>
+
+            {/* 👑 Platform Commission Tracking */}
+            <CommissionWidget />
         </div>
     );
 }

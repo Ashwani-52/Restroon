@@ -85,7 +85,8 @@ const orderSchema = new mongoose.Schema(
         platformFeeAmount: { type: Number, default: 0 },
         deliveryCharge: { type: Number, default: 0 },
         commissionPaid: { type: Boolean, default: false },
-        commissionPaidAt: { type: Date, default: null }
+        commissionPaidAt: { type: Date, default: null },
+        commissionPaymentId: { type: String, default: '' }
     },
     { timestamps: true }
 );
