@@ -78,7 +78,7 @@ export default function CafePage() {
     const buildOrderPayload = (method) => ({
         cafeId: cafe._id,
         items: cart.map(i => ({ menuItemId: i.menuItem, quantity: i.quantity })),
-        paymentMethod: method,
+        paymentMethod: method === 'online' ? 'razorpay' : method,
         orderType,
         deliveryAddress: orderType === 'delivery' ? address : null,
         note: orderType === 'dine_in' ? 'Dine-in order' : '',
