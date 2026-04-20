@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../../context/AuthContext';
 import api from '../../../services/api';
 import { CartoonButton } from '../../../components/ui/CartoonButton';
 
 export default function PlatformCommission() {
-    const { user } = useAuth();
     const [commissionData, setCommissionData] = useState({ totalCommission: 0, orderCount: 0 });
     const [loading, setLoading] = useState(true);
     const [paying, setPaying] = useState(false);

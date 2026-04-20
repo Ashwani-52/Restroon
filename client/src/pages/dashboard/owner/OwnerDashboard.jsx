@@ -3,7 +3,6 @@ import { useState, useEffect, useRef } from 'react';
 import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../../services/api';
-import { useAuth } from '../../../context/AuthContext';
 import { CartoonButton } from '../../../components/ui/CartoonButton';
 import { ImageUpload } from '../../../components/ui/ImageUpload';
 import SubscriptionPage from './SubscriptionPage';
@@ -226,7 +225,13 @@ function OwnerOrders({ cafe }) {
                                         )}
                                     </div>
                                 )}
-
+                                <div className="space-y-1 mb-4">
+                                    {order.items?.map(item => (
+                                        <div key={item._id} className="flex justify-between text-sm font-grotesk">
+                                            <span>{item.name} × {item.quantity}</span>
+                                            <span className="text-orange font-semibold">₹{item.price * item.quantity}</span>
+                                        </div>
+                                    ))}
                                 </div>
 
                                 {/* GPS Location Link */}
@@ -456,7 +461,6 @@ function OwnerMenu({ cafe }) {
 export default function OwnerDashboard() {
     const [cafe, setCafe] = useState(null);
     const [stats, setStats] = useState(null);
-    const { user } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
     const tab = location.pathname.split('/').pop();
