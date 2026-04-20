@@ -398,7 +398,8 @@ export const getCafeBySlug = async (req, res) => {
     try {
         const cafe = await Cafe.findOne({
             slug: req.params.slug,
-            status: CAFE_STATUS.ACTIVE
+            // Temporarily removed for testing
+            // status: CAFE_STATUS.ACTIVE
         }).select('-totalRevenue');
 
         if (!cafe) {

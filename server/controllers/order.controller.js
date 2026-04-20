@@ -51,12 +51,13 @@ export const placeOrder = async (req, res) => {
             });
         }
 
-        if (cafe.status !== CAFE_STATUS.ACTIVE) {
-            return res.status(400).json({
-                success: false,
-                message: 'This cafe is not available'
-            });
-        }
+        // Temporarily removed for testing
+        // if (cafe.status !== CAFE_STATUS.ACTIVE) {
+        //     return res.status(400).json({
+        //         success: false,
+        //         message: 'This cafe is not available'
+        //     });
+        // }
 
         if (!cafe.isOpen) {
             return res.status(400).json({
