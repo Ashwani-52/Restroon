@@ -16,7 +16,8 @@ const defaultTrends = [
     { name: 'Chinese', emoji: '🍜', score: 55, change: '-5%', growing: false, insight: 'Losing to South Indian options' },
 ];
 
-// Replace AdminStats function in AdminDashboard.jsx
+import {
+    LineChart, Line, BarChart, Bar, AreaChart, Area,
     XAxis, YAxis, CartesianGrid, Tooltip,
     ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
