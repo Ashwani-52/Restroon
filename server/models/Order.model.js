@@ -83,6 +83,7 @@ const orderSchema = new mongoose.Schema(
         foodTotal: { type: Number, default: 0 },
         platformFeePercent: { type: Number, default: 5 },
         platformFeeAmount: { type: Number, default: 0 },
+        deliveryCharge: { type: Number, default: 0 },
         commissionPaid: { type: Boolean, default: false },
         commissionPaidAt: { type: Date, default: null }
     },

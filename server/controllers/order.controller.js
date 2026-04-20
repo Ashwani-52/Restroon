@@ -104,9 +104,10 @@ export const placeOrder = async (req, res) => {
             foodTotal += menuItem.price * item.quantity;
         }
 
-        const platformFeePercent = 5;
-        const platformFeeAmount = Math.ceil((foodTotal * platformFeePercent) / 100);
-        const totalAmount = foodTotal + platformFeeAmount;
+        // ─── Fee structure (Flat fees) ──────────────────
+        const platformFeeAmount = 15;
+        const deliveryCharge = (orderType === 'delivery') ? 10 : 0;
+        const totalAmount = foodTotal + platformFeeAmount + deliveryCharge;
 
         // ─── Create order ──────────────────────
         const isCOD = !paymentMethod || paymentMethod === 'cod';
@@ -120,8 +121,8 @@ export const placeOrder = async (req, res) => {
             cafe: cafeId,
             items: orderItems,
             foodTotal,
-            platformFeePercent,
             platformFeeAmount,
+            deliveryCharge,
             totalAmount,
             paymentMethod: paymentMethod || 'cod',
             orderType: orderType || 'delivery',

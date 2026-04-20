@@ -70,8 +70,8 @@ export default function CafePage() {
     const DELIVERY_CHARGE = 10;   // ₹10 per delivery → stays in cafe
 
     const foodTotal      = total;
-    const platformFee    = cartItems.length > 0 ? PLATFORM_FEE : 0;
-    const deliveryCharge = (orderType === 'delivery' && cartItems.length > 0) ? DELIVERY_CHARGE : 0;
+    const platformFee    = foodTotal > 0 ? PLATFORM_FEE : 0;
+    const deliveryCharge = (orderType === 'delivery' && foodTotal > 0) ? DELIVERY_CHARGE : 0;
     const grandTotal     = foodTotal + platformFee + deliveryCharge;
 
     const [detectingLocation, setDetectingLocation] = useState(false);

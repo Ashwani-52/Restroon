@@ -22,7 +22,8 @@ export const getTodayCommission = async (req, res) => {
         res.json({
             success: true,
             totalCommission,
-            orderCount: orders.length
+            orderCount: orders.length,
+            orders // Send orders for the breakdown table
         });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
