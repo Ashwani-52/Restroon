@@ -65,25 +65,79 @@ export default function CafePage() {
 
     const cartItems = cafeId === cafe?._id ? cart : [];
 
-    // Calculate totals
-    const foodTotal = total;
-    const platformFee = Math.ceil(foodTotal * 5 / 100);
-    const grandTotal = foodTotal + platformFee;
+    // ── Flat fee structure (matches backend constants) ────────────
+    const PLATFORM_FEE = 15;      // ₹15 per order → admin commission
+    const DELIVERY_CHARGE = 10;   // ₹10 per delivery → stays in cafe
+
+    const foodTotal      = total;
+    const platformFee    = cartItems.length > 0 ? PLATFORM_FEE : 0;
+    const deliveryCharge = (orderType === 'delivery' && cartItems.length > 0) ? DELIVERY_CHARGE : 0;
+    const grandTotal     = foodTotal + platformFee + deliveryCharge;
+
+    const [detectingLocation, setDetectingLocation] = useState(false);
 
     const scrollToCart = () => {
         cartRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
 
-    // ── Helper to capture GPS ───────────────────────────
-    const getGPSCoords = () => {
-        return new Promise((resolve) => {
-            if (!("geolocation" in navigator)) return resolve(null);
-            navigator.geolocation.getCurrentPosition(
-                (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-                () => resolve(null), // silently fail if denied/error
-                { timeout: 5000 }
+    // ── Get GPS coordinates silently (non-blocking) ───────────────
+    const getGPSCoords = () => new Promise((resolve) => {
+        if (!navigator.geolocation) return resolve(null);
+        navigator.geolocation.getCurrentPosition(
+            (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+            () => resolve(null),  // silently fail — don't block order
+            { timeout: 5000, maximumAge: 60000 }
+        );
+    });
+
+    // ── Auto-detect address from GPS (OpenStreetMap Nominatim — free, no API key) ──
+    const detectAddressFromGPS = async () => {
+        if (!navigator.geolocation) {
+            alert('Location not supported on this browser.');
+            return;
+        }
+        setDetectingLocation(true);
+        try {
+            const coords = await new Promise((resolve, reject) =>
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+                    (err) => reject(err),
+                    { timeout: 8000, maximumAge: 0 }
+                )
             );
-        });
+
+            // ── Reverse geocode using OpenStreetMap Nominatim (completely free) ──
+            const res = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?lat=${coords.lat}&lon=${coords.lng}&format=json&addressdetails=1`,
+                { headers: { 'Accept-Language': 'en' } }
+            );
+            const data = await res.json();
+            const a = data.address || {};
+
+            // Build street: road + house_number / suburb / neighbourhood
+            const streetParts = [
+                a.house_number,
+                a.road || a.pedestrian || a.street,
+                a.suburb || a.neighbourhood || a.quarter
+            ].filter(Boolean);
+            const street = streetParts.join(', ') || a.county || '';
+
+            // City: city > town > village > district
+            const city = a.city || a.town || a.village || a.district || a.state_district || '';
+
+            // Pincode
+            const pincode = a.postcode || '';
+
+            setAddress({ street, city, pincode });
+        } catch (err) {
+            if (err.code === 1) {
+                alert('📍 Location permission denied. Please allow location access and try again.');
+            } else {
+                alert('Could not detect location. Please enter your address manually.');
+            }
+        } finally {
+            setDetectingLocation(false);
+        }
     };
 
     // ── Shared order payload builder ──────────────────────
@@ -92,7 +146,10 @@ export default function CafePage() {
         items: cart.map(i => ({ menuItemId: i.menuItem, quantity: i.quantity })),
         paymentMethod: method === 'online' ? 'razorpay' : method,
         orderType,
-        deliveryAddress: orderType === 'delivery' ? { ...address, coordinates: coords } : null,
+        deliveryAddress: orderType === 'delivery' ? {
+            ...address,
+            ...(coords ? { coordinates: coords } : {})
+        } : null,
         note: orderType === 'dine_in' ? 'Dine-in order' : '',
         customerName: customerName.trim(),
         customerPhone: customerPhone.trim(),
@@ -105,7 +162,6 @@ export default function CafePage() {
         if (cart.length === 0) return;
         setOrdering(true);
         try {
-            // Get GPS coords first (non-blocking)
             const coords = orderType === 'delivery' ? await getGPSCoords() : null;
             const res = await api.post('/api/order', buildOrderPayload('cod', coords));
             clearCart();
@@ -146,9 +202,7 @@ export default function CafePage() {
         if (!user) { navigate('/login'); return; }
         setOrdering(true);
         try {
-            // Get GPS coords first (non-blocking)
             const coords = orderType === 'delivery' ? await getGPSCoords() : null;
-
             // 1. Create order in DB
             const res = await api.post('/api/order', buildOrderPayload('online', coords));
             const orderId = res.data.order._id;
@@ -418,7 +472,22 @@ export default function CafePage() {
                                     {/* Delivery address (if delivery) */}
                                     {orderType === 'delivery' && (
                                         <div className="space-y-2 mb-4">
-                                            <p className="font-bangers text-sm text-ink/70">DELIVERY ADDRESS</p>
+                                            <div className="flex items-center justify-between">
+                                                <p className="font-bangers text-sm text-ink/70">DELIVERY ADDRESS</p>
+                                                <button
+                                                    onClick={detectAddressFromGPS}
+                                                    disabled={detectingLocation}
+                                                    className="flex items-center gap-1 text-xs font-grotesk font-semibold text-blue-600 bg-blue-50 border border-blue-300 rounded-lg px-2 py-1 hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                >
+                                                    {detectingLocation ? (
+                                                        <>
+                                                            <span className="animate-spin inline-block">⏳</span> Detecting...
+                                                        </>
+                                                    ) : (
+                                                        <>📍 Use My Location</>
+                                                    )}
+                                                </button>
+                                            </div>
                                             {['street', 'city', 'pincode'].map(field => (
                                                 <input
                                                     key={field}
@@ -426,7 +495,7 @@ export default function CafePage() {
                                                     placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
                                                     value={address[field]}
                                                     onChange={e => setAddress(a => ({ ...a, [field]: e.target.value }))}
-                                                    className="w-full px-3 py-2 bg-white border-2 border-ink rounded-xl font-grotesk text-sm focus:outline-none"
+                                                    className="w-full px-3 py-2 bg-white border-2 border-ink rounded-xl font-grotesk text-sm focus:outline-none focus:border-orange"
                                                 />
                                             ))}
                                         </div>
@@ -438,10 +507,16 @@ export default function CafePage() {
                                             <span>Food Total</span>
                                             <span>₹{foodTotal}</span>
                                         </div>
-                                        <div className="flex justify-between items-center text-sm mb-2 font-grotesk text-ink/60">
-                                            <span>Platform Fee (5%)</span>
+                                        <div className="flex justify-between items-center text-sm mb-1.5 font-grotesk text-ink/60">
+                                            <span>Platform Fee</span>
                                             <span>₹{platformFee}</span>
                                         </div>
+                                        {orderType === 'delivery' && (
+                                            <div className="flex justify-between items-center text-sm mb-2 font-grotesk text-ink/60">
+                                                <span>Delivery Charge</span>
+                                                <span>₹{deliveryCharge}</span>
+                                            </div>
+                                        )}
                                         <div className="h-px bg-[#e5e7eb] mb-2" />
                                         <div className="flex justify-between items-center font-bangers text-[17px] text-ink">
                                             <span>TOTAL</span>
