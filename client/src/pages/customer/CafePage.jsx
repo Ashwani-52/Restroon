@@ -74,13 +74,25 @@ export default function CafePage() {
         cartRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
 
+    // ── Helper to capture GPS ───────────────────────────
+    const getGPSCoords = () => {
+        return new Promise((resolve) => {
+            if (!("geolocation" in navigator)) return resolve(null);
+            navigator.geolocation.getCurrentPosition(
+                (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+                () => resolve(null), // silently fail if denied/error
+                { timeout: 5000 }
+            );
+        });
+    };
+
     // ── Shared order payload builder ──────────────────────
-    const buildOrderPayload = (method) => ({
+    const buildOrderPayload = (method, coords = null) => ({
         cafeId: cafe._id,
         items: cart.map(i => ({ menuItemId: i.menuItem, quantity: i.quantity })),
         paymentMethod: method === 'online' ? 'razorpay' : method,
         orderType,
-        deliveryAddress: orderType === 'delivery' ? address : null,
+        deliveryAddress: orderType === 'delivery' ? { ...address, coordinates: coords } : null,
         note: orderType === 'dine_in' ? 'Dine-in order' : '',
         customerName: customerName.trim(),
         customerPhone: customerPhone.trim(),
@@ -93,7 +105,9 @@ export default function CafePage() {
         if (cart.length === 0) return;
         setOrdering(true);
         try {
-            const res = await api.post('/api/order', buildOrderPayload('cod'));
+            // Get GPS coords first (non-blocking)
+            const coords = orderType === 'delivery' ? await getGPSCoords() : null;
+            const res = await api.post('/api/order', buildOrderPayload('cod', coords));
             clearCart();
             // Show save-address prompt if address was entered and not yet saved
             const hasSavedAddr = user?.defaultAddress?.city;
@@ -132,8 +146,11 @@ export default function CafePage() {
         if (!user) { navigate('/login'); return; }
         setOrdering(true);
         try {
+            // Get GPS coords first (non-blocking)
+            const coords = orderType === 'delivery' ? await getGPSCoords() : null;
+
             // 1. Create order in DB
-            const res = await api.post('/api/order', buildOrderPayload('online'));
+            const res = await api.post('/api/order', buildOrderPayload('online', coords));
             const orderId = res.data.order._id;
 
             initiatePayment({

@@ -227,14 +227,21 @@ function OwnerOrders({ cafe }) {
                                     </div>
                                 )}
 
-                                <div className="space-y-1 mb-4">
-                                    {order.items?.map(item => (
-                                        <div key={item._id} className="flex justify-between text-sm font-grotesk">
-                                            <span>{item.name} × {item.quantity}</span>
-                                            <span className="text-orange font-semibold">₹{item.price * item.quantity}</span>
-                                        </div>
-                                    ))}
                                 </div>
+
+                                {/* GPS Location Link */}
+                                {order.orderType === 'delivery' && order.deliveryAddress?.coordinates?.lat && (
+                                    <div className="mb-4">
+                                        <a
+                                            href={`https://www.google.com/maps?q=${order.deliveryAddress.coordinates.lat},${order.deliveryAddress.coordinates.lng}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-2 px-3 py-2 bg-blue-100 hover:bg-blue-200 border-2 border-ink rounded-xl font-bangers text-sm transition-all shadow-[2px_2px_0_#1A1A1A] hover:shadow-none hover:translate-y-[2px] translate-y-0"
+                                        >
+                                            📍 View Customer Location
+                                        </a>
+                                    </div>
+                                )}
 
                                 {/* Action buttons */}
                                 {order.status === 'placed' && (

@@ -7,14 +7,30 @@ export default function PlatformCommission() {
     const { user } = useAuth();
     const [commissionData, setCommissionData] = useState({ totalCommission: 0, orderCount: 0 });
     const [loading, setLoading] = useState(true);
+    const [paying, setPaying] = useState(false);
+
+    // Razorpay Script Loader
+    const loadRazorpayScript = () => {
+        return new Promise((resolve) => {
+            if (window.Razorpay) {
+                resolve(true);
+                return;
+            }
+            const script = document.createElement('script');
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.body.appendChild(script);
+        });
+    };
 
     useEffect(() => {
         const fetchCommission = async () => {
             try {
                 // Fetch the cafe first if I need the cafe ID
-                const { data: cafeRes } = await api.get('/cafe/my-cafe');
+                const { data: cafeRes } = await api.get('/api/cafe/my-cafe');
                 if (cafeRes.success && cafeRes.cafe) {
-                    const { data } = await api.get(`/commission/today?cafeId=${cafeRes.cafe._id}`);
+                    const { data } = await api.get(`/api/commission/today?cafeId=${cafeRes.cafe._id}`);
                     if (data.success) {
                         setCommissionData(data);
                     }
@@ -31,19 +47,29 @@ export default function PlatformCommission() {
 
     const processPayment = async () => {
         try {
-            const { data: cafeRes } = await api.get('/cafe/my-cafe');
+            setPaying(true);
+            const isLoaded = await loadRazorpayScript();
+            if (!isLoaded) {
+                alert('Razorpay SDK failed to load. Are you online?');
+                setPaying(false);
+                return;
+            }
+
+            const { data: cafeRes } = await api.get('/api/cafe/my-cafe');
             const cafeId = cafeRes.cafe._id;
 
-            const { data } = await api.post('/commission/create-payment', { amount: commissionData.totalCommission });
+            const { data } = await api.post('/api/commission/create-payment', { amount: commissionData.totalCommission });
             
             if (!data.success) {
                 alert('Payment creation failed');
+                setPaying(false);
                 return;
             }
 
             // ✅ keyId comes from backend (admin Razorpay account) — never read from frontend env
             if (!data.keyId) {
                 alert('Payment configuration error. Please contact support.');
+                setPaying(false);
                 return;
             }
 
@@ -55,7 +81,7 @@ export default function PlatformCommission() {
                 description: "Platform Commission",
                 order_id: data.orderId,
                 handler: async function (response) {
-                    const verifyData = await api.post('/commission/verify', {
+                    const verifyData = await api.post('/api/commission/verify', {
                         razorpay_order_id: response.razorpay_order_id,
                         razorpay_payment_id: response.razorpay_payment_id,
                         razorpay_signature: response.razorpay_signature,
@@ -66,6 +92,10 @@ export default function PlatformCommission() {
                         alert("Payment successful! Commission marked as paid.");
                         setCommissionData({ totalCommission: 0, orderCount: 0 });
                     }
+                    setPaying(false);
+                },
+                modal: {
+                    ondismiss: () => setPaying(false),
                 },
                 theme: {
                     color: "#FFD700"
@@ -77,6 +107,7 @@ export default function PlatformCommission() {
         } catch (error) {
             console.error('Payment Error', error);
             alert('Something went wrong during payment processing');
+            setPaying(false);
         }
     };
 
@@ -102,10 +133,10 @@ export default function PlatformCommission() {
 
                 <div className="mt-8 flex justify-end">
                     <CartoonButton 
-                        label="Pay Now with Razorpay" 
+                        label={paying ? "Processing..." : "Pay Now with Razorpay"} 
                         color="bg-green-400" 
                         onClick={processPayment}
-                        disabled={commissionData.totalCommission <= 0}
+                        disabled={commissionData.totalCommission <= 0 || paying}
                     />
                 </div>
             </div>
