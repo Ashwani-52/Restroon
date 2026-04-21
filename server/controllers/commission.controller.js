@@ -53,13 +53,17 @@ export const createPayment = async (req, res) => {
             cafe: cafe._id,
             status: 'delivered',
             commissionPaid: { $ne: true }
-        }).select('_id');
+        }).select('_id platformFeeAmount');  // ← must include platformFeeAmount for reduce
 
         if (!unpaidOrders.length) {
             return res.status(400).json({ success: false, message: 'No dues pending' });
         }
 
-        const totalDue = unpaidOrders.reduce((sum, order) => sum + (order.platformFeeAmount || 0), 0);
+        const totalDue = +unpaidOrders.reduce((sum, order) => sum + (order.platformFeeAmount || 0), 0).toFixed(2);
+
+        if (totalDue <= 0) {
+            return res.status(400).json({ success: false, message: 'Total due is ₹0 — nothing to pay' });
+        }
 
         const options = {
             amount: totalDue * 100, // paise

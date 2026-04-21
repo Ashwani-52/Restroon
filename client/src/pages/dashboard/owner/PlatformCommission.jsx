@@ -1,6 +1,24 @@
 import { useState, useEffect } from 'react';
 import api from '../../../services/api';
 
+// ── Safe Razorpay SDK loader — awaitable ──────────────────────
+const loadRazorpay = () => new Promise((resolve, reject) => {
+    if (window.Razorpay) return resolve(true);
+    const existing = document.getElementById('rzp-sdk');
+    if (existing) {
+        existing.onload  = () => resolve(true);
+        existing.onerror = () => reject(new Error('Razorpay SDK failed to load'));
+        return;
+    }
+    const s = document.createElement('script');
+    s.id  = 'rzp-sdk';
+    s.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    s.async = true;
+    s.onload  = () => resolve(true);
+    s.onerror = () => { document.body.removeChild(s); reject(new Error('Razorpay SDK failed to load. Check your internet connection.')); };
+    document.body.appendChild(s);
+});
+
 const PlatformCommission = () => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -23,55 +41,72 @@ const PlatformCommission = () => {
 
     useEffect(() => {
         fetchDues();
-        // Load Razorpay SDK
-        if (!document.getElementById("rzp-sdk")) {
-            const s = document.createElement("script");
-            s.id = "rzp-sdk";
-            s.src = "https://checkout.razorpay.com/v1/checkout.js";
-            document.body.appendChild(s);
-        }
+        loadRazorpay().catch(() => {}); // pre-warm SDK on mount
     }, []);
 
     const handlePay = async () => {
-        if (!data?.totalDue) return;
+        if (!data?.totalDue || data.totalDue <= 0) return;
         setPayLoading(true);
-        setPayError("");
+        setPayError('');
 
         try {
-            const { data: orderData } = await api.post("/api/commission/create-payment");
+            // 1. Ensure SDK is loaded BEFORE opening checkout
+            await loadRazorpay();
 
+            // 2. Create Razorpay order on backend
+            const { data: orderData } = await api.post('/api/commission/create-payment');
+
+            if (!orderData.success || !orderData.orderId) {
+                throw new Error(orderData.message || 'Failed to create payment order');
+            }
+            if (!orderData.keyId) {
+                throw new Error('Payment configuration error. Contact support.');
+            }
+
+            // 3. Open Razorpay checkout
             const options = {
-                key: orderData.keyId,
-                amount: orderData.amount,
-                currency: "INR",
-                name: "Restroon Platform",
-                description: `Platform fee for ${data.unpaidCount} orders`,
-                order_id: orderData.orderId,
-                theme: { color: "#f97316" },
+                key:         orderData.keyId,   // ADMIN_RAZORPAY_KEY_ID from backend
+                amount:      orderData.amount,  // paise — set by backend
+                currency:    'INR',
+                name:        'Restroon Platform',
+                description: `Platform fee for ${data.unpaidCount} order${data.unpaidCount !== 1 ? 's' : ''}`,
+                order_id:    orderData.orderId,
+                theme:       { color: '#f97316' },
                 handler: async (response) => {
                     try {
-                        const { data: vData } = await api.post("/api/commission/verify", {
-                            razorpay_order_id: response.razorpay_order_id,
+                        const { data: vData } = await api.post('/api/commission/verify', {
+                            razorpay_order_id:   response.razorpay_order_id,
                             razorpay_payment_id: response.razorpay_payment_id,
-                            razorpay_signature: response.razorpay_signature,
+                            razorpay_signature:  response.razorpay_signature,
                         });
                         if (vData.success) {
                             setPaySuccess(vData);
-                            await fetchDues(); // refresh dues
+                            await fetchDues();
+                        } else {
+                            setPayError('Verification failed. Save payment ID: ' + response.razorpay_payment_id);
                         }
                     } catch (err) {
-                        setPayError("Payment received but verification failed. Contact support.");
+                        setPayError('Payment received but verification failed. Contact support with payment ID: ' + response.razorpay_payment_id);
                     } finally {
                         setPayLoading(false);
                     }
                 },
-                modal: { ondismiss: () => setPayLoading(false) },
+                modal: {
+                    ondismiss: () => setPayLoading(false),
+                    escape:    true,
+                    animation: true,
+                },
             };
 
             const rzp = new window.Razorpay(options);
+            rzp.on('payment.failed', (r) => {
+                setPayError('Payment failed: ' + (r.error?.description || 'Unknown error'));
+                setPayLoading(false);
+            });
             rzp.open();
+
         } catch (err) {
-            setPayError(err.response?.data?.message || "Failed to initiate payment.");
+            setPayError(err.response?.data?.message || err.message || 'Failed to initiate payment.');
             setPayLoading(false);
         }
     };
