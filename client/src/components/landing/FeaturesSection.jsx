@@ -14,7 +14,7 @@ const features = [
   },
   {
     icon : '💰', title: 'Low Commission',
-    desc : 'Keep 96% of your revenue. Just a 4% platform fee. Your money stays yours.',
+    desc : 'Keep 95% of your revenue. Just a 5% platform fee. Your money stays yours.',
     color: 'bg-red',    delay: 0.2
   },
   {

@@ -29,7 +29,7 @@ export default function LandingPage() {
                                 <span className="font-bangers text-3xl text-yellow tracking-wider">RESTROON</span>
                             </div>
                             <p className="font-grotesk text-cream/70 text-sm leading-relaxed mb-4">
-                                Empowering local cafes with modern order management, 4% commissions, and direct customer relationships.
+                                Empowering local cafes with modern order management, 5% platform fee, and direct customer relationships.
                             </p>
                         </div>
 

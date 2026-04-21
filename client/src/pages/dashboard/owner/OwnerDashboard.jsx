@@ -1069,6 +1069,36 @@ function OwnerSettings({ cafe, setCafe }) {
                     />
                 </form>
             </div>
+
+            {/* ── Cafe Location ── */}
+            <div className="bg-cream border-3 border-ink rounded-2xl p-6 mt-6 shadow-[4px_4px_0_#1A1A1A]">
+                <h3 className="font-bangers text-2xl text-ink mb-2">📍 CAFE LOCATION</h3>
+                <p className="font-grotesk text-xs text-ink/60 mb-4">
+                    Drag the pin to your exact cafe location. Used to calculate delivery distance for customers.
+                </p>
+                {cafe?.address?.coordinates?.lat ? (
+                    <p className="font-grotesk text-sm text-green-700 bg-green-100 rounded-xl px-3 py-2 mb-4">
+                        ✅ Location set: {cafe.address.coordinates.lat.toFixed(5)}, {cafe.address.coordinates.lng.toFixed(5)}
+                    </p>
+                ) : (
+                    <p className="font-grotesk text-sm text-orange bg-orange/10 rounded-xl px-3 py-2 mb-4">
+                        ⚠️ No location set yet — delivery distances can't be calculated accurately.
+                    </p>
+                )}
+                <LocationPicker
+                    onLocationSelect={async ({ lat, lng }) => {
+                        try {
+                            const res = await api.put('/api/cafe/my-cafe', {
+                                address: { ...cafe.address, coordinates: { lat, lng } }
+                            });
+                            setCafe(res.data.cafe);
+                            alert('✅ Location saved!');
+                        } catch (err) {
+                            alert('❌ Failed to save location');
+                        }
+                    }}
+                />
+            </div>
         </div>
     );
 }
@@ -1097,11 +1127,11 @@ function OwnerBanking({ cafe }) {
                 <div className="space-y-2 font-grotesk text-sm text-ink/80">
                     <div className="flex justify-between py-1 border-b border-ink/10">
                         <span>Customer pays</span>
-                        <span className="font-semibold">₹104</span>
+                        <span className="font-semibold">₹105</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-ink/10">
-                        <span>Platform fee (4%)</span>
-                        <span className="font-semibold text-red">- ₹4</span>
+                        <span>Platform fee (5%)</span>
+                        <span className="font-semibold text-red">- ₹5</span>
                     </div>
                     <div className="flex justify-between py-1 font-bold">
                         <span>You receive</span>

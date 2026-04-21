@@ -67,10 +67,9 @@ export default function CafePage() {
 
     const cartItems = cafeId === cafe?._id ? cart : [];
 
-    // ── Fee structure (Now Dynamic) ────────────
-    const PLATFORM_FEE = 15;      
+    // ── Fee structure (5% Platform Fee) ────────────
     const foodTotal      = total;
-    const platformFee    = foodTotal > 0 ? PLATFORM_FEE : 0;
+    const platformFee    = foodTotal > 0 ? +((foodTotal * 0.05).toFixed(2)) : 0;
     const grandTotal     = foodTotal + platformFee + (orderType === 'delivery' ? deliveryCharge : 0);
 
     const [detectingLocation, setDetectingLocation] = useState(false);
