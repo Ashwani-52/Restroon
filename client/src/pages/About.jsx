@@ -72,7 +72,7 @@ const About = () => {
 
           <div className="grid grid-cols-2 gap-6">
             {[
-              { icon: '💸', title: "4% Commission", desc: "Restaurants keep 96% of their earnings." },
+              { icon: '💸', title: "5% Commission", desc: "Restaurants keep 95% of their earnings." },
               { icon: '🏪', title: "Local First", desc: "Built specifically to uplift local cafes and stalls." },
               { icon: '🍕', title: "Transparent Menus", desc: "No artificially inflated online prices." },
               { icon: '🤝', title: "Direct Contact", desc: "Customers connect directly with cafes." },

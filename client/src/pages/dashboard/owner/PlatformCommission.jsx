@@ -91,7 +91,7 @@ const PlatformCommission = () => {
                 <div>
                     <h1 className="font-bangers text-5xl text-ink mb-2">💸 PLATFORM FEES</h1>
                     <p className="font-grotesk text-ink/60 max-w-lg">
-                        Our platform charges a small flat fee of <span className="font-bold text-orange">₹{feePerOrder}</span> per delivered order to keep the service running.
+                        Our platform charges a small <span className="font-bold text-orange">5% platform fee</span> per delivered order to keep the service running.
                     </p>
                 </div>
                 
@@ -111,11 +111,11 @@ const PlatformCommission = () => {
                     <p className="font-bangers text-4xl text-ink">{unpaidCount}</p>
                 </div>
 
-                {/* Per Order Fee */}
+                {/* Platform Fee Label */}
                 <div className="bg-white border-4 border-ink rounded-3xl p-6 shadow-[6px_6px_0_#1A1A1A]">
                     <p className="font-grotesk font-bold text-ink/40 uppercase text-[10px] tracking-widest mb-1">PLATFORM FEE</p>
-                    <p className="font-bangers text-4xl text-ink">₹{feePerOrder}</p>
-                    <p className="font-grotesk text-[10px] text-orange font-bold uppercase mt-1">Per Delivered Order</p>
+                    <p className="font-bangers text-4xl text-ink">5%</p>
+                    <p className="font-grotesk text-[10px] text-orange font-bold uppercase mt-1">Of Menu Total</p>
                 </div>
 
                 {/* Total Due */}
@@ -173,7 +173,7 @@ const PlatformCommission = () => {
                                                 ₹{order.totalAmount}
                                             </td>
                                             <td className="py-5 px-6 text-right font-bangers text-xl text-orange">
-                                                ₹{feePerOrder}
+                                                ₹{order.platformFeeAmount}
                                             </td>
                                         </tr>
                                     ))}
@@ -221,7 +221,7 @@ const PlatformCommission = () => {
                             {[
                                 { icon: '🍔', title: 'Food Sales', desc: 'Direct to your wallet', color: 'text-ink' },
                                 { icon: '🛵', title: 'Delivery Charges', desc: 'Direct to your wallet', color: 'text-ink' },
-                                { icon: '💳', title: 'Platform Fee', desc: `Fixed ₹${feePerOrder}/order`, color: 'text-orange' }
+                                { icon: '💳', title: 'Platform Fee', desc: `5% of order total`, color: 'text-orange' }
                             ].map((item, i) => (
                                 <li key={i} className="flex items-start gap-3">
                                     <span className="text-xl">{item.icon}</span>

@@ -100,29 +100,6 @@ const cafeSchema = new mongoose.Schema(
             type: Number,
             default: 0
         },
-        upiId: {
-            type: String,
-            trim: true,
-            default: null,
-        },
-        upiName: {
-            type: String,
-            trim: true,
-            default: null,
-        },
-        upiQrImage: {
-            type: String,
-            default: null,
-        },
-        // Add to Cafe.model.js inside cafeSchema
-        banking: {
-            accountHolderName: { type: String, default: '' },
-            accountNumber: { type: String, default: '' },
-            ifscCode: { type: String, default: '' },
-            upiId: { type: String, default: '' },
-            razorpayAccountId: { type: String, default: '' }, // linked account ID from Razorpay
-            isVerified: { type: Boolean, default: false }
-        },
         // Add to Cafe.model.js inside cafeSchema
         subscription: {
             plan: {

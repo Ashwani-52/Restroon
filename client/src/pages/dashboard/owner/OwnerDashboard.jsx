@@ -8,7 +8,6 @@ import { ImageUpload } from '../../../components/ui/ImageUpload';
 import SubscriptionPage from './SubscriptionPage';
 import PlatformCommission from './PlatformCommission';
 import LocationPicker from '../../../components/common/LocationPicker';
-import UpiSettings from '../../../components/dashboard/owner/UpiSettings';
 import NotificationBell from '../../../components/common/NotificationBell';
 import {
     LineChart, Line, BarChart, Bar,
@@ -491,7 +490,6 @@ export default function OwnerDashboard() {
         { path: 'menu', label: '🍽️ Menu' },
         { path: 'revenue', label: '💰 Revenue' },
         { path: 'settings', label: '⚙️ Settings' },
-        { path: 'banking', label: '🏦 Banking' },
         { path: 'commission', label: '🧾 Platform Fees' },
         { path: 'subscription', label: '💳 Subscription' }
     ];
@@ -636,7 +634,6 @@ export default function OwnerDashboard() {
                             <Route path="menu" element={<OwnerMenu cafe={cafe} />} />
                             <Route path="revenue" element={<OwnerRevenue cafe={cafe} />} />
                             <Route path="settings" element={<OwnerSettings cafe={cafe} setCafe={setCafe} />} />
-                            <Route path="banking" element={<OwnerBanking cafe={cafe} />} />
                             <Route path="commission" element={<PlatformCommission />} />
                             <Route path="subscription" element={<SubscriptionPage />} />
                             <Route path="setup" element={<CafeSetup setCafe={setCafe} />} />
@@ -1103,50 +1100,7 @@ function OwnerSettings({ cafe, setCafe }) {
     );
 }
 
-// Add OwnerBanking function
-function OwnerBanking({ cafe }) {
-    return (
-        <div className="max-w-xl space-y-6">
-            <h2 className="font-bangers text-3xl text-ink">🏦 PAYMENT SETTINGS</h2>
 
-            {/* Security notice */}
-            <div className="bg-ink border-3 border-ink rounded-2xl p-4 flex gap-3">
-                <span className="text-2xl">🔐</span>
-                <div>
-                    <p className="font-bangers text-yellow text-lg">BANK-LEVEL SECURITY</p>
-                    <p className="font-grotesk text-cream/70 text-sm">
-                        Your banking details are encrypted and never shared.
-                        Payments are automatically transferred after each order.
-                    </p>
-                </div>
-            </div>
-
-            {/* Platform fee info */}
-            <div className="bg-yellow/20 border-3 border-ink rounded-2xl p-4">
-                <h3 className="font-bangers text-xl text-ink mb-2">💡 HOW PAYMENTS WORK</h3>
-                <div className="space-y-2 font-grotesk text-sm text-ink/80">
-                    <div className="flex justify-between py-1 border-b border-ink/10">
-                        <span>Customer pays</span>
-                        <span className="font-semibold">₹105</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-ink/10">
-                        <span>Platform fee (5%)</span>
-                        <span className="font-semibold text-red">- ₹5</span>
-                    </div>
-                    <div className="flex justify-between py-1 font-bold">
-                        <span>You receive</span>
-                        <span className="text-green-600">₹100 ✅</span>
-                    </div>
-                </div>
-                <p className="font-mono text-xs text-ink/50 mt-2">
-                    Transferred automatically within 2-3 business days
-                </p>
-            </div>
-            
-            <UpiSettings />
-        </div>
-    );
-}
 
 // ── Cafe Setup (first time) ────────────────────
 function CafeSetup({ setCafe }) {

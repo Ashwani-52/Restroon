@@ -26,7 +26,7 @@ export const getCafeDues = async (req, res) => {
         .sort({ createdAt: -1 })
         .lean();
 
-        const totalDue = unpaidOrders.length * PLATFORM_FEE_FLAT;
+        const totalDue = unpaidOrders.reduce((sum, order) => sum + (order.platformFeeAmount || 0), 0);
 
         res.json({
             success: true,
@@ -59,7 +59,7 @@ export const createPayment = async (req, res) => {
             return res.status(400).json({ success: false, message: 'No dues pending' });
         }
 
-        const totalDue = unpaidOrders.length * PLATFORM_FEE_FLAT;
+        const totalDue = unpaidOrders.reduce((sum, order) => sum + (order.platformFeeAmount || 0), 0);
 
         const options = {
             amount: totalDue * 100, // paise
@@ -118,7 +118,7 @@ export const verifyPayment = async (req, res) => {
             return res.status(400).json({ success: false, message: 'No unpaid orders found' });
         }
 
-        const amountPaid = unpaidOrders.length * PLATFORM_FEE_FLAT;
+        const amountPaid = unpaidOrders.reduce((sum, order) => sum + (order.platformFeeAmount || 0), 0);
         const orderIds = unpaidOrders.map(o => o._id);
 
         // 1. Mark orders as commission paid (bulk)
@@ -187,7 +187,7 @@ export const getAdminSummary = async (req, res) => {
                 $group: {
                     _id: '$cafe',
                     orderCount: { $sum: 1 },
-                    pendingAmount: { $sum: PLATFORM_FEE_FLAT }
+                    pendingAmount: { $sum: '$platformFeeAmount' }
                 }
             },
             {

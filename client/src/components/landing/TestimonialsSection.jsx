@@ -6,7 +6,7 @@ const testimonials = [
     { name: 'Priya Sharma', cafe: 'Spice Garden', city: 'Mumbai', rating: 5, text: 'Setup was so easy. My customers love ordering directly from us.', emoji: '🍛' },
     { name: 'Arjun Singh', cafe: 'Burger Bros', city: 'Bangalore', rating: 5, text: 'Finally own my digital menu! Great dashboard to track orders.', emoji: '🍔' },
     { name: 'Meena Patel', cafe: 'South Flavors', city: 'Chennai', rating: 5, text: 'Super secure and easy to use. Highly recommend to all cafe owners!', emoji: '🥘' },
-    { name: 'Vikram Nair', cafe: 'The Grind', city: 'Pune', rating: 5, text: 'Low 4% commission means I keep most of my money. Game changer!', emoji: '☕' },
+    { name: 'Vikram Nair', cafe: 'The Grind', city: 'Pune', rating: 5, text: 'Low 5% commission means I keep most of my money. Game changer!', emoji: '☕' },
     { name: 'Sunita Joshi', cafe: 'Curry House', city: 'Jaipur', rating: 5, text: 'Dashboard is beautiful and tracking revenue is so satisfying.', emoji: '🍲' },
     { name: 'Amit Khanna', cafe: 'Pizza Palace', city: 'Chandigarh', rating: 5, text: 'My cafe went viral on local social media after using Restroon!', emoji: '🍕' },
     { name: 'Deepa Menon', cafe: 'Coconut Grove', city: 'Kochi', rating: 5, text: 'The live order management is incredible. So fast and reliable.', emoji: '🥥' }

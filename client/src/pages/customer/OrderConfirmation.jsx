@@ -29,10 +29,6 @@ export default function OrderConfirmation() {
     const [loading, setLoading] = useState(true);
     const [cancelling, setCancelling] = useState(false);
 
-    const isUpiReturn = searchParams.get('payment') === 'upi';
-    const needsConfirm = searchParams.get('confirm') === 'true';
-    const [confirmed, setConfirmed] = useState(false);
-
     useEffect(() => {
         api.get(`/api/order/${orderId}`)
             .then(r => setOrder(r.data.order))
@@ -125,50 +121,6 @@ export default function OrderConfirmation() {
                     {/* Right — Order Details + Status */}
                     <div className="space-y-6">
 
-                        {/* UPI Banner */}
-                        {isUpiReturn && needsConfirm && !confirmed && (
-                            <div className="bg-yellow/20 border-4 border-yellow rounded-3xl p-6 text-center shadow-[4px_4px_0_#1A1A1A]">
-                                <div className="text-4xl mb-2">🙏</div>
-                                <h3 className="font-bangers text-2xl text-ink mb-2">
-                                    Did you complete the UPI payment?
-                                </h3>
-                                <p className="font-grotesk text-sm text-ink/70 mb-4">
-                                    Check your UPI app for confirmation, then tap below.
-                                </p>
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={async () => {
-                                            try {
-                                                await api.post(`/api/order/${orderId}/paid`);
-                                                setConfirmed(true);
-                                                // Refresh order info
-                                                const res = await api.get(`/api/order/${orderId}`);
-                                                setOrder(res.data.order);
-                                            } catch (err) {
-                                                alert('Failed to update payment status');
-                                            }
-                                        }}
-                                        className="flex-1 py-3 bg-green-500 text-cream font-bangers text-lg border-2 border-ink rounded-xl shadow-[2px_2px_0_#1A1A1A] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
-                                    >
-                                        ✅ Yes, I Paid
-                                    </button>
-                                    <button
-                                        onClick={() => navigate(`/cafe/${order?.cafe?._id || ''}`)}
-                                        className="flex-1 py-3 bg-cream text-ink font-bangers text-lg border-2 border-ink rounded-xl transition-all"
-                                    >
-                                        ❌ Payment Failed
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                        {confirmed && (
-                            <div className="bg-green-100 border-2 border-green-500 rounded-3xl p-6 text-center shadow-[4px_4px_0_#1A1A1A]">
-                                <div className="text-4xl mb-2">🎉</div>
-                                <h3 className="font-bangers text-2xl text-green-700">Payment Confirmed!</h3>
-                                <p className="font-grotesk text-sm text-green-800/70">Your order is being prepared.</p>
-                            </div>
-                        )}
 
                         {/* Order ID */}
                         <div className="bg-yellow border-3 border-ink rounded-2xl p-4 shadow-[4px_4px_0_#1A1A1A]">

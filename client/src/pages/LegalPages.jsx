@@ -42,8 +42,8 @@ export const Terms = () => (
     <h2>3. Restaurant Responsibilities</h2>
     <p>Partner cafes are responsible for maintaining accurate pricing, availability, and fulfilling accepted orders in a timely manner. Restroon acts merely as a technology facilitator and does not prepare or handle food.</p>
 
-    <h2>4. Payment Terms & 4% Commission</h2>
-    <p>We charge a nominal 4% commission to our partner restaurants. Payments are securely processed via Razorpay. Users are responsible for all applicable taxes and delivery charges stated at checkout.</p>
+    <h2>4. Payment Terms & 5% Commission</h2>
+    <p>We charge a nominal 5% commission to our partner restaurants. Payments are securely processed via Razorpay. Users are responsible for all applicable taxes and delivery charges stated at checkout.</p>
 
     <h2>5. Cancellation & Refunds</h2>
     <p>Orders can only be cancelled before they are accepted by the restaurant. For full details on dispute resolution, please refer to our dedicated <a href="/refund-policy" className="text-orange-600 underline">Refund Policy</a>.</p>
@@ -93,7 +93,7 @@ export const CookiePolicy = () => (
 export const FAQ = () => (
   <PageLayout icon={HelpCircle} title="Frequently Asked Questions" lastUpdated="March 31, 2026">
     <h3>1. What is Restroon?</h3>
-    <p>Restroon is a modern dining and ordering platform built to support local cafes by offering them a high-tech ordering system with a modest 4% commission fee, far lower than the 30% charged by traditional delivery apps.</p>
+    <p>Restroon is a modern dining and ordering platform built to support local cafes by offering them a high-tech ordering system with a modest 5% commission fee, far lower than the 30% charged by traditional delivery apps.</p>
 
     <h3>2. Are prices on Restroon the same as dining in?</h3>
     <p>Yes! Because we do not charge exorbitant commissions, our partner restaurants do not need to artificially inflate their online menu prices. What you see is the real menu price.</p>

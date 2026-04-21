@@ -201,7 +201,7 @@ export default function HeroSection() {
                     {/* Stats */}
                     <div className="flex gap-6 pt-4">
                         {[
-                            { num: '4%', label: 'Commission' },
+                            { num: '5%', label: 'Commission' },
                             { num: '∞', label: 'Customization' },
                             { num: '24/7', label: 'Support' }
                         ].map(({ num, label }) => (

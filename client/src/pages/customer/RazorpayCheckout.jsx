@@ -86,6 +86,9 @@ export function RazorpayCheckout({ orderId, amount, onSuccess }) {
         }
     };
 
+    const platformFeePreview = +(amount * 0.05).toFixed(2);
+    const totalPayablePreview = +(amount + platformFeePreview).toFixed(2);
+
     return (
         <div className="space-y-3">
             {error && (
@@ -102,18 +105,18 @@ export function RazorpayCheckout({ orderId, amount, onSuccess }) {
                         <span>₹{amount}</span>
                     </div>
                     <div className="flex justify-between">
-                        <span className="text-ink/70">Platform fee (4%)</span>
-                        <span>₹{Math.ceil(amount * 4 / 100)}</span>
+                        <span className="text-ink/70">Platform fee (5%)</span>
+                        <span>₹{platformFeePreview}</span>
                     </div>
                     <div className="flex justify-between font-bold border-t border-ink/20 pt-1 mt-1">
                         <span>Total payable</span>
-                        <span className="text-orange">₹{amount + Math.ceil(amount * 4 / 100)}</span>
+                        <span className="text-orange">₹{totalPayablePreview}</span>
                     </div>
                 </div>
             </div>
 
             <CartoonButton
-                label={loading ? '⏳ Opening Payment...' : `💳 Pay ₹${amount + Math.ceil(amount * 4 / 100)} via UPI/Card`}
+                label={loading ? '⏳ Opening Payment...' : `💳 Pay ₹${totalPayablePreview} via UPI/Card`}
                 color="bg-yellow"
                 size="lg"
                 disabled={loading}
