@@ -26,6 +26,7 @@ export default function CafePage() {
     const [deliveryCharge, setDeliveryCharge] = useState(35); // default ₹35 fallback
     const [deliveryDistance, setDeliveryDistance] = useState(null);
     const [savedOrderId, setSavedOrderId] = useState(null);     // orderId after COD success
+    const [paymentCancelled, setPaymentCancelled] = useState(false); // razorpay closed without paying
 
     const cartRef = useRef(null);
 
@@ -238,10 +239,14 @@ export default function CafePage() {
                     alert(msg || "Payment failed or could not be initiated.");
                     setOrdering(false);
                 },
-                onDismiss: () => {
-                    alert("Payment cancelled. You can retry paying from your orders page.");
-                    navigate(`/order-confirmation/${orderId}`);
+                onDismiss: async () => {
+                    // User closed Razorpay without paying — cancel the pending order
+                    try {
+                        await api.post(`/api/order/${orderId}/cancel`);
+                    } catch (_) { /* non-critical */ }
                     setOrdering(false);
+                    // Stay on CafePage — show a banner instead of navigating
+                    setPaymentCancelled(true);
                 }
             });
         } catch (err) {
@@ -546,13 +551,30 @@ export default function CafePage() {
                                         {['online', 'cod'].map(method => (
                                             <button
                                                 key={method}
-                                                onClick={() => { setPaymentMethod(method); setPlacedOrderId(null); }}
+                                                onClick={() => { setPaymentMethod(method); setPlacedOrderId(null); setPaymentCancelled(false); }}
                                                 className={`flex-1 py-2 rounded-xl border-2 border-ink font-bangers text-sm transition-all ${paymentMethod === method ? 'bg-yellow shadow-[2px_2px_0_#1A1A1A]' : 'bg-cream'}`}
                                             >
                                                 {method === 'online' ? '💳 Pay Online' : '💵 Cash'}
                                             </button>
                                         ))}
                                     </div>
+
+                                    {/* ── Payment Cancelled Banner ─────────────────── */}
+                                    {paymentCancelled && paymentMethod === 'online' && (
+                                        <div className="bg-red/10 border-2 border-red rounded-xl p-3 mb-3 flex items-start gap-2">
+                                            <span className="text-lg">❌</span>
+                                            <div className="flex-1">
+                                                <p className="font-bangers text-sm text-red">Payment Cancelled</p>
+                                                <p className="font-grotesk text-xs text-ink/60 mt-0.5">
+                                                    Your order was not placed. Try again or pay with Cash.
+                                                </p>
+                                            </div>
+                                            <button
+                                                onClick={() => setPaymentCancelled(false)}
+                                                className="text-ink/40 hover:text-ink text-xs font-bold mt-0.5"
+                                            >✕</button>
+                                        </div>
+                                    )}
 
                                     {/* COD Button */}
                                     {paymentMethod === 'cod' && (
@@ -569,10 +591,10 @@ export default function CafePage() {
                                     {paymentMethod === 'online' && !placedOrderId && (
                                         <CartoonButton
                                             label={ordering ? '⏳ Processing...' : `💳 Proceed to Pay • ₹${grandTotal}`}
-                                            color="bg-yellow"
+                                            color={paymentCancelled ? 'bg-orange' : 'bg-yellow'}
                                             size="lg"
                                             disabled={ordering || !isFormValid}
-                                            onClick={handleOnlinePayment}
+                                            onClick={() => { setPaymentCancelled(false); handleOnlinePayment(); }}
                                         />
                                     )}
 

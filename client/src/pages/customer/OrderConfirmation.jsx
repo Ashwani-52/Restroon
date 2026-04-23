@@ -64,6 +64,53 @@ export default function OrderConfirmation() {
 
     const currentStep = STATUS_STEPS.indexOf(order?.status);
     const isDelivered = order?.status === 'delivered';
+    const isCancelled = order?.status === 'cancelled';
+
+    // Detect unpaid online orders — user closed Razorpay without completing payment
+    const isPaymentPending = order?.paymentMethod === 'razorpay' && !order?.paymentConfirmed;
+
+    // If payment is pending on a razorpay order, show a clear failed state
+    if (isPaymentPending) return (
+        <div className="min-h-screen retro-grid">
+            <Navbar />
+            <div className="max-w-2xl mx-auto px-6 pt-28 pb-16 text-center">
+                <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
+                    <div className="text-7xl mb-5">❌</div>
+                    <h1 className="font-bangers text-5xl text-ink mb-2">
+                        PAYMENT <span className="text-red">CANCELLED</span>
+                    </h1>
+                    <p className="font-grotesk text-lg text-ink/60 mb-8">
+                        Your order was not confirmed because payment was not completed.
+                    </p>
+
+                    <div className="bg-cream border-3 border-ink rounded-2xl p-5 shadow-[4px_4px_0_#1A1A1A] mb-6 text-left">
+                        <p className="font-mono text-xs text-ink/50 mb-1">ORDER ID</p>
+                        <p className="font-bangers text-xl text-ink mb-1">#{order?._id?.slice(-8).toUpperCase()}</p>
+                        <p className="font-grotesk text-sm text-ink/60">{order?.cafe?.name} • ₹{order?.totalAmount}</p>
+                        <div className="mt-3 pt-3 border-t border-ink/10">
+                            <p className="font-grotesk text-xs text-orange font-semibold">
+                                ⚠️ This order has been automatically cancelled. No money was charged.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="px-6 py-3 bg-yellow border-3 border-ink rounded-xl font-bangers text-lg shadow-[3px_3px_0_#1A1A1A] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[3px] transition-all"
+                        >
+                            ↩ Try Again
+                        </button>
+                        <Link to="/cafes">
+                            <button className="px-6 py-3 bg-cream border-3 border-ink rounded-xl font-bangers text-lg shadow-[3px_3px_0_#1A1A1A] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[3px] transition-all">
+                                🍕 Browse Cafes
+                            </button>
+                        </Link>
+                    </div>
+                </motion.div>
+            </div>
+        </div>
+    );
 
     return (
         <div className="min-h-screen retro-grid">
