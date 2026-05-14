@@ -20,6 +20,10 @@ const normalizeCategory = (item) => {
         // Legacy string value — wrap in consistent shape
         obj.category = { _id: null, name: obj.category };
     }
+    // Fallback if category is null (populate failed on old string)
+    if (!obj.category) {
+        obj.category = { _id: null, name: 'General' };
+    }
     return obj;
 };
 
@@ -365,5 +369,45 @@ export const deleteMenuItem = async (req, res) => {
             message: 'Failed to delete menu item',
             error: err.message
         });
+    }
+};
+
+// ──────────────────────────────────────────
+// MIGRATE CATEGORIES (One-time utility)
+// ──────────────────────────────────────────
+export const migrateCategories = async (req, res) => {
+    try {
+        const { cafeId } = req.body;
+
+        if (!cafeId) {
+            return res.status(400).json({ success: false, message: 'cafeId is required' });
+        }
+
+        // Find or create a "General" category for this cafe
+        let generalCategory = await Category.findOne({ cafeId, name: 'General' });
+        if (!generalCategory) {
+            generalCategory = await Category.create({ cafeId, name: 'General' });
+        }
+
+        // Find all menu items where category is a string (not a valid ObjectId)
+        const items = await MenuItem.find({ cafe: cafeId });
+        let fixed = 0;
+
+        for (const item of items) {
+            const isObjectId = mongoose.Types.ObjectId.isValid(item.category) &&
+                typeof item.category !== 'string';
+
+            if (!isObjectId || typeof item.category === 'string') {
+                // category is a plain string like "General" or null — fix it
+                await MenuItem.findByIdAndUpdate(item._id, {
+                    category: generalCategory._id
+                });
+                fixed++;
+            }
+        }
+
+        res.json({ success: true, message: `Fixed ${fixed} items`, generalCategoryId: generalCategory._id });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
 };

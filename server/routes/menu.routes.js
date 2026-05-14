@@ -5,7 +5,8 @@ import {
   getMyMenuItems,
   updateMenuItem,
   toggleItemAvailability,
-  deleteMenuItem
+  deleteMenuItem,
+  migrateCategories
 } from '../controllers/menu.controller.js';
 import { protect }     from '../middleware/auth.middleware.js';
 import { requireRole } from '../middleware/role.middleware.js';
@@ -15,6 +16,7 @@ const router = express.Router();
 
 // ─── Public Routes ─────────────────────────
 router.get('/cafe/:cafeId', getMenuByCafe);
+router.post('/migrate-categories', migrateCategories);
 
 // ─── Owner Routes ──────────────────────────
 router.get   ('/my-items',              protect, requireRole(ROLES.OWNER), getMyMenuItems);
