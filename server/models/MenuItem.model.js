@@ -32,8 +32,7 @@ const menuItemSchema = new mongoose.Schema(
             default: ''
         },
         category: {
-            type: String,
-            trim: true,
+            type: mongoose.Schema.Types.Mixed,
             default: 'General'
         },
         isVeg: {

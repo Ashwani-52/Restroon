@@ -14,6 +14,7 @@ export default function CafePage() {
     const [cafe, setCafe] = useState(null);
     const [menu, setMenu] = useState([]);
     const [category, setCategory] = useState('All');
+    const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(true);
     const [ordering, setOrdering] = useState(false);
     const [address, setAddress] = useState({ street: '', city: '', pincode: '' });
@@ -60,11 +61,17 @@ export default function CafePage() {
         }
     }, [user]);
 
-    const categories = ['All', ...new Set(menu.map(m => m.category))];
+    const categories = ['All', ...new Set(menu.map(m => {
+        if (m.category && typeof m.category === 'object') return m.category.name;
+        return m.category || 'General';
+    }))];
 
-    const filteredMenu = category === 'All'
-        ? menu
-        : menu.filter(m => m.category === category);
+    const filteredMenu = menu.filter(item => {
+        const catName = item.category && typeof item.category === 'object' ? item.category.name : (item.category || 'General');
+        const matchesCategory = category === 'All' || catName === category;
+        const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesCategory && matchesSearch;
+    });
 
     const cartItems = cafeId === cafe?._id ? cart : [];
 
@@ -362,12 +369,24 @@ export default function CafePage() {
 
                 {/* ── Menu ─────────────────────────────────── */}
                 <div className="lg:col-span-2">
+                    {/* Search Bar */}
+                    <div className="relative mb-4">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl pointer-events-none">🔍</span>
+                        <input
+                            type="text"
+                            placeholder="Search menu items..."
+                            value={searchQuery}
+                            onChange={e => setSearchQuery(e.target.value)}
+                            className="w-full pl-12 pr-4 py-3 bg-cream border-3 border-ink rounded-2xl font-grotesk text-ink placeholder:text-ink/40 focus:outline-none focus:border-orange shadow-[3px_3px_0_#1A1A1A] transition-all"
+                        />
+                    </div>
+
                     {/* Category Filter */}
                     <div className="flex gap-3 overflow-x-auto pb-3 mb-6">
                         {categories.map(cat => (
                             <button
                                 key={cat}
-                                onClick={() => setCategory(cat)}
+                                onClick={() => { setCategory(cat); setSearchQuery(''); }}
                                 className={`
                   px-4 py-2 rounded-full border-2 border-ink font-bangers text-lg whitespace-nowrap transition-all
                   ${category === cat
@@ -383,7 +402,15 @@ export default function CafePage() {
 
                     {/* Items */}
                     <div className="space-y-4">
-                        {filteredMenu.map(item => {
+                        {filteredMenu.length === 0 ? (
+                            <div className="text-center py-16">
+                                <div className="text-5xl mb-3">🍽️</div>
+                                <p className="font-bangers text-2xl text-ink/50">
+                                    {searchQuery ? `No items found for '${searchQuery}'` : 'No items in this category'}
+                                </p>
+                                <p className="font-grotesk text-sm text-ink/40 mt-1">Try a different search or category</p>
+                            </div>
+                        ) : filteredMenu.map(item => {
                             const cartItem = cartItems.find(i => i.menuItem === item._id);
                             return (
                                 <motion.div

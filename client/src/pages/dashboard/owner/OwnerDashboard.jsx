@@ -275,17 +275,26 @@ function OwnerOrders({ cafe }) {
 // ── Owner Menu Tab ──────────────────────────────
 function OwnerMenu({ cafe }) {
     const [items, setItems] = useState([]);
-    const [form, setForm] = useState({ name: '', description: '', price: '', category: 'General', isVeg: true, image: '' });
+    const [form, setForm] = useState({ name: '', description: '', price: '', category: '', isVeg: true, image: '' });
     const [imagePreview, setImagePreview] = useState(null);
     const [adding, setAdding] = useState(false);
     const [showAdd, setShowAdd] = useState(false);
 
-    const handleImage = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+    // ─── Category management state ─────────
+    const [categories, setCategories] = useState([]);
+    const [newCatName, setNewCatName] = useState('');
+    const [editingCatId, setEditingCatId] = useState(null);
+    const [editingCatName, setEditingCatName] = useState('');
+
+    // ─── Edit item state ───────────────────
+    const [editItem, setEditItem] = useState(null);
+    const [editForm, setEditForm] = useState({ name: '', description: '', price: '', category: '', isVeg: true, image: '' });
+    const [editImagePreview, setEditImagePreview] = useState(null);
+    const [saving, setSaving] = useState(false);
+
+    const compressImage = (file, callback) => {
         const reader = new FileReader();
         reader.onloadend = () => {
-            // Compress via canvas — max 600px, 70% quality
             const img = new Image();
             img.onload = () => {
                 const MAX = 600;
@@ -294,19 +303,46 @@ function OwnerMenu({ cafe }) {
                 canvas.width = Math.round(img.width * scale);
                 canvas.height = Math.round(img.height * scale);
                 canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-                const compressed = canvas.toDataURL('image/jpeg', 0.7);
-                setImagePreview(compressed);
-                setForm(f => ({ ...f, image: compressed }));
+                callback(canvas.toDataURL('image/jpeg', 0.7));
             };
             img.src = reader.result;
         };
         reader.readAsDataURL(file);
     };
 
+    const handleImage = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        compressImage(file, (compressed) => {
+            setImagePreview(compressed);
+            setForm(f => ({ ...f, image: compressed }));
+        });
+    };
+
+    const handleEditImage = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        compressImage(file, (compressed) => {
+            setEditImagePreview(compressed);
+            setEditForm(f => ({ ...f, image: compressed }));
+        });
+    };
+
+    // ─── Fetch items + categories ──────────
     useEffect(() => {
         if (!cafe) return;
         api.get('/api/menu/my-items').then(r => setItems(r.data.menuItems));
+        api.get(`/api/categories/${cafe._id}`).then(r => {
+            setCategories(r.data.categories);
+        });
     }, [cafe]);
+
+    // Set default category in form when categories load
+    useEffect(() => {
+        if (categories.length > 0 && !form.category) {
+            setForm(f => ({ ...f, category: categories[0]._id }));
+        }
+    }, [categories]);
 
     const addItem = async (e) => {
         e.preventDefault();
@@ -314,7 +350,7 @@ function OwnerMenu({ cafe }) {
         try {
             const res = await api.post('/api/menu', { ...form, price: Number(form.price) });
             setItems(prev => [...prev, res.data.menuItem]);
-            setForm({ name: '', description: '', price: '', category: 'General', isVeg: true, image: '' });
+            setForm({ name: '', description: '', price: '', category: categories[0]?._id || '', isVeg: true, image: '' });
             setImagePreview(null);
             setShowAdd(false);
         } catch (err) {
@@ -335,12 +371,167 @@ function OwnerMenu({ cafe }) {
         setItems(prev => prev.filter(i => i._id !== itemId));
     };
 
+    // ─── Category CRUD ─────────────────────
+    const addCategory = async () => {
+        if (!newCatName.trim() || !cafe) return;
+        try {
+            const res = await api.post('/api/categories', { cafeId: cafe._id, name: newCatName.trim() });
+            setCategories(prev => [...prev, res.data.category]);
+            setNewCatName('');
+        } catch (err) { alert(err.response?.data?.message || 'Failed to add category'); }
+    };
+
+    const renameCategory = async (id) => {
+        if (!editingCatName.trim()) return;
+        try {
+            const res = await api.put(`/api/categories/${id}`, { name: editingCatName.trim() });
+            setCategories(prev => prev.map(c => c._id === id ? res.data.category : c));
+            setEditingCatId(null);
+        } catch (err) { alert(err.response?.data?.message || 'Failed to rename'); }
+    };
+
+    const deleteCategory = async (id) => {
+        if (!window.confirm('Delete this category?')) return;
+        try {
+            await api.delete(`/api/categories/${id}`);
+            setCategories(prev => prev.filter(c => c._id !== id));
+        } catch (err) { alert(err.response?.data?.message || 'Cannot delete'); }
+    };
+
+    // ─── Edit item handlers ────────────────
+    const openEditModal = (item) => {
+        setEditItem(item);
+        setEditForm({
+            name: item.name,
+            description: item.description || '',
+            price: item.price,
+            category: item.category?._id || '',
+            isVeg: item.isVeg,
+            image: item.image || ''
+        });
+        setEditImagePreview(item.image || null);
+    };
+
+    const submitEdit = async (e) => {
+        e.preventDefault();
+        setSaving(true);
+        try {
+            const res = await api.put(`/api/menu/${editItem._id}`, { ...editForm, price: Number(editForm.price) });
+            setItems(prev => prev.map(i => i._id === editItem._id ? res.data.menuItem : i));
+            setEditItem(null);
+        } catch (err) { alert(err.response?.data?.message || 'Failed to update'); }
+        finally { setSaving(false); }
+    };
+
+    const getCategoryName = (cat) => {
+        if (!cat) return 'General';
+        if (typeof cat === 'string') return cat;
+        return cat.name || 'General';
+    };
+
     return (
         <div>
             <div className="flex items-center justify-between mb-6">
                 <h2 className="font-bangers text-3xl text-ink">🍽️ MENU ITEMS</h2>
                 <CartoonButton label="+ Add Item" color="bg-yellow" size="sm" onClick={() => setShowAdd(true)} />
             </div>
+
+            {/* ── Manage Categories ────────────────── */}
+            <div className="bg-cream border-3 border-ink rounded-2xl p-5 mb-6 shadow-[4px_4px_0_#1A1A1A]">
+                <h3 className="font-bangers text-xl text-ink mb-3">📂 MANAGE CATEGORIES</h3>
+                <div className="space-y-2 mb-3">
+                    {categories.map(cat => (
+                        <div key={cat._id} className="flex items-center gap-2 bg-yellow/30 border-2 border-ink/20 rounded-xl px-3 py-2">
+                            {editingCatId === cat._id ? (
+                                <input
+                                    autoFocus
+                                    value={editingCatName}
+                                    onChange={e => setEditingCatName(e.target.value)}
+                                    onBlur={() => renameCategory(cat._id)}
+                                    onKeyDown={e => e.key === 'Enter' && renameCategory(cat._id)}
+                                    className="flex-1 bg-white border-2 border-ink rounded-lg px-2 py-1 font-grotesk text-sm focus:outline-none focus:border-orange"
+                                />
+                            ) : (
+                                <span
+                                    onClick={() => { setEditingCatId(cat._id); setEditingCatName(cat.name); }}
+                                    className="flex-1 font-grotesk text-sm text-ink cursor-pointer hover:text-orange transition-colors"
+                                    title="Click to rename"
+                                >
+                                    {cat.name}
+                                </span>
+                            )}
+                            <button
+                                onClick={() => deleteCategory(cat._id)}
+                                className="text-sm hover:scale-110 transition-transform"
+                                title="Delete category"
+                            >🗑️</button>
+                        </div>
+                    ))}
+                    {categories.length === 0 && (
+                        <p className="font-grotesk text-sm text-ink/50 text-center py-2">No categories yet — add one below</p>
+                    )}
+                </div>
+                <div className="flex gap-2">
+                    <input
+                        type="text"
+                        placeholder="New category name..."
+                        value={newCatName}
+                        onChange={e => setNewCatName(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && addCategory()}
+                        className="flex-1 px-3 py-2 bg-white border-2 border-ink rounded-xl font-grotesk text-sm focus:outline-none focus:border-orange"
+                    />
+                    <CartoonButton label="+ Add" color="bg-yellow" size="sm" onClick={addCategory} />
+                </div>
+            </div>
+
+            {/* ── Edit Item Modal ──────────────────── */}
+            <AnimatePresence>
+                {editItem && (
+                    <motion.div
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 backdrop-blur-sm px-4"
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    >
+                        <motion.div
+                            className="bg-yellow border-3 border-ink rounded-2xl p-6 max-w-lg w-full shadow-[8px_8px_0_#1A1A1A] max-h-[90vh] overflow-y-auto"
+                            initial={{ scale: 0.8, y: 40 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.8, opacity: 0 }}
+                        >
+                            <h3 className="font-bangers text-2xl text-ink mb-4">✏️ EDIT ITEM</h3>
+                            <form onSubmit={submitEdit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <input type="text" placeholder="✏️ Food Name" value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} required className="px-4 py-3 bg-white border-2 border-ink rounded-xl font-grotesk text-ink placeholder:text-ink/50 focus:outline-none focus:border-orange" />
+                                <input type="number" placeholder="₹ Price" value={editForm.price} onChange={e => setEditForm(f => ({ ...f, price: e.target.value }))} required className="px-4 py-3 bg-white border-2 border-ink rounded-xl font-grotesk text-ink placeholder:text-ink/50 focus:outline-none focus:border-orange" />
+                                <select value={editForm.category} onChange={e => setEditForm(f => ({ ...f, category: e.target.value }))} required className="px-4 py-3 bg-white border-2 border-ink rounded-xl font-grotesk text-ink focus:outline-none focus:border-orange">
+                                    <option value="">Select Category</option>
+                                    {categories.map(cat => <option key={cat._id} value={cat._id}>{cat.name}</option>)}
+                                </select>
+                                <input type="text" placeholder="📝 Description" value={editForm.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} className="px-4 py-3 bg-white border-2 border-ink rounded-xl font-grotesk text-ink placeholder:text-ink/50 focus:outline-none focus:border-orange" />
+                                <div className="md:col-span-2">
+                                    <label className="block font-bangers text-ink text-sm mb-2">📸 FOOD IMAGE</label>
+                                    <label className="flex items-center gap-4 cursor-pointer bg-white border-2 border-dashed border-ink rounded-xl p-3 hover:border-orange transition-colors">
+                                        {editImagePreview ? (
+                                            <img src={editImagePreview} alt="preview" className="w-16 h-16 rounded-lg object-cover border-2 border-ink" loading="lazy" decoding="async" />
+                                        ) : (
+                                            <div className="w-16 h-16 rounded-lg border-2 border-ink/30 bg-cream flex items-center justify-center text-2xl">🖼️</div>
+                                        )}
+                                        <div>
+                                            <p className="font-grotesk text-sm text-ink font-semibold">{editImagePreview ? 'Change photo' : 'Upload photo'}</p>
+                                            <p className="font-grotesk text-xs text-ink/50">JPG, PNG</p>
+                                        </div>
+                                        <input type="file" accept="image/*" className="hidden" onChange={handleEditImage} />
+                                    </label>
+                                </div>
+                                <label className="flex items-center gap-2 font-grotesk">
+                                    <input type="checkbox" checked={editForm.isVeg} onChange={e => setEditForm(f => ({ ...f, isVeg: e.target.checked }))} className="w-5 h-5" />
+                                    Vegetarian
+                                </label>
+                                <div className="flex gap-3 md:col-span-2">
+                                    <CartoonButton type="submit" label={saving ? '⏳ Saving...' : '💾 Save Changes'} color="bg-green-400" size="sm" disabled={saving} />
+                                    <CartoonButton label="Cancel" color="bg-red" size="sm" onClick={() => setEditItem(null)} />
+                                </div>
+                            </form>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Add Item Form */}
             <AnimatePresence>
@@ -353,22 +544,13 @@ function OwnerMenu({ cafe }) {
                     >
                         <h3 className="font-bangers text-2xl text-ink mb-4">ADD NEW ITEM</h3>
                         <form onSubmit={addItem} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {[
-                                { name: 'name', placeholder: '✏️ e.g. Butter Chicken', type: 'text' },
-                                { name: 'price', placeholder: '₹ e.g. 180', type: 'number' },
-                                { name: 'category', placeholder: '📂 e.g. Main Course', type: 'text' },
-                                { name: 'description', placeholder: '📝 Short description...', type: 'text' }
-                            ].map(({ name, placeholder, type }) => (
-                                <input
-                                    key={name}
-                                    type={type}
-                                    placeholder={placeholder}
-                                    value={form[name]}
-                                    onChange={e => setForm(f => ({ ...f, [name]: e.target.value }))}
-                                    required={name !== 'description'}
-                                    className="px-4 py-3 bg-white border-2 border-ink rounded-xl font-grotesk text-ink placeholder:text-ink/50 focus:outline-none focus:border-orange"
-                                />
-                            ))}
+                            <input type="text" placeholder="✏️ e.g. Butter Chicken" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required className="px-4 py-3 bg-white border-2 border-ink rounded-xl font-grotesk text-ink placeholder:text-ink/50 focus:outline-none focus:border-orange" />
+                            <input type="number" placeholder="₹ e.g. 180" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} required className="px-4 py-3 bg-white border-2 border-ink rounded-xl font-grotesk text-ink placeholder:text-ink/50 focus:outline-none focus:border-orange" />
+                            <select name="category" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} required className="px-4 py-3 bg-white border-2 border-ink rounded-xl font-grotesk text-ink focus:outline-none focus:border-orange">
+                                <option value="">Select Category</option>
+                                {categories.map(cat => <option key={cat._id} value={cat._id}>{cat.name}</option>)}
+                            </select>
+                            <input type="text" placeholder="📝 Short description..." value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="px-4 py-3 bg-white border-2 border-ink rounded-xl font-grotesk text-ink placeholder:text-ink/50 focus:outline-none focus:border-orange" />
                             {/* Image upload */}
                             <div className="md:col-span-2">
                                 <label className="block font-bangers text-ink text-sm mb-2">📸 FOOD IMAGE (optional)</label>
@@ -386,12 +568,7 @@ function OwnerMenu({ cafe }) {
                                 </label>
                             </div>
                             <label className="flex items-center gap-2 font-grotesk">
-                                <input
-                                    type="checkbox"
-                                    checked={form.isVeg}
-                                    onChange={e => setForm(f => ({ ...f, isVeg: e.target.checked }))}
-                                    className="w-5 h-5"
-                                />
+                                <input type="checkbox" checked={form.isVeg} onChange={e => setForm(f => ({ ...f, isVeg: e.target.checked }))} className="w-5 h-5" />
                                 Vegetarian
                             </label>
                             <div className="flex gap-3 md:col-span-2">
@@ -433,13 +610,20 @@ function OwnerMenu({ cafe }) {
                                 <h3 className="font-bangers text-xl text-ink leading-tight">{item.name}</h3>
                                 <span className="font-bangers text-xl text-orange ml-1 shrink-0">₹{item.price}</span>
                             </div>
-                            <p className="font-grotesk text-sm text-ink/60 mb-3">{item.category}</p>
+                            <p className="font-grotesk text-sm text-ink/60 mb-3">{getCategoryName(item.category)}</p>
                             <div className="flex gap-2 mt-auto">
                                 <button
                                     onClick={() => toggleAvailability(item._id)}
                                     className={`flex-1 py-1.5 rounded-xl border-2 border-ink font-bangers text-sm ${item.isAvailable ? 'bg-green-100' : 'bg-red/20'}`}
                                 >
                                     {item.isAvailable ? '✅ Available' : '❌ Unavailable'}
+                                </button>
+                                <button
+                                    onClick={() => openEditModal(item)}
+                                    className="px-3 py-1.5 rounded-xl border-2 border-ink bg-yellow/30 font-bangers text-sm hover:bg-yellow/60"
+                                    title="Edit item"
+                                >
+                                    ✏️
                                 </button>
                                 <button
                                     onClick={() => deleteItem(item._id)}

@@ -1,10 +1,27 @@
 import MenuItem from '../models/MenuItem.model.js';
 import Cafe from '../models/Cafe.model.js';
+import Category from '../models/Category.model.js';
+import mongoose from 'mongoose';
 import {
     CAFE_STATUS,
     MENU_ITEM_NAME_MAX,
     MENU_ITEM_DESC_MAX
 } from '../utils/constants.js';
+
+// ── Helper: normalize category field in response ──
+// Handles both legacy string values and new ObjectId refs
+const normalizeCategory = (item) => {
+    const obj = item.toObject ? item.toObject() : { ...item };
+    if (obj.category && typeof obj.category === 'object' && obj.category.name) {
+        // Already populated ObjectId ref — keep as-is
+        return obj;
+    }
+    if (typeof obj.category === 'string') {
+        // Legacy string value — wrap in consistent shape
+        obj.category = { _id: null, name: obj.category };
+    }
+    return obj;
+};
 
 // ──────────────────────────────────────────
 // ADD MENU ITEM (Owner only)
@@ -68,10 +85,15 @@ export const addMenuItem = async (req, res) => {
             isBestSeller: isBestSeller !== undefined ? isBestSeller : false
         });
 
+        // Populate category if it's an ObjectId
+        if (mongoose.Types.ObjectId.isValid(menuItem.category)) {
+            await menuItem.populate('category', 'name');
+        }
+
         res.status(201).json({
             success: true,
             message: 'Menu item added successfully',
-            menuItem
+            menuItem: normalizeCategory(menuItem)
         });
 
     } catch (err) {
@@ -96,7 +118,12 @@ export const getMenuByCafe = async (req, res) => {
 
         // ─── Filter by category ────────────────
         if (category) {
-            query.category = { $regex: category, $options: 'i' };
+            // Support filtering by category name — check if it's an ObjectId
+            if (mongoose.Types.ObjectId.isValid(category)) {
+                query.category = category;
+            } else {
+                query.category = { $regex: category, $options: 'i' };
+            }
         }
 
         // ─── Filter by veg/non-veg ─────────────
@@ -104,14 +131,20 @@ export const getMenuByCafe = async (req, res) => {
             query.isVeg = isVeg === 'true';
         }
 
-        const menuItems = await MenuItem.find(query)
+        let menuItems = await MenuItem.find(query)
             .sort({ isBestSeller: -1, category: 1 });
         // best sellers first, then grouped by category
 
+        // Populate category for items that have ObjectId refs
+        await MenuItem.populate(menuItems, { path: 'category', select: 'name' });
+
+        // Normalize all categories to consistent { _id, name } shape
+        const normalized = menuItems.map(normalizeCategory);
+
         res.status(200).json({
             success: true,
-            count: menuItems.length,
-            menuItems
+            count: normalized.length,
+            menuItems: normalized
         });
 
     } catch (err) {
@@ -138,13 +171,19 @@ export const getMyMenuItems = async (req, res) => {
             });
         }
 
-        const menuItems = await MenuItem.find({ cafe: cafe._id })
+        let menuItems = await MenuItem.find({ cafe: cafe._id })
             .sort({ category: 1, createdAt: -1 });
+
+        // Populate category for items that have ObjectId refs
+        await MenuItem.populate(menuItems, { path: 'category', select: 'name' });
+
+        // Normalize all categories
+        const normalized = menuItems.map(normalizeCategory);
 
         res.status(200).json({
             success: true,
-            count: menuItems.length,
-            menuItems
+            count: normalized.length,
+            menuItems: normalized
         });
 
     } catch (err) {
@@ -169,7 +208,8 @@ export const updateMenuItem = async (req, res) => {
             category,
             isVeg,
             isAvailable,
-            isBestSeller
+            isBestSeller,
+            image
         } = req.body;
 
         // ─── Get owner's cafe ──────────────────
@@ -211,13 +251,19 @@ export const updateMenuItem = async (req, res) => {
         if (isVeg !== undefined) menuItem.isVeg = isVeg;
         if (isAvailable !== undefined) menuItem.isAvailable = isAvailable;
         if (isBestSeller !== undefined) menuItem.isBestSeller = isBestSeller;
+        if (image !== undefined) menuItem.image = image;
 
         await menuItem.save();
+
+        // Populate category if it's an ObjectId
+        if (mongoose.Types.ObjectId.isValid(menuItem.category)) {
+            await menuItem.populate('category', 'name');
+        }
 
         res.status(200).json({
             success: true,
             message: 'Menu item updated successfully',
-            menuItem
+            menuItem: normalizeCategory(menuItem)
         });
 
     } catch (err) {
