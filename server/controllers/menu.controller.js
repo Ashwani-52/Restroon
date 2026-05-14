@@ -87,7 +87,7 @@ export const addMenuItem = async (req, res) => {
 
         // Populate category if it's an ObjectId
         if (mongoose.Types.ObjectId.isValid(menuItem.category)) {
-            await menuItem.populate('category', 'name');
+            await menuItem.populate({ path: 'category', select: 'name', model: 'Category', strictPopulate: false });
         }
 
         res.status(201).json({
@@ -136,7 +136,7 @@ export const getMenuByCafe = async (req, res) => {
         // best sellers first, then grouped by category
 
         // Populate category for items that have ObjectId refs
-        await MenuItem.populate(menuItems, { path: 'category', select: 'name' });
+        await MenuItem.populate(menuItems, { path: 'category', select: 'name', model: 'Category', strictPopulate: false });
 
         // Normalize all categories to consistent { _id, name } shape
         const normalized = menuItems.map(normalizeCategory);
@@ -175,7 +175,7 @@ export const getMyMenuItems = async (req, res) => {
             .sort({ category: 1, createdAt: -1 });
 
         // Populate category for items that have ObjectId refs
-        await MenuItem.populate(menuItems, { path: 'category', select: 'name' });
+        await MenuItem.populate(menuItems, { path: 'category', select: 'name', model: 'Category', strictPopulate: false });
 
         // Normalize all categories
         const normalized = menuItems.map(normalizeCategory);
@@ -257,7 +257,7 @@ export const updateMenuItem = async (req, res) => {
 
         // Populate category if it's an ObjectId
         if (mongoose.Types.ObjectId.isValid(menuItem.category)) {
-            await menuItem.populate('category', 'name');
+            await menuItem.populate({ path: 'category', select: 'name', model: 'Category', strictPopulate: false });
         }
 
         res.status(200).json({

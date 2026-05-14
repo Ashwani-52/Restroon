@@ -405,7 +405,7 @@ function OwnerMenu({ cafe }) {
             name: item.name,
             description: item.description || '',
             price: item.price,
-            category: item.category?._id || '',
+            category: item.category?._id || item.category || '',
             isVeg: item.isVeg,
             image: item.image || ''
         });
@@ -499,7 +499,7 @@ function OwnerMenu({ cafe }) {
                             <form onSubmit={submitEdit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <input type="text" placeholder="✏️ Food Name" value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} required className="px-4 py-3 bg-white border-2 border-ink rounded-xl font-grotesk text-ink placeholder:text-ink/50 focus:outline-none focus:border-orange" />
                                 <input type="number" placeholder="₹ Price" value={editForm.price} onChange={e => setEditForm(f => ({ ...f, price: e.target.value }))} required className="px-4 py-3 bg-white border-2 border-ink rounded-xl font-grotesk text-ink placeholder:text-ink/50 focus:outline-none focus:border-orange" />
-                                <select value={editForm.category} onChange={e => setEditForm(f => ({ ...f, category: e.target.value }))} required className="px-4 py-3 bg-white border-2 border-ink rounded-xl font-grotesk text-ink focus:outline-none focus:border-orange">
+                                <select value={editForm.category || ''} onChange={e => setEditForm(f => ({ ...f, category: e.target.value }))} required className="px-4 py-3 bg-white border-2 border-ink rounded-xl font-grotesk text-ink focus:outline-none focus:border-orange">
                                     <option value="">Select Category</option>
                                     {categories.map(cat => <option key={cat._id} value={cat._id}>{cat.name}</option>)}
                                 </select>

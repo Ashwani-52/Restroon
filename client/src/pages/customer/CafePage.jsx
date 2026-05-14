@@ -13,7 +13,7 @@ export default function CafePage() {
     const { slug } = useParams();
     const [cafe, setCafe] = useState(null);
     const [menu, setMenu] = useState([]);
-    const [category, setCategory] = useState('All');
+    const [category, setCategory] = useState('ALL');
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(true);
     const [ordering, setOrdering] = useState(false);
@@ -61,15 +61,27 @@ export default function CafePage() {
         }
     }, [user]);
 
-    const categories = ['All', ...new Set(menu.map(m => {
-        if (m.category && typeof m.category === 'object') return m.category.name;
-        return m.category || 'General';
-    }))];
+    const categories = [
+        { _id: 'ALL', name: 'ALL' },
+        ...Object.values(
+            menu.reduce((acc, item) => {
+                if (item.category && item.category._id) {
+                    acc[item.category._id] = item.category; // deduplicate by _id
+                } else if (typeof item.category === 'string') {
+                    acc[item.category] = { _id: item.category, name: item.category };
+                }
+                return acc;
+            }, {})
+        )
+    ];
 
     const filteredMenu = menu.filter(item => {
-        const catName = item.category && typeof item.category === 'object' ? item.category.name : (item.category || 'General');
-        const matchesCategory = category === 'All' || catName === category;
-        const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesCategory =
+            category === 'ALL' ||
+            item.category?._id === category ||
+            item.category === category;
+        const matchesSearch =
+            item.name.toLowerCase().includes(searchQuery.toLowerCase());
         return matchesCategory && matchesSearch;
     });
 
@@ -385,17 +397,17 @@ export default function CafePage() {
                     <div className="flex gap-3 overflow-x-auto pb-3 mb-6">
                         {categories.map(cat => (
                             <button
-                                key={cat}
-                                onClick={() => { setCategory(cat); setSearchQuery(''); }}
+                                key={cat._id}
+                                onClick={() => { setCategory(cat._id); setSearchQuery(''); }}
                                 className={`
                   px-4 py-2 rounded-full border-2 border-ink font-bangers text-lg whitespace-nowrap transition-all
-                  ${category === cat
+                  ${category === cat._id
                                         ? 'bg-yellow shadow-[3px_3px_0_#1A1A1A] -translate-y-0.5'
                                         : 'bg-cream hover:bg-yellow/50'
                                     }
                 `}
                             >
-                                {cat}
+                                {cat.name}
                             </button>
                         ))}
                     </div>
