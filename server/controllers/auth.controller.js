@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.model.js';
+import DeliveryInvite from '../models/DeliveryInvite.model.js';
 import {
     generateAccessToken,
     generateRefreshToken
@@ -15,7 +16,7 @@ import {
 // ──────────────────────────────────────────
 export const register = async (req, res) => {
     try {
-        const { name, email, password, role } = req.body;
+        const { name, email, password, role, phone } = req.body;
 
         // ─── Validate fields ───────────────────
         if (!name || !email || !password) {
@@ -26,9 +27,36 @@ export const register = async (req, res) => {
         }
 
         // ─── Prevent self-registering as admin ─
-        const safeRole = role === ROLES.OWNER
+        let safeRole = role === ROLES.OWNER
             ? ROLES.OWNER
             : ROLES.CUSTOMER;
+
+        // ─── Handle delivery_partner registration via invite ─
+        let assignedCafe = null;
+        if (role === 'delivery_partner') {
+            // Look for a pending invite matching this email or phone
+            const invite = await DeliveryInvite.findOne({
+                status: 'pending',
+                $or: [
+                    ...(email ? [{ email }] : []),
+                    ...(phone ? [{ phone }] : [])
+                ]
+            });
+
+            if (!invite) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'No pending invite found. A cafe owner must invite you first.'
+                });
+            }
+
+            safeRole = 'delivery_partner';
+            assignedCafe = invite.cafeId;
+
+            // Mark invite as accepted
+            invite.status = 'accepted';
+            await invite.save();
+        }
 
         // ─── Check existing user ───────────────
         const existingUser = await User.findOne({ email });
@@ -44,7 +72,9 @@ export const register = async (req, res) => {
             name,
             email,
             password,
-            role: safeRole
+            role: safeRole,
+            phone: phone || '',
+            ...(assignedCafe ? { assignedCafe } : {})
         });
 
         // ─── Generate tokens ───────────────────

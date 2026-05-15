@@ -86,7 +86,24 @@ const orderSchema = new mongoose.Schema(
         deliveryCharge: { type: Number, default: 0 },
         commissionPaid: { type: Boolean, default: false },
         commissionPaidAt: { type: Date, default: null },
-        commissionPaymentId: { type: String, default: '' }
+        commissionPaymentId: { type: String, default: '' },
+        // ─── Delivery Partner fields ──────────
+        deliveryPartnerId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            default: null
+        },
+        deliveryStatus: {
+            type: String,
+            enum: ['unassigned', 'assigned', 'out_for_delivery', 'delivered', 'failed'],
+            default: 'unassigned'
+        },
+        paymentCollected: { type: Boolean, default: false },
+        deliveryNotes: { type: String, default: '' },
+        cafeNotes: { type: String, default: '' },
+        assignedAt: { type: Date },
+        deliveredAt: { type: Date },
+        deliveryAttempts: { type: Number, default: 0 }
     },
     { timestamps: true }
 );
@@ -94,5 +111,6 @@ const orderSchema = new mongoose.Schema(
 orderSchema.index({ cafe: 1, status: 1 });
 orderSchema.index({ customer: 1 });
 orderSchema.index({ createdAt: -1 });
+orderSchema.index({ deliveryPartnerId: 1, deliveryStatus: 1 });
 
 export default mongoose.model('Order', orderSchema);

@@ -26,7 +26,17 @@ export const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 export const ROLES = {
     ADMIN: 'admin',
     OWNER: 'owner',
-    CUSTOMER: 'customer'
+    CUSTOMER: 'customer',
+    DELIVERY_PARTNER: 'delivery_partner'
+};
+
+// ─── DELIVERY STATUS ──────────────────────
+export const DELIVERY_STATUS = {
+    UNASSIGNED: 'unassigned',
+    ASSIGNED: 'assigned',
+    OUT_FOR_DELIVERY: 'out_for_delivery',
+    DELIVERED: 'delivered',
+    FAILED: 'failed'
 };
 
 // ─── ORDER STATUS ─────────────────────────

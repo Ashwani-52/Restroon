@@ -28,6 +28,7 @@ export default function OrderConfirmation() {
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
     const [cancelling, setCancelling] = useState(false);
+    const [deliveryInfo, setDeliveryInfo] = useState(null);
 
     useEffect(() => {
         api.get(`/api/order/${orderId}`)
@@ -42,6 +43,14 @@ export default function OrderConfirmation() {
 
         return () => clearInterval(interval);
     }, [orderId]);
+
+    // Fetch delivery partner info
+    useEffect(() => {
+        if (!order?.deliveryPartnerId) return;
+        api.get(`/api/delivery/orders/${orderId}/info`)
+            .then(r => setDeliveryInfo(r.data.deliveryInfo))
+            .catch(() => {});
+    }, [order?.deliveryPartnerId, order?.deliveryStatus, orderId]);
 
     const handleCancel = async () => {
         if (!window.confirm('Cancel this order?')) return;
@@ -217,6 +226,37 @@ export default function OrderConfirmation() {
                                 <span className="font-bangers text-xl text-orange">₹{order?.totalAmount}</span>
                             </div>
                         </div>
+
+                        {/* Delivery Partner Info */}
+                        {deliveryInfo && ['assigned', 'out_for_delivery'].includes(order?.deliveryStatus) && (
+                            <div className="bg-blue-50 border-3 border-ink rounded-2xl p-5 shadow-[4px_4px_0_#1A1A1A]">
+                                <h3 className="font-bangers text-xl text-ink mb-3">🛵 YOUR DELIVERY PARTNER</h3>
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-lg">👤</span>
+                                        <span className="font-grotesk font-semibold text-ink">{deliveryInfo.partnerName}</span>
+                                    </div>
+                                    {deliveryInfo.partnerPhone && (
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-lg">📞</span>
+                                            <span className="font-mono text-sm text-ink/70">{deliveryInfo.partnerPhone}</span>
+                                            <a
+                                                href={`tel:${deliveryInfo.partnerPhone}`}
+                                                className="ml-auto px-4 py-2 bg-yellow border-2 border-ink rounded-xl font-bangers text-sm shadow-[2px_2px_0_#1A1A1A] hover:shadow-none hover:translate-y-[2px] transition-all"
+                                            >
+                                                📞 Call Partner
+                                            </a>
+                                        </div>
+                                    )}
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <span className="text-lg">{order?.deliveryStatus === 'out_for_delivery' ? '🔵' : '🟡'}</span>
+                                        <span className="font-grotesk text-sm text-ink/70">
+                                            Status: {order?.deliveryStatus === 'out_for_delivery' ? 'On the way' : 'Assigned'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* ─── Conditional Cancel Button ─────────── */}
                         {order?.status !== 'delivered' && order?.status !== 'cancelled' && (

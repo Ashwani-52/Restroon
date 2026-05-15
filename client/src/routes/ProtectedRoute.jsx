@@ -26,9 +26,10 @@ export function ProtectedRoute({ children, role }) {
   // ─── Wrong role ────────────────────────────────────────────
   if (role && user.role !== role) {
     const dashboardMap = {
-      admin   : '/dashboard/admin',
-      owner   : '/dashboard/owner',
-      customer: '/cafes'
+      admin           : '/dashboard/admin',
+      owner           : '/dashboard/owner',
+      customer        : '/cafes',
+      delivery_partner: '/delivery/dashboard'
     };
     return <Navigate to={dashboardMap[user.role] || '/'} replace />;
   }

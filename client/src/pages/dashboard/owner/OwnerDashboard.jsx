@@ -164,6 +164,27 @@ function OwnerOrders({ cafe }) {
         fetchOrders();
     };
 
+    // ─── Delivery partner assignment ─────────
+    const [deliveryPartners, setDeliveryPartners] = useState([]);
+    const [assigningOrder, setAssigningOrder] = useState(null);
+
+    useEffect(() => {
+        if (!cafe) return;
+        api.get('/api/delivery/partners')
+            .then(r => setDeliveryPartners(r.data.partners || []))
+            .catch(() => {});
+    }, [cafe]);
+
+    const assignPartner = async (orderId, partnerId) => {
+        try {
+            await api.patch(`/api/delivery/orders/${orderId}/assign`, { deliveryPartnerId: partnerId });
+            setAssigningOrder(null);
+            fetchOrders();
+        } catch (err) {
+            alert(err.response?.data?.message || 'Failed to assign');
+        }
+    };
+
     return (
         <>
             <NewOrderPopup
@@ -262,6 +283,43 @@ function OwnerOrders({ cafe }) {
                                 )}
                                 {order.status === 'out_for_delivery' && (
                                     <CartoonButton label="✅ Mark Delivered" color="bg-green-400" size="sm" onClick={() => updateStatus(order._id, 'delivered')} />
+                                )}
+
+                                {/* Assign Delivery Partner */}
+                                {['accepted', 'preparing'].includes(order.status) && order.orderType === 'delivery' && !order.deliveryPartnerId && deliveryPartners.length > 0 && (
+                                    <div className="mt-3 pt-3 border-t border-ink/10">
+                                        {assigningOrder === order._id ? (
+                                            <div className="flex gap-2 items-center">
+                                                <select
+                                                    className="flex-1 px-3 py-2 bg-white border-2 border-ink rounded-xl font-grotesk text-sm focus:outline-none focus:border-orange"
+                                                    onChange={e => { if (e.target.value) assignPartner(order._id, e.target.value); }}
+                                                    defaultValue=""
+                                                >
+                                                    <option value="" disabled>Select partner...</option>
+                                                    {deliveryPartners.filter(p => p.isAvailable).map(p => (
+                                                        <option key={p._id} value={p._id}>{p.name} ({p.activeOrders || 0} active)</option>
+                                                    ))}
+                                                </select>
+                                                <button onClick={() => setAssigningOrder(null)} className="text-ink/40 hover:text-ink text-sm">✕</button>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={() => setAssigningOrder(order._id)}
+                                                className="w-full py-2 bg-blue-100 border-2 border-blue-300 text-blue-800 rounded-xl font-bangers text-sm hover:bg-blue-200 transition-colors"
+                                            >
+                                                🛵 Assign Delivery Partner
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
+                                {/* Show assigned partner */}
+                                {order.deliveryPartnerId && (
+                                    <div className="mt-3 pt-3 border-t border-ink/10">
+                                        <p className="font-grotesk text-xs text-ink/60">
+                                            🛵 Assigned to: <strong>{deliveryPartners.find(p => p._id === (order.deliveryPartnerId?._id || order.deliveryPartnerId))?.name || 'Partner'}</strong>
+                                            {order.deliveryStatus && ` • ${order.deliveryStatus.replace('_', ' ')}`}
+                                        </p>
+                                    </div>
                                 )}
                             </div>
                         ))}
@@ -690,6 +748,7 @@ export default function OwnerDashboard() {
     const navItems = [
         { path: 'orders', label: '📦 Orders', badge: stats?.pending },
         { path: 'menu', label: '🍽️ Menu' },
+        { path: 'delivery', label: '🛵 Delivery' },
         { path: 'revenue', label: '💰 Revenue' },
         { path: 'settings', label: '⚙️ Settings' },
         { path: 'commission', label: '🧾 Platform Fees' },
@@ -834,6 +893,7 @@ export default function OwnerDashboard() {
                         <Routes>
                             <Route path="orders" element={<OwnerOrders cafe={cafe} />} />
                             <Route path="menu" element={<OwnerMenu cafe={cafe} />} />
+                            <Route path="delivery" element={<OwnerDeliveryPartners cafe={cafe} />} />
                             <Route path="revenue" element={<OwnerRevenue cafe={cafe} />} />
                             <Route path="settings" element={<OwnerSettings cafe={cafe} setCafe={setCafe} />} />
                             <Route path="commission" element={<PlatformCommission />} />
@@ -874,6 +934,167 @@ export default function OwnerDashboard() {
 
 // ── Revenue Tab ────────────────────────────────
 // In OwnerDashboard.jsx — replace OwnerRevenue function
+
+// ── Owner Delivery Partners Tab ─────────────────
+function OwnerDeliveryPartners({ cafe }) {
+    const [partners, setPartners] = useState([]);
+    const [pendingInvites, setPendingInvites] = useState([]);
+    const [invitePhone, setInvitePhone] = useState('');
+    const [inviteEmail, setInviteEmail] = useState('');
+    const [inviting, setInviting] = useState(false);
+    const [loading, setLoading] = useState(true);
+
+    const fetchPartners = async () => {
+        try {
+            const res = await api.get('/api/delivery/partners');
+            setPartners(res.data.partners || []);
+            setPendingInvites(res.data.pendingInvites || []);
+        } catch { }
+        setLoading(false);
+    };
+
+    useEffect(() => { if (cafe) fetchPartners(); }, [cafe]);
+
+    const handleInvite = async () => {
+        if (!invitePhone && !inviteEmail) return alert('Enter phone or email');
+        setInviting(true);
+        try {
+            await api.post('/api/delivery/partners/invite', {
+                phone: invitePhone,
+                email: inviteEmail
+            });
+            setInvitePhone('');
+            setInviteEmail('');
+            fetchPartners();
+        } catch (err) {
+            alert(err.response?.data?.message || 'Failed to invite');
+        }
+        setInviting(false);
+    };
+
+    const handleRemove = async (partnerId) => {
+        if (!window.confirm('Remove this delivery partner?')) return;
+        try {
+            await api.delete(`/api/delivery/partners/${partnerId}`);
+            fetchPartners();
+        } catch (err) {
+            alert(err.response?.data?.message || 'Failed to remove');
+        }
+    };
+
+    const handleDeleteInvite = async (inviteId) => {
+        try {
+            await api.delete(`/api/delivery/invites/${inviteId}`);
+            fetchPartners();
+        } catch (err) {
+            alert(err.response?.data?.message || 'Failed to delete invite');
+        }
+    };
+
+    if (loading) return (
+        <div className="text-center py-16">
+            <div className="text-5xl animate-bounce mb-3">🛵</div>
+            <p className="font-bangers text-2xl text-ink/50">Loading...</p>
+        </div>
+    );
+
+    return (
+        <div>
+            <h2 className="font-bangers text-3xl text-ink mb-6">🛵 DELIVERY PARTNERS</h2>
+
+            {/* Invite Section */}
+            <div className="bg-cream border-3 border-ink rounded-2xl p-5 mb-6 shadow-[4px_4px_0_#1A1A1A]">
+                <h3 className="font-bangers text-xl text-ink mb-3">📨 INVITE NEW PARTNER</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                    <input
+                        type="tel"
+                        placeholder="Phone number"
+                        value={invitePhone}
+                        onChange={e => setInvitePhone(e.target.value)}
+                        className="px-4 py-3 bg-white border-2 border-ink rounded-xl font-grotesk text-sm focus:outline-none focus:border-orange"
+                    />
+                    <input
+                        type="email"
+                        placeholder="Email address"
+                        value={inviteEmail}
+                        onChange={e => setInviteEmail(e.target.value)}
+                        className="px-4 py-3 bg-white border-2 border-ink rounded-xl font-grotesk text-sm focus:outline-none focus:border-orange"
+                    />
+                </div>
+                <CartoonButton
+                    label={inviting ? '⏳ Inviting...' : '📨 Send Invite'}
+                    color="bg-yellow"
+                    size="sm"
+                    onClick={handleInvite}
+                />
+            </div>
+
+            {/* Active Partners */}
+            {partners.length > 0 && (
+                <div className="mb-6">
+                    <h3 className="font-bangers text-xl text-ink mb-3">👥 ACTIVE PARTNERS</h3>
+                    <div className="space-y-3">
+                        {partners.map(p => (
+                            <div key={p._id} className="bg-cream border-3 border-ink rounded-2xl p-4 shadow-[4px_4px_0_#1A1A1A] flex items-center gap-4">
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="font-bangers text-lg text-ink">{p.name}</span>
+                                        <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${p.isAvailable ? 'bg-green-200 text-green-800' : 'bg-gray-200 text-gray-600'}`}>
+                                            {p.isAvailable ? '🟢 Online' : '⚫ Offline'}
+                                        </span>
+                                    </div>
+                                    <p className="font-grotesk text-sm text-ink/60">
+                                        📞 {p.phone || 'N/A'} • ✉️ {p.email || 'N/A'}
+                                    </p>
+                                    <p className="font-grotesk text-xs text-ink/40 mt-1">
+                                        {p.activeOrders || 0} active • {p.totalDeliveries || 0} total deliveries
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => handleRemove(p._id)}
+                                    className="px-3 py-2 bg-red/10 border-2 border-red/30 text-red rounded-xl font-bangers text-sm hover:bg-red/20 transition-colors"
+                                >
+                                    Remove
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Pending Invites */}
+            {pendingInvites.length > 0 && (
+                <div className="mb-6">
+                    <h3 className="font-bangers text-xl text-ink/60 mb-3">⏳ PENDING INVITES</h3>
+                    <div className="space-y-2">
+                        {pendingInvites.map(inv => (
+                            <div key={inv._id} className="bg-yellow/20 border-2 border-ink/20 rounded-xl px-4 py-3 flex items-center justify-between">
+                                <span className="font-grotesk text-sm text-ink">
+                                    {inv.phone || inv.email}
+                                </span>
+                                <button
+                                    onClick={() => handleDeleteInvite(inv._id)}
+                                    className="text-sm hover:scale-110 transition-transform"
+                                >🗑️</button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Empty State */}
+            {partners.length === 0 && pendingInvites.length === 0 && (
+                <div className="text-center py-16">
+                    <div className="text-5xl mb-3">🛵</div>
+                    <p className="font-bangers text-2xl text-ink/50 mb-2">No delivery partners yet</p>
+                    <p className="font-grotesk text-sm text-ink/40">
+                        Invite partners by phone or email above to get started.
+                    </p>
+                </div>
+            )}
+        </div>
+    );
+}
 
 function OwnerRevenue({ cafe }) {
     const [orders, setOrders] = useState([]);

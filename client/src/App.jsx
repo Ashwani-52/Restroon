@@ -23,6 +23,7 @@ import BlogList          from './pages/blog/BlogList';
 import BlogPost          from './pages/blog/BlogPost';
 import MaintenancePage   from './pages/MaintenancePage'; // ← ADD
 import RegisterCafe      from './pages/owner/RegisterCafe';
+import DeliveryDashboard from './pages/delivery/DeliveryDashboard';
 
 // ── Redirect logged-in users away from login/register ──
 function AuthGuard({ children }) {
@@ -38,9 +39,10 @@ function AuthGuard({ children }) {
 
   if (user) {
     const redirect = {
-      admin   : '/dashboard/admin',
-      owner   : '/dashboard/owner',
-      customer: '/cafes'
+      admin           : '/dashboard/admin',
+      owner           : '/dashboard/owner',
+      customer        : '/cafes',
+      delivery_partner: '/delivery/dashboard'
     };
     return <Navigate to={redirect[user.role] || '/'} replace />;
   }
@@ -109,6 +111,11 @@ export default function App() {
             {/* ─── ADMIN DASHBOARD ───────────────── */}
             <Route path="/dashboard/admin/*" element={
               <ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>
+            } />
+
+            {/* ─── DELIVERY PARTNER DASHBOARD ──────── */}
+            <Route path="/delivery/dashboard" element={
+              <ProtectedRoute role="delivery_partner"><DeliveryDashboard /></ProtectedRoute>
             } />
 
             {/* ─── 404 ───────────────────────────── */}

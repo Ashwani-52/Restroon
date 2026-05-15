@@ -31,7 +31,7 @@ const userSchema = new mongoose.Schema(
         },
         role: {
             type: String,
-            enum: ['customer', 'owner', 'admin'],
+            enum: ['customer', 'owner', 'admin', 'delivery_partner'],
             default: 'customer'
         },
         phone: {
@@ -95,6 +95,24 @@ const userSchema = new mongoose.Schema(
         },
         currentPlan: {
             type: String,
+            default: null
+        },
+        // ─── Delivery Partner fields ───────────
+        isAvailable: {
+            type: Boolean,
+            default: true
+        },
+        currentAssignedOrders: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Order'
+        }],
+        totalDeliveries: {
+            type: Number,
+            default: 0
+        },
+        assignedCafe: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Cafe',
             default: null
         }
     },
