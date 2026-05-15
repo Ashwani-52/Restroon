@@ -291,6 +291,7 @@ function OwnerMenu({ cafe }) {
     const [editForm, setEditForm] = useState({ name: '', description: '', price: '', category: '', isVeg: true, image: '' });
     const [editImagePreview, setEditImagePreview] = useState(null);
     const [saving, setSaving] = useState(false);
+    const [showCategories, setShowCategories] = useState(false);
 
     const compressImage = (file, callback) => {
         const reader = new FileReader();
@@ -436,51 +437,68 @@ function OwnerMenu({ cafe }) {
                 <CartoonButton label="+ Add Item" color="bg-yellow" size="sm" onClick={() => setShowAdd(true)} />
             </div>
 
-            {/* ── Manage Categories ────────────────── */}
-            <div className="bg-cream border-3 border-ink rounded-2xl p-5 mb-6 shadow-[4px_4px_0_#1A1A1A]">
-                <h3 className="font-bangers text-xl text-ink mb-3">📂 MANAGE CATEGORIES</h3>
-                <div className="space-y-2 mb-3">
-                    {categories.map(cat => (
-                        <div key={cat._id} className="flex items-center gap-2 bg-yellow/30 border-2 border-ink/20 rounded-xl px-3 py-2">
-                            {editingCatId === cat._id ? (
-                                <input
-                                    autoFocus
-                                    value={editingCatName}
-                                    onChange={e => setEditingCatName(e.target.value)}
-                                    onBlur={() => renameCategory(cat._id)}
-                                    onKeyDown={e => e.key === 'Enter' && renameCategory(cat._id)}
-                                    className="flex-1 bg-white border-2 border-ink rounded-lg px-2 py-1 font-grotesk text-sm focus:outline-none focus:border-orange"
-                                />
-                            ) : (
-                                <span
-                                    onClick={() => { setEditingCatId(cat._id); setEditingCatName(cat.name); }}
-                                    className="flex-1 font-grotesk text-sm text-ink cursor-pointer hover:text-orange transition-colors"
-                                    title="Click to rename"
-                                >
-                                    {cat.name}
-                                </span>
+            {/* ── Manage Categories (Collapsible) ──── */}
+            <div className="mb-6">
+                {/* Toggle Header */}
+                <button
+                    onClick={() => setShowCategories(prev => !prev)}
+                    className="flex items-center justify-between w-full px-4 py-3 rounded-xl bg-cream border-3 border-ink shadow-[4px_4px_0_#1A1A1A] hover:bg-yellow/50 transition-all duration-200 group"
+                >
+                    <span className="flex items-center gap-2 font-bangers text-xl text-ink">
+                        📂 MANAGE CATEGORIES
+                    </span>
+                    <span className={`text-ink transition-transform duration-300 ${showCategories ? 'rotate-180' : 'rotate-0'}`}>
+                        ▼
+                    </span>
+                </button>
+
+                {/* Collapsible Body */}
+                <div className={`overflow-hidden transition-all duration-300 ease-in-out ${showCategories ? 'max-h-[600px] opacity-100 mt-3' : 'max-h-0 opacity-0'}`}>
+                    <div className="bg-cream border-3 border-ink rounded-2xl p-5 shadow-[4px_4px_0_#1A1A1A]">
+                        <div className="flex flex-col gap-2 max-h-[500px] overflow-y-auto pr-1">
+                            {categories.map(cat => (
+                                <div key={cat._id} className="flex items-center gap-2 bg-yellow/30 border-2 border-ink/20 rounded-xl px-3 py-2">
+                                    {editingCatId === cat._id ? (
+                                        <input
+                                            autoFocus
+                                            value={editingCatName}
+                                            onChange={e => setEditingCatName(e.target.value)}
+                                            onBlur={() => renameCategory(cat._id)}
+                                            onKeyDown={e => e.key === 'Enter' && renameCategory(cat._id)}
+                                            className="flex-1 bg-white border-2 border-ink rounded-lg px-2 py-1 font-grotesk text-sm focus:outline-none focus:border-orange"
+                                        />
+                                    ) : (
+                                        <span
+                                            onClick={() => { setEditingCatId(cat._id); setEditingCatName(cat.name); }}
+                                            className="flex-1 font-grotesk text-sm text-ink cursor-pointer hover:text-orange transition-colors"
+                                            title="Click to rename"
+                                        >
+                                            {cat.name}
+                                        </span>
+                                    )}
+                                    <button
+                                        onClick={() => deleteCategory(cat._id)}
+                                        className="text-sm hover:scale-110 transition-transform"
+                                        title="Delete category"
+                                    >🗑️</button>
+                                </div>
+                            ))}
+                            {categories.length === 0 && (
+                                <p className="font-grotesk text-sm text-ink/50 text-center py-2">No categories yet — add one below</p>
                             )}
-                            <button
-                                onClick={() => deleteCategory(cat._id)}
-                                className="text-sm hover:scale-110 transition-transform"
-                                title="Delete category"
-                            >🗑️</button>
                         </div>
-                    ))}
-                    {categories.length === 0 && (
-                        <p className="font-grotesk text-sm text-ink/50 text-center py-2">No categories yet — add one below</p>
-                    )}
-                </div>
-                <div className="flex gap-2">
-                    <input
-                        type="text"
-                        placeholder="New category name..."
-                        value={newCatName}
-                        onChange={e => setNewCatName(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && addCategory()}
-                        className="flex-1 px-3 py-2 bg-white border-2 border-ink rounded-xl font-grotesk text-sm focus:outline-none focus:border-orange"
-                    />
-                    <CartoonButton label="+ Add" color="bg-yellow" size="sm" onClick={addCategory} />
+                        <div className="flex gap-2 mt-3">
+                            <input
+                                type="text"
+                                placeholder="New category name..."
+                                value={newCatName}
+                                onChange={e => setNewCatName(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && addCategory()}
+                                className="flex-1 px-3 py-2 bg-white border-2 border-ink rounded-xl font-grotesk text-sm focus:outline-none focus:border-orange"
+                            />
+                            <CartoonButton label="+ Add" color="bg-yellow" size="sm" onClick={addCategory} />
+                        </div>
+                    </div>
                 </div>
             </div>
 
