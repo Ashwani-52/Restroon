@@ -50,18 +50,38 @@ export const inviteDeliveryPartner = async (req, res) => {
         });
 
         if (existingInvite) {
-            return res.status(409).json({
-                success: false,
-                message: `An active invite already exists for this person. Code: ${existingInvite.inviteCode}`
+            // Resend the email instead of blocking
+            console.log(`[INVITE] Resending existing invite code: ${existingInvite.inviteCode} to ${email || phone}`);
+
+            if (email) {
+                try {
+                    await sendDeliveryInviteEmail({
+                        to: email,
+                        cafeName: cafe.name,
+                        inviteCode: existingInvite.inviteCode
+                    });
+                    console.log(`[INVITE] ✓ Resend email sent to ${email}`);
+                } catch (emailErr) {
+                    console.error(`[INVITE] ✗ Resend email failed: ${emailErr.message}`);
+                }
+            }
+
+            return res.status(200).json({
+                success: true,
+                message: `Invite resent. Code: ${existingInvite.inviteCode}`,
+                inviteCode: existingInvite.inviteCode,
+                invite: existingInvite
             });
         }
 
         // Generate unique invite code
         let inviteCode = generateInviteCode();
-        // Ensure uniqueness (very unlikely collision)
         while (await DeliveryInvite.findOne({ inviteCode })) {
             inviteCode = generateInviteCode();
         }
+
+        // ★ Always log the code for Render debugging
+        console.log(`[INVITE] ★ New invite code generated: ${inviteCode} for ${email || phone} → cafe: ${cafe.name}`);
 
         // Create invite with 7-day expiry
         const invite = await DeliveryInvite.create({
@@ -73,24 +93,32 @@ export const inviteDeliveryPartner = async (req, res) => {
             expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
         });
 
-        // Send invite email (fire-and-forget, never blocks response)
+        // Send invite email — await it so we know if it worked
+        let emailSent = false;
         if (email) {
-            sendDeliveryInviteEmail({
-                to: email,
-                cafeName: cafe.name,
-                inviteCode
-            }).catch(err => console.error('[EMAIL] Invite email failed:', err.message));
+            try {
+                await sendDeliveryInviteEmail({
+                    to: email,
+                    cafeName: cafe.name,
+                    inviteCode
+                });
+                emailSent = true;
+                console.log(`[INVITE] ✓ Email sent to ${email}`);
+            } catch (emailErr) {
+                console.error(`[INVITE] ✗ Email failed to ${email}: ${emailErr.message}`);
+            }
         }
 
         res.status(201).json({
             success: true,
-            message: email
+            message: emailSent
                 ? `Invite sent to ${email} with code ${inviteCode}`
-                : `Invite created. Share this code with your partner: ${inviteCode}`,
+                : `Invite created with code ${inviteCode}. ${email ? 'Email could not be sent — share the code manually.' : 'Share this code with your partner.'}`,
             inviteCode,
             invite
         });
     } catch (err) {
+        console.error('[INVITE] ✗ Failed:', err.message);
         res.status(500).json({
             success: false,
             message: 'Failed to invite delivery partner',

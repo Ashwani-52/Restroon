@@ -343,6 +343,9 @@ export async function sendContactEmail(contactData) {
 // ── DELIVERY PARTNER INVITE EMAIL ────────────────────────────────────────────
 /**
  * Sends a branded invite email to a delivery partner with their invite code.
+ * Unlike order emails, this function THROWS on failure so the caller
+ * can tell the cafe owner whether the email was actually sent.
+ *
  * @param {Object} params
  * @param {string} params.to       - Recipient email
  * @param {string} params.cafeName - Name of the inviting cafe
@@ -350,6 +353,21 @@ export async function sendContactEmail(contactData) {
  */
 export async function sendDeliveryInviteEmail({ to, cafeName, inviteCode }) {
     const clientUrl = process.env.CLIENT_URL || 'https://restroon.vercel.app';
+    const from = process.env.EMAIL_USER?.trim();
+    const pass = process.env.EMAIL_PASS?.trim();
+
+    if (!from || !pass) {
+        console.warn(`[EMAIL] ⚠️  EMAIL_USER or EMAIL_PASS not set — invite email to ${to} skipped`);
+        console.log(`[EMAIL-DEV] INVITE CODE for ${to}: ${inviteCode}`);
+        // Don't throw — just log. The invite code is still returned in the API response.
+        return;
+    }
+
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: { user: from, pass },
+        pool: false
+    });
 
     const bodyHtml = /* html */ `
       <p style="font-size:16px;color:#1A1A1A;margin-bottom:20px;">
@@ -384,13 +402,19 @@ export async function sendDeliveryInviteEmail({ to, cafeName, inviteCode }) {
         <a href="${clientUrl}/register">Join Restroon →</a>
       </div>`;
 
-    await sendMail({
-        to,
-        subject: `🛵 You've been invited to join Restroon as a Delivery Partner`,
-        html: buildTemplate({
-            title: 'Delivery Partner Invite 🛵',
-            preheader: `${cafeName} wants you to deliver with Restroon. Use code: ${inviteCode}`,
-            bodyHtml
-        })
+    const html = buildTemplate({
+        title: 'Delivery Partner Invite 🛵',
+        preheader: `${cafeName} wants you to deliver with Restroon. Use code: ${inviteCode}`,
+        bodyHtml
     });
+
+    // ★ This throws on failure — intentional for invite emails
+    const info = await transporter.sendMail({
+        from: `"Restroon 🛵" <${from}>`,
+        to,
+        subject: `🛵 You're invited to join ${cafeName} on Restroon`,
+        html
+    });
+
+    console.log(`[EMAIL] ✓ Invite email sent to ${to} | code: ${inviteCode} | msgId: ${info.messageId}`);
 }
