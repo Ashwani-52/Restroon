@@ -441,10 +441,10 @@ export default function DeliveryDashboard() {
         <div className="min-h-screen retro-grid">
             <Navbar />
 
-            <div className="max-w-2xl mx-auto px-4 pt-20 pb-24">
+            <div className="max-w-2xl mx-auto px-4 pt-24 pb-24">
 
                 {/* ─── Header ─────────────────────────── */}
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center justify-between mb-6 sticky top-16 z-10 bg-[#fdf6e3]/95 backdrop-blur-sm -mx-4 px-4 py-3 rounded-b-xl">
                     <div>
                         <h1 className="font-bangers text-3xl text-ink">🛵 MY DELIVERIES</h1>
                         {profile?.assignedCafe && (
@@ -455,7 +455,7 @@ export default function DeliveryDashboard() {
                     </div>
                     <button
                         onClick={handleToggleAvailability}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-full border-2 border-ink font-bangers text-sm shadow-[3px_3px_0_#1A1A1A] transition-all ${isAvailable
+                        className={`flex items-center gap-2 px-4 py-2 rounded-full border-2 border-ink font-bangers text-sm shadow-[3px_3px_0_#1A1A1A] transition-all mr-2 shrink-0 ${isAvailable
                             ? 'bg-green-400 hover:bg-green-300'
                             : 'bg-gray-300 hover:bg-gray-200'
                             }`}

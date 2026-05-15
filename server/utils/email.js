@@ -340,81 +340,97 @@ export async function sendContactEmail(contactData) {
     });
 }
 
-// ── DELIVERY PARTNER INVITE EMAIL ────────────────────────────────────────────
+// ── DELIVERY PARTNER INVITE EMAIL (via Resend — works on Render free tier) ──
 /**
- * Sends a branded invite email to a delivery partner with their invite code.
- * Unlike order emails, this function THROWS on failure so the caller
- * can tell the cafe owner whether the email was actually sent.
+ * Sends a branded invite email using Resend (HTTP API, no SMTP needed).
+ * Gmail SMTP is blocked on Render free tier (ports 465/587 firewalled).
+ * Resend sends over HTTPS so it works everywhere.
+ *
+ * Requires RESEND_API_KEY env var. Uses onboarding@resend.dev as sender
+ * until a custom domain is verified on Resend.
  *
  * @param {Object} params
- * @param {string} params.to       - Recipient email
- * @param {string} params.cafeName - Name of the inviting cafe
+ * @param {string} params.to         - Recipient email
+ * @param {string} params.cafeName   - Name of the inviting cafe
  * @param {string} params.inviteCode - 8-char invite code
  */
 export async function sendDeliveryInviteEmail({ to, cafeName, inviteCode }) {
+    const apiKey = process.env.RESEND_API_KEY?.trim();
     const clientUrl = process.env.CLIENT_URL || 'https://restroon.vercel.app';
-    const from = process.env.EMAIL_USER?.trim();
-    const pass = process.env.EMAIL_PASS?.trim();
 
-    if (!from || !pass) {
-        console.warn(`[EMAIL] ⚠️  EMAIL_USER or EMAIL_PASS not set — invite email to ${to} skipped`);
+    if (!apiKey) {
+        console.warn(`[EMAIL] ⚠️  RESEND_API_KEY not set — invite email to ${to} skipped`);
         console.log(`[EMAIL-DEV] INVITE CODE for ${to}: ${inviteCode}`);
-        // Don't throw — just log. The invite code is still returned in the API response.
         return;
     }
 
-    const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: { user: from, pass },
-        pool: false
-    });
+    // Dynamic import — Resend is only needed for invite emails
+    const { Resend } = await import('resend');
+    const resend = new Resend(apiKey);
 
-    const bodyHtml = /* html */ `
-      <p style="font-size:16px;color:#1A1A1A;margin-bottom:20px;">
-        Hi! 👋 <strong>${cafeName}</strong> has invited you to join
-        <strong>Restroon</strong> as a delivery partner.
-      </p>
-
-      <div style="background:${CREAM};border:3px solid ${DARK};border-radius:16px;padding:24px;margin-bottom:24px;text-align:center;">
-        <div style="font-size:11px;text-transform:uppercase;color:${GREY};letter-spacing:1px;margin-bottom:8px;">
-          Your Invite Code
+    const html = `
+      <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;
+                  background:#fdf6e3;border-radius:16px;padding:32px;
+                  border:2px solid #f5c518;">
+        <h2 style="font-size:22px;font-weight:900;text-transform:uppercase;
+                   color:#1a1a1a;margin:0 0 4px;">🛵 Restroon</h2>
+        <p style="color:#888;margin:0 0 20px;font-size:13px;">
+          Delivery Partner Invitation
+        </p>
+        <p style="font-size:15px;color:#333;margin:0 0 20px;">
+          <strong>${cafeName}</strong> has invited you to join Restroon
+          as a <strong>Delivery Partner</strong>.
+        </p>
+        <div style="background:#f5c518;border-radius:12px;padding:24px;
+                    text-align:center;margin:0 0 20px;">
+          <p style="margin:0;font-size:11px;color:#666;
+                    text-transform:uppercase;letter-spacing:3px;">
+            Your Invite Code
+          </p>
+          <p style="margin:12px 0 0;font-size:44px;font-weight:900;
+                    letter-spacing:10px;color:#1a1a1a;font-family:monospace;">
+            ${inviteCode}
+          </p>
         </div>
-        <div style="font-size:36px;font-weight:800;color:${ORANGE};letter-spacing:6px;font-family:monospace;">
-          ${inviteCode}
+        <div style="background:#fff;border-radius:10px;padding:16px;
+                    border:1px solid #e8d07a;margin:0 0 16px;">
+          <p style="margin:0 0 10px;font-weight:bold;color:#333;font-size:14px;">
+            How to get started:
+          </p>
+          <ol style="margin:0;padding-left:20px;color:#555;
+                     line-height:2;font-size:14px;">
+            <li>Go to
+              <a href="${clientUrl}/register"
+                 style="color:#c8a000;font-weight:bold;">
+                ${clientUrl.replace('https://', '')}/register
+              </a>
+            </li>
+            <li>Select the <strong>Delivery Partner</strong> tile</li>
+            <li>Enter code:
+              <strong style="font-family:monospace;font-size:16px;
+                             background:#f5f5f5;padding:2px 8px;
+                             border-radius:4px;">${inviteCode}</strong>
+            </li>
+            <li>Fill in your name, phone and password</li>
+            <li>Start delivering! 🎉</li>
+          </ol>
         </div>
-      </div>
-
-      <div style="background:#F9FAFB;border-radius:12px;padding:20px;margin-bottom:24px;">
-        <p style="font-size:14px;font-weight:700;color:${DARK};margin-bottom:12px;">How to join:</p>
-        <ol style="font-size:14px;color:${DARK};padding-left:20px;line-height:1.8;">
-          <li>Go to <a href="${clientUrl}/register" style="color:${ORANGE};font-weight:600;">${clientUrl.replace('https://', '')}/register</a></li>
-          <li>Select <strong>"Delivery Partner"</strong></li>
-          <li>Enter your invite code: <strong style="color:${ORANGE};">${inviteCode}</strong></li>
-          <li>Complete your profile and start delivering!</li>
-        </ol>
-      </div>
-
-      <p style="font-size:13px;color:${GREY};margin-bottom:8px;">
-        ⏰ This invite expires in <strong>7 days</strong>.
-      </p>
-
-      <div class="cta">
-        <a href="${clientUrl}/register">Join Restroon →</a>
+        <p style="font-size:11px;color:#bbb;text-align:center;margin:0;">
+          Invite expires in 7 days · Do not share this code
+        </p>
       </div>`;
 
-    const html = buildTemplate({
-        title: 'Delivery Partner Invite 🛵',
-        preheader: `${cafeName} wants you to deliver with Restroon. Use code: ${inviteCode}`,
-        bodyHtml
-    });
-
-    // ★ This throws on failure — intentional for invite emails
-    const info = await transporter.sendMail({
-        from: `"Restroon 🛵" <${from}>`,
+    const { data, error } = await resend.emails.send({
+        from: 'Restroon <onboarding@resend.dev>',
         to,
         subject: `🛵 You're invited to join ${cafeName} on Restroon`,
         html
     });
 
-    console.log(`[EMAIL] ✓ Invite email sent to ${to} | code: ${inviteCode} | msgId: ${info.messageId}`);
+    if (error) {
+        console.error(`[EMAIL] ✗ Resend error for ${to}:`, error);
+        throw new Error(error.message || 'Resend email failed');
+    }
+
+    console.log(`[EMAIL] ✓ Invite email sent to ${to} via Resend | code: ${inviteCode} | id: ${data.id}`);
 }

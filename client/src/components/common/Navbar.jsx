@@ -25,7 +25,8 @@ export default function Navbar() {
     const dashboardLink = {
         admin: '/dashboard/admin',
         owner: '/dashboard/owner',
-        customer: '/cafes'
+        customer: '/cafes',
+        delivery_partner: '/delivery/dashboard'
     }[user?.role];
 
     return (
@@ -60,7 +61,7 @@ export default function Navbar() {
                         <>
                             <Link to={dashboardLink}>
                                 <CartoonButton
-                                    label={`${user.role === 'owner' ? '🏪' : user.role === 'admin' ? '👑' : '🍽️'} ${user.name?.split(' ')[0]}`}
+                                    label={`${user.role === 'owner' ? '🏪' : user.role === 'admin' ? '👑' : user.role === 'delivery_partner' ? '🛵' : '🍽️'} ${user.name?.split(' ')[0]}`}
                                     color="bg-yellow"
                                     size="sm"
                                 />
