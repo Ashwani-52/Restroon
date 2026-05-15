@@ -5,7 +5,8 @@ import {
     login,
     logout,
     refreshAccessToken,
-    getMe
+    getMe,
+    verifyInvite
 } from '../controllers/auth.controller.js';
 import { updateProfile, getProfile } from '../controllers/user.controller.js';
 import { protect } from '../middleware/auth.middleware.js';
@@ -20,6 +21,7 @@ router.post('/login', login);
 router.post('/logout', protect, logout);
 router.post('/refresh', refreshAccessToken);
 router.get('/me', protect, getMe);
+router.post('/verify-invite', verifyInvite);
 
 // ─── Profile (address + phone save/load) ───
 router.get('/profile', protect, getProfile);
@@ -58,7 +60,8 @@ router.get('/google/callback',
             const redirectMap = {
                 admin: `${process.env.CLIENT_URL}/dashboard/admin`,
                 owner: `${process.env.CLIENT_URL}/dashboard/owner`,
-                customer: `${process.env.CLIENT_URL}/cafes`
+                customer: `${process.env.CLIENT_URL}/cafes`,
+                delivery_partner: `${process.env.CLIENT_URL}/delivery/dashboard`
             };
 
             const redirectUrl = redirectMap[user.role] || `${process.env.CLIENT_URL}/cafes`;

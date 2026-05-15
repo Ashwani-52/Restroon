@@ -955,16 +955,20 @@ function OwnerDeliveryPartners({ cafe }) {
 
     useEffect(() => { if (cafe) fetchPartners(); }, [cafe]);
 
+    const [lastInviteCode, setLastInviteCode] = useState('');
+
     const handleInvite = async () => {
         if (!invitePhone && !inviteEmail) return alert('Enter phone or email');
         setInviting(true);
+        setLastInviteCode('');
         try {
-            await api.post('/api/delivery/partners/invite', {
+            const res = await api.post('/api/delivery/partners/invite', {
                 phone: invitePhone,
                 email: inviteEmail
             });
             setInvitePhone('');
             setInviteEmail('');
+            setLastInviteCode(res.data.inviteCode || '');
             fetchPartners();
         } catch (err) {
             alert(err.response?.data?.message || 'Failed to invite');
@@ -1027,6 +1031,28 @@ function OwnerDeliveryPartners({ cafe }) {
                     size="sm"
                     onClick={handleInvite}
                 />
+
+                {/* Show generated invite code */}
+                {lastInviteCode && (
+                    <div className="mt-4 bg-green-100 border-2 border-green-400 rounded-xl p-4 text-center">
+                        <p className="font-grotesk text-sm text-green-800 mb-2">✅ Invite sent! Share this code:</p>
+                        <div className="flex items-center justify-center gap-3">
+                            <span className="font-mono text-2xl font-bold text-green-900 tracking-widest">{lastInviteCode}</span>
+                            <button
+                                onClick={() => {
+                                    navigator.clipboard.writeText(lastInviteCode);
+                                    alert('Code copied!');
+                                }}
+                                className="px-3 py-1 bg-green-200 hover:bg-green-300 text-green-800 rounded-lg font-grotesk text-xs font-bold transition-colors"
+                            >
+                                📋 Copy
+                            </button>
+                        </div>
+                        <p className="font-grotesk text-xs text-green-700 mt-2">
+                            Partner goes to Register → Delivery Partner → enters this code
+                        </p>
+                    </div>
+                )}
             </div>
 
             {/* Active Partners */}
@@ -1069,9 +1095,16 @@ function OwnerDeliveryPartners({ cafe }) {
                     <div className="space-y-2">
                         {pendingInvites.map(inv => (
                             <div key={inv._id} className="bg-yellow/20 border-2 border-ink/20 rounded-xl px-4 py-3 flex items-center justify-between">
-                                <span className="font-grotesk text-sm text-ink">
-                                    {inv.phone || inv.email}
-                                </span>
+                                <div>
+                                    <span className="font-grotesk text-sm text-ink">
+                                        {inv.phone || inv.email}
+                                    </span>
+                                    {inv.inviteCode && (
+                                        <span className="ml-3 font-mono text-xs bg-yellow/50 px-2 py-0.5 rounded text-ink/80">
+                                            Code: {inv.inviteCode}
+                                        </span>
+                                    )}
+                                </div>
                                 <button
                                     onClick={() => handleDeleteInvite(inv._id)}
                                     className="text-sm hover:scale-110 transition-transform"

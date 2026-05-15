@@ -339,3 +339,58 @@ export async function sendContactEmail(contactData) {
         })
     });
 }
+
+// ── DELIVERY PARTNER INVITE EMAIL ────────────────────────────────────────────
+/**
+ * Sends a branded invite email to a delivery partner with their invite code.
+ * @param {Object} params
+ * @param {string} params.to       - Recipient email
+ * @param {string} params.cafeName - Name of the inviting cafe
+ * @param {string} params.inviteCode - 8-char invite code
+ */
+export async function sendDeliveryInviteEmail({ to, cafeName, inviteCode }) {
+    const clientUrl = process.env.CLIENT_URL || 'https://restroon.vercel.app';
+
+    const bodyHtml = /* html */ `
+      <p style="font-size:16px;color:#1A1A1A;margin-bottom:20px;">
+        Hi! 👋 <strong>${cafeName}</strong> has invited you to join
+        <strong>Restroon</strong> as a delivery partner.
+      </p>
+
+      <div style="background:${CREAM};border:3px solid ${DARK};border-radius:16px;padding:24px;margin-bottom:24px;text-align:center;">
+        <div style="font-size:11px;text-transform:uppercase;color:${GREY};letter-spacing:1px;margin-bottom:8px;">
+          Your Invite Code
+        </div>
+        <div style="font-size:36px;font-weight:800;color:${ORANGE};letter-spacing:6px;font-family:monospace;">
+          ${inviteCode}
+        </div>
+      </div>
+
+      <div style="background:#F9FAFB;border-radius:12px;padding:20px;margin-bottom:24px;">
+        <p style="font-size:14px;font-weight:700;color:${DARK};margin-bottom:12px;">How to join:</p>
+        <ol style="font-size:14px;color:${DARK};padding-left:20px;line-height:1.8;">
+          <li>Go to <a href="${clientUrl}/register" style="color:${ORANGE};font-weight:600;">${clientUrl.replace('https://', '')}/register</a></li>
+          <li>Select <strong>"Delivery Partner"</strong></li>
+          <li>Enter your invite code: <strong style="color:${ORANGE};">${inviteCode}</strong></li>
+          <li>Complete your profile and start delivering!</li>
+        </ol>
+      </div>
+
+      <p style="font-size:13px;color:${GREY};margin-bottom:8px;">
+        ⏰ This invite expires in <strong>7 days</strong>.
+      </p>
+
+      <div class="cta">
+        <a href="${clientUrl}/register">Join Restroon →</a>
+      </div>`;
+
+    await sendMail({
+        to,
+        subject: `🛵 You've been invited to join Restroon as a Delivery Partner`,
+        html: buildTemplate({
+            title: 'Delivery Partner Invite 🛵',
+            preheader: `${cafeName} wants you to deliver with Restroon. Use code: ${inviteCode}`,
+            bodyHtml
+        })
+    });
+}

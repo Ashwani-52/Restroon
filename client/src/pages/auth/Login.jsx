@@ -39,9 +39,10 @@ export default function Login() {
 
             // ─── Default redirect by role ─────────────
             const redirectMap = {
-                admin   : '/dashboard/admin',
-                owner   : '/dashboard/owner',
-                customer: '/cafes'
+                admin           : '/dashboard/admin',
+                owner           : '/dashboard/owner',
+                customer        : '/cafes',
+                delivery_partner: '/delivery/dashboard'
             };
             navigate(redirectMap[user.role] || '/cafes', { replace: true });
             

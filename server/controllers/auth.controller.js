@@ -16,7 +16,7 @@ import {
 // ──────────────────────────────────────────
 export const register = async (req, res) => {
     try {
-        const { name, email, password, role, phone } = req.body;
+        const { name, email, password, role, phone, inviteCode } = req.body;
 
         // ─── Validate fields ───────────────────
         if (!name || !email || !password) {
@@ -31,22 +31,27 @@ export const register = async (req, res) => {
             ? ROLES.OWNER
             : ROLES.CUSTOMER;
 
-        // ─── Handle delivery_partner registration via invite ─
+        // ─── Handle delivery_partner registration via invite code ─
         let assignedCafe = null;
         if (role === 'delivery_partner') {
-            // Look for a pending invite matching this email or phone
+            if (!inviteCode) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invite code is required for delivery partner registration'
+                });
+            }
+
+            // Verify invite code
             const invite = await DeliveryInvite.findOne({
+                inviteCode: inviteCode.toUpperCase().trim(),
                 status: 'pending',
-                $or: [
-                    ...(email ? [{ email }] : []),
-                    ...(phone ? [{ phone }] : [])
-                ]
+                expiresAt: { $gt: new Date() }
             });
 
             if (!invite) {
                 return res.status(403).json({
                     success: false,
-                    message: 'No pending invite found. A cafe owner must invite you first.'
+                    message: 'Invalid or expired invite code. Please ask your cafe owner for a valid code.'
                 });
             }
 
@@ -100,6 +105,52 @@ export const register = async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Registration failed',
+            error: err.message
+        });
+    }
+};
+
+// ──────────────────────────────────────────
+// VERIFY INVITE CODE (Public — before registration)
+// ──────────────────────────────────────────
+export const verifyInvite = async (req, res) => {
+    try {
+        const { code } = req.body;
+
+        if (!code) {
+            return res.status(400).json({
+                success: false,
+                valid: false,
+                message: 'Invite code is required'
+            });
+        }
+
+        const invite = await DeliveryInvite.findOne({
+            inviteCode: code.toUpperCase().trim(),
+            status: 'pending',
+            expiresAt: { $gt: new Date() }
+        });
+
+        if (!invite) {
+            return res.status(404).json({
+                success: false,
+                valid: false,
+                message: 'Invalid or expired invite code'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            valid: true,
+            email: invite.email,
+            cafeId: invite.cafeId,
+            cafeName: invite.cafeName
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            valid: false,
+            message: 'Failed to verify invite code',
             error: err.message
         });
     }

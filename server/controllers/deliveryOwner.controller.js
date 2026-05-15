@@ -3,6 +3,17 @@ import User from '../models/User.model.js';
 import Cafe from '../models/Cafe.model.js';
 import DeliveryInvite from '../models/DeliveryInvite.model.js';
 import { DELIVERY_STATUS } from '../utils/constants.js';
+import { sendDeliveryInviteEmail } from '../utils/email.js';
+
+// ── Generate random 8-char alphanumeric invite code ──
+const generateInviteCode = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no O/0/1/I confusion
+    let code = '';
+    for (let i = 0; i < 8; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+};
 
 // ──────────────────────────────────────────
 // INVITE DELIVERY PARTNER (Cafe Owner)
@@ -27,75 +38,56 @@ export const inviteDeliveryPartner = async (req, res) => {
             });
         }
 
-        // Check if invite already exists
+        // Check if pending invite already exists
         const existingInvite = await DeliveryInvite.findOne({
             cafeId: cafe._id,
             $or: [
                 ...(phone ? [{ phone }] : []),
                 ...(email ? [{ email }] : [])
             ],
-            status: 'pending'
+            status: 'pending',
+            expiresAt: { $gt: new Date() }
         });
 
         if (existingInvite) {
             return res.status(409).json({
                 success: false,
-                message: 'An invite already exists for this person'
+                message: `An active invite already exists for this person. Code: ${existingInvite.inviteCode}`
             });
         }
 
-        // Check if user already exists and link them directly
-        let existingUser = null;
-        if (email) {
-            existingUser = await User.findOne({ email });
-        }
-        if (!existingUser && phone) {
-            existingUser = await User.findOne({ phone });
+        // Generate unique invite code
+        let inviteCode = generateInviteCode();
+        // Ensure uniqueness (very unlikely collision)
+        while (await DeliveryInvite.findOne({ inviteCode })) {
+            inviteCode = generateInviteCode();
         }
 
-        if (existingUser) {
-            // If user exists, directly assign them as delivery partner
-            if (existingUser.role === 'delivery_partner' && existingUser.assignedCafe) {
-                return res.status(409).json({
-                    success: false,
-                    message: 'This user is already assigned to a cafe'
-                });
-            }
-
-            existingUser.role = 'delivery_partner';
-            existingUser.assignedCafe = cafe._id;
-            await existingUser.save({ validateBeforeSave: false });
-
-            await DeliveryInvite.create({
-                cafeId: cafe._id,
-                phone: phone || '',
-                email: email || '',
-                status: 'accepted'
-            });
-
-            return res.status(200).json({
-                success: true,
-                message: 'User found and linked as delivery partner',
-                partner: {
-                    _id: existingUser._id,
-                    name: existingUser.name,
-                    phone: existingUser.phone,
-                    email: existingUser.email,
-                    isAvailable: existingUser.isAvailable
-                }
-            });
-        }
-
-        // Create pending invite
+        // Create invite with 7-day expiry
         const invite = await DeliveryInvite.create({
             cafeId: cafe._id,
+            cafeName: cafe.name,
             phone: phone || '',
-            email: email || ''
+            email: email || '',
+            inviteCode,
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
         });
+
+        // Send invite email (fire-and-forget, never blocks response)
+        if (email) {
+            sendDeliveryInviteEmail({
+                to: email,
+                cafeName: cafe.name,
+                inviteCode
+            }).catch(err => console.error('[EMAIL] Invite email failed:', err.message));
+        }
 
         res.status(201).json({
             success: true,
-            message: 'Invite created. The partner can register using this phone/email.',
+            message: email
+                ? `Invite sent to ${email} with code ${inviteCode}`
+                : `Invite created. Share this code with your partner: ${inviteCode}`,
+            inviteCode,
             invite
         });
     } catch (err) {
